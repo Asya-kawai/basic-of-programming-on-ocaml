@@ -1,0 +1,2470 @@
+% -*- coding: utf-8 -*-
+@import: settings
+@import: preface
+@import: top-page
+@import: bib
+
+document (|
+  title = {OCamlで学ぶプログラミングの基礎};
+  author = {Toshiki KAWAI};
+  preface = preface;
+  top-page = Some(top-page);
+  copyright-page = (|
+    title = {OCamlで学ぶプログラミングの基礎（Web公開版 第1版）};
+    author = {Toshiki KAWAI\hskip(5cm);};
+    date = {2021/07/07};
+    contact = {\url{kawai-toshiki\@aintek.xyz}};
+    printed-by = None;
+  |);
+  bibliography = bibliography;
+
+|) '<
+  +chapter?:(`Basic data and type`){基本的なデータと型}<
+    +p{
+      本章では、プログラミングの基本となるデータとその型を説明します。
+      少し退屈な章ですが...ご了承下さい。
+
+      本章を読み進めるにあたって、初学者の方は、
+      お手元のインタプリタ（例えば、\codem{utop}コマンドや\codem{ocaml}コマンド）
+      を利用して、確かめながら読み進めてみて下さい。
+    }
+    +section{整数}<
+      +p{
+        \dfn{整数}とは0とそれに1ずつ加えて得られる数（自然数、例えば1、2、3...）
+        及び1ずつ引いて得られる数（例えば、-1、-2、-3...）の総称です\footnote{
+          整数全体からなる集合は太字の${\bm{Z}}または黒板太字の${\mathbb{Z}}で表されることがあります。
+        }。
+
+        OCamlにおいて、整数は\codem{int}という型で表現されます。
+
+        それでは、\codem{utop}で整数をインタプリタに与えた例を見てみます。
+        \d-code(```
+          utop # 2 ;;
+          - : int = 2
+        ```);%
+
+        例えば1行目に関して言えば、\codem{2}と入力\footnote{
+          末尾の2つのセミコロン\codem{\;\;}は、入力の終わりをインタプリタに示すものです。
+        }した時、その結果が2行目に表示されており、
+        「直前(\codem{-})に入力した結果の型は\codem{int}であり、結果の値は\codem{2}である」ことを表しています。
+
+        int型には（みなさんが紙面上で計算する時に用いるような）次の四則演算があります。
+        可算を表す\codem{+}、減算を表す\codem{-}、乗算を表す\codem{\*}、
+        除算の商を表す\codem{/}及び余りを表す\codem{mod}があります。
+
+        \d-code(```
+          utop # 4 + 3 ;;
+          - : int = 7
+          utop # 5 - 3 ;;
+          - : int = 2
+          utop # 6 * 3 ;;
+          - : int = 18
+          utop # 7 / 3 ;;
+          - : int = 2
+          utop # 8 mod 3 ;;
+          - : int = 2
+        ```);%
+      }
+      % +centering{
+      %   \tabular(fun t -> (
+      %     let (c, l, r) = (t#c, t#l, t#r) in
+      %     let m = t#m in
+      %     let e = t#e in
+      %     [
+      %       [c {演算子}; c {説明}; ];
+      %       [c {+}     ; l {整数同士の可算を表します}; ];
+      %       [c {-}     ; l {整数同士の減算を表します}; ];
+      %       [c {\*}    ; l {整数同士の乗算を表します}; ];
+      %       [c {/}     ; l {整数同士の除算の商を表します}; ];
+      %       [c {mod}   ; l {整数同士の除算の余りを表します}; ];
+      %     ]
+      %   ))(fun xs ys -> (
+      %     match (xs, List.reverse xs, ys, List.reverse ys) with
+      %     | (xL :: _, xR :: _, yT :: y2 :: _, yB :: _) ->
+      %       [
+      %         stroke 1pt Color.black (Gr.line (xL, yT) (xR, yT));
+      %         stroke 0.5pt Color.black (Gr.line (xL, y2) (xR, y2));
+      %         stroke 1pt Color.black (Gr.line (xL, yB) (xR, yB));
+      %       ]
+      %     | _ -> []
+      %   ));
+      % }
+    >
+    +section{実数}<
+      +p{
+        \dfn{実数}とは連続した量を表すための数で、イメージとしては数直線上に並べることができる全ての数を言います\footnote{
+          実数全体からなる集合は太字の${\bm{R}}または黒板太字の${\mathbb{R}}で表されることがあります。
+        }。
+        実数の中には前節で説明した整数も含まれます。
+
+        OCamlにおいて、実数は\codem{float}という型で表現されます。
+
+        \codem{utop}で実数をインタプリタに与えた例を見てみます。
+        \d-code(```
+          utop # 3.14 ;;
+          - : float = 3.14
+        ```);%
+
+        float型にもint型同様に四則演算が定義されています。
+        ここで注意点ですが、OCamlはint型とfloat型を明確に区別しています。
+        そのため、int型で使用可能な\codem{+}などを利用することができず、float型用の四則演算を利用する必要があります。
+        可算を表す\codem{+.}、減算を表す\codem{-.}、乗算を表す\codem{\*.}、除算の商を表す\codem{/.}があります。
+        int型の四則演算とは違い、後ろにドット（\codem{.}）がついた形になっていますね。
+
+        \d-code(```
+          utop # 3.14 +. 4.0 *. 5.0 /. 3.0 ;;
+          - : float = 9.80666666666666664
+        ```);%
+
+        また、小数点以下が0の場合は、その0を省略することができます。次の例は前述の式と同じ式になります。
+
+        \d-code(```
+          utop # 3.14 +. 4. *. 5. /. 3. ;;
+          - : float = 9.80666666666666664
+        ```);%
+
+        加えて、int型には無い\codem{べき乗を求める\*\*}という関数も定義されています。
+        なお、\codem{\*\*}にはドット（\codem{.}）が付かないことに注意して下さい。
+
+        \d-code(```
+          utop # 3. ** 3. ;;
+          - : float = 27.
+        ```);%
+      }
+      +p{
+        最後に、int型の四則演算をfloat型に適用した場合またはその逆（float型の四則演算をint型に適用した場合）について説明します。
+        int型の四則演算はint型の値のみを受け取ることができ、float型の四則演算ではfloat型の値のみ受け取ることができます。
+        四則演算に渡される型が1つでも合わない場合は、エラーとなります。
+
+        \d-code(```
+          utop # 3 ** 3. ;;
+          Line 1, characters 0-1:
+          Error: This expression has type int but an expression was expected of type
+                   float
+          Hint: Did you mean `3.'?
+        ```);%
+
+        上記はよくある（ありそうな）間違いですが、\codem{\*\*}にint型を適用してしまった例です。
+        1行目にはエラーとなった箇所が示されており、「（与えられた入力の）1行目の0から1文字目（でエラーとなった）」という内容になります。
+        また、2行目にはエラーメッセージが示されており、内容は「この式はint型を受け取ったが、式はfloat型を期待していた」となります。
+        さらに3行目にはエラー箇所に対するヒントとして「3.ではないですか？」という内容が示されています。
+
+        % int型の四則演算がint型の値のみ受け取ること及び
+        % float型の四則演算がfloat型のみ受け取ることを確かめるためには、インタプリタに以下のように入力します。
+        % \d-code(```
+        %   utop # (+) ;;
+        %   - : int -> int -> int = <fun>
+        %   utop # (-) ;;
+        %   - : int -> int -> int = <fun>
+        %   utop # ( * ) ;;
+        %   - : int -> int -> int = <fun>
+        %   utop # (/) ;;
+        %   - : int -> int -> int = <fun>
+        %   utop # (mod) ;;
+        %   - : int -> int -> int = <fun>
+
+        %   utop # (+.) ;;
+        %   - : float -> float -> float = <fun>
+        %   utop # (-.) ;;
+        %   - : float -> float -> float = <fun>
+        %   utop # ( *. ) ;;
+        %   - : float -> float -> float = <fun>
+        %   utop # ( /. ) ;;
+        %   - : float -> float -> float = <fun>
+        % ```);%
+
+        % OCamlでは四則演算は関数として定義されます。
+      }
+      +frame<
+        +subsection{コラム； エラーメッセージを読もう}<
+          +p{
+            OCamlを含めいくつかのプログラミング言語では、エラー箇所、エラー原因、エラー解消のヒントが示される場合があります。
+            エラーメッセージを注意深く読むことでエラーを解決できる場合や、
+            エラーメッセージから分からない場合は当該メッセージをWebで検索することで答えが見つかる場合があります。
+            エラーが発生したからと言って慌てずに、落ち着いてエラーメッセージを読んで対処しましょう。
+          }
+        >
+      >
+    >
+    +section{文字}<
+      +p{
+        \dfn{文字}は8bitで表現される1文字を表し、文字を扱いたい場合は引用符\codem{'...'}で囲みます。
+        OCamlにおいて、文字は\codem{char}という型で表現されます。
+
+        utopで文字をインタプリタに与えた例を見てみます。
+        \d-code(```
+          utop # 'a' ;;
+          - : char = 'a'
+        ```);%
+
+        なお、文字は1文字の表現であるため\codem{'ab'}のように2文字をシングルクォート（\codem{'}）で囲むことはできません。
+        加えて、空文字\codem{''}を書くこともできません。
+        \d-code(```
+          utop # 'ab' ;;
+          Error: Syntax error
+          utop # '' ;;
+          Error: Syntax error
+        ```);%
+
+      }
+    >
+    +section{文字列}<
+      +p{
+        \dfn{文字列}は単なる文字のリスト（文字を結合したもの）ではありません。
+        そのため、文字とは異なるデータであり、文字列を扱いたい場合は引用符\codem{"..."}で囲みます。
+
+        OCamlにおいて、文字列は\codem{string}という型で表現されます。
+
+        utopで文字列をインタプリタに与えた例は以下の通りです。
+        \d-code(```
+          utop # "abc" ;;
+          - : string = "abc"
+        ```);%
+
+        文字とは異なり、文字列は1文字であってもダブルクォート（\codem{"}）で囲みさえすればきちんと文字列として評価されます。
+        また、空の文字列\codem{""}も書くことができます。
+
+        \d-code(```
+          utop # "a" ;;
+          - : string = "a"
+          utop # "" ;;
+          - : string = ""
+        ```);%
+
+        さらに、文字列には文字列同士を結合する命令\footnote{
+          命令と表現していますが、内部的には関数として扱われます。
+          本章及びそれ以前で、まだ関数の説明を行っていないため、便宜上この表現を用いています。
+        }
+        である\codem{^}が定義されています。
+
+        \d-code(```
+          utop # "a" ^ "bc" ^ "def" ;;
+          - : string = "abcdef"
+        ```);%
+
+        もちろん、\codem{^}を用いて空の文字列と結合することも可能です。
+
+        \d-code(```
+          utop # "a" ^ "" ;;
+          - : string = "a"
+        ```);%
+
+      }
+    >
+    +section{真偽値}<
+      +p{
+        \dfn{真偽値}は真または偽を表す値です。
+        真を\codem{true}で表し、偽を\codem{false}で表します。
+        OCamlにおいて、真偽値は\codem{bool}という型で表現されます。
+
+        真偽値をインタプリタに与えた例を見てみます。
+        \d-code(```
+          utop # true ;;
+          - : bool = true
+          utop # false ;;
+          - : bool = false
+        ```);%
+
+        整数や実数では四則演算が定義されていましたが、真偽値においては論理演算が定義されています。
+        OCamlでは、「且つ」を表す\codem{&&}、「または」を表す\codem{\|\|}、「否定」を表す\codem{not}があります。
+
+        \d-code(```
+          utop # true && true ;;
+          - : bool = true
+          utop # true && false ;;
+          - : bool = false
+          utop # false && false ;;
+          - : bool = false
+
+          utop # true || true ;;
+          - : bool = true
+          utop # true || false ;;
+          - : bool = true
+          utop # false || false ;;
+          - : bool = false
+
+          utop # not true ;;
+          - : bool = false
+          utop # not false ;;
+          - : bool = true
+        ```);%
+
+        また四則演算では加減算よりも乗除算の方が優先度が高い（つまり乗除算を先に計算する）というルールがありますが、
+        真偽値においては優先度の高い順から「否定」、「且つ」、「または」というルールがあります。
+        そのため、次の2つの式は同じ意味となります。
+
+        \d-code(```
+          utop # not (true && false || not true && not false) ;;
+          - : bool = true
+          utop # not ((true && false) || ((not true) && (not false))) ;;
+          - : bool = true
+        ```);%
+      }
+      +p{
+        次に、2つ（または2つ以上）の値を比較した結果として\codem{bool}型を返す方法について説明します。
+        比較演算子として、2つの値が等しいかどうかを表す\codem{=}、2つの値が異なるかどうかを表す\codem{\<\>}、
+        与えられた1つ目の値が2つ目の値よりも大きいかどうかを表す\codem{\>}、
+        与えられた1つ目の値が2つ目の値以上かどうかを表す\codem{\>=}、
+        与えられた1つ目の値が2つ目の値よりも小さいかどうかを表す\codem{\<}、
+        与えられた1つ目の値が2つ目の値以下かどうかを表す\codem{\<=}、
+        などがあり、これらを用いてその大小を比較することができます。
+
+        \d-code(```
+          utop # 3 = 3 ;;
+          - : bool = true
+          utop # 3 <> 3 ;;
+          - : bool = false
+          utop # 3 > 2 ;;
+          - : bool = true
+          utop # 3 >= 2 ;;
+          - : bool = true
+          utop # 3 < 2 ;;
+          - : bool = false
+          utop # 3 <= 2 ;;
+          - : bool = false
+
+          utop # "abc" = "abc" ;;
+          - : bool = true
+          utop # "abc" <> "abc" ;;
+          - : bool = false
+        ```);%
+
+        文字や文字列においては、ラテン文字（abc...xyz、ABC...XYZのこと）の先頭から末尾に行くに連れて大きな値となっており、
+        ちょうど辞書の並びと一致するようになっています。
+        そのため、文字や文字列も整数や実装と同じようにその大小を比較できます。
+
+        \d-code(```
+          utop # 'b' > 'a' ;;
+          - : bool = true
+          utop # 'b' < 'a' ;;
+          - : bool = false
+
+          utop # "def" > "abc" ;;
+          - : bool = true
+          utop # "def" < "abc" ;;
+          - : bool = false
+        ```);%
+
+        なお、文字や文字列に大小関係があるからといって、整数や実数などの異なる型と比較することはできません。
+        \d-code(```
+          utop # 'a' < 1 ;;
+          Line 1, characters 6-7:
+          Error: This expression has type int but an expression was expected of type char
+
+          utop # "pi" = 3.14 ;;
+          Line 1, characters 7-11:
+          Error: This expression has type float but an expression was expected of type
+                   string
+        ```);%
+
+        最後に蛇足的な情報ですが、\codem{true}と\codem{false}にも値の大小があるため、同様の比較が可能です。
+        \d-code(```
+          utop # true > false ;;
+          - : bool = true
+          utop # true < false ;;
+          - : bool = false
+        ```);%
+
+        しかしながら、これはプログラムの読み手にとって分かりづらいかも知れないので、避けたほうが無難でしょう。
+      }
+    >
+    +section?:(`Other data`){その他のデータ}<
+      +p{
+        OCamlにおける基本的なデータは前述の通りですが、この他にもタプル、リスト、レコードなどのデータと型が存在します。
+        これらのデータについては、後ほど説明します。
+      }
+    >
+  >
+  +chapter?:(`Variables and functions`){変数と関数}<
+    +p{
+      本章では、プログラミングの基本的な考え方である変数と関数を説明します。
+
+      変数及び関数の定義方法からその利用方法について見ていきます。
+    }
+    +section?:(`Variables`){変数}<
+      +p{
+        \dfn{変数}とは、ある値をバインド（束縛）するための識別子です。
+        変数をバインドするには以下の構文を利用します。
+
+        \d-code(```
+          let <variable> = <expr>
+        ```);%
+
+        \codem{\<variable\>}は変数名を表し、\codem{\<expr\>}は式を表します。
+        これは具体的には以下のような入力になります。
+
+        \d-code(```
+          utop # let a = 123 ;;
+          val a : int = 123
+        ```);%
+
+        上記の例では、インタプリタが\codem{a}という名前の変数を新たに定義し、その値を\codem{123}という整数にバインドします。
+        インタプリタの出力結果は
+        「\codem{a}というint型の変数を定義し、その値（\codem{val}）は\codem{123}である」ことを示しています。
+
+        なお、OCamlの変数名は小文字またはアンダースコア（\codem{_}）で始まる必要があることに注意して下さい。
+        2文字目以降は、大文字、小文字、数字、アンダースコア（\codem{_}）などを自由に利用できます。
+      }
+      +frame<
+        +subsection{コラム； 変数を使う理由}<
+          +p{
+            変数がない場合を考えてみましょう。
+            一度計算した値やその計算に利用した値を再度利用したいとなった場合、
+            式全体を書き換えて再びインタプリタに入力する必要があります。
+
+            そこで再度利用しそうな計算結果や値を変数にバインドしておくことで何度も利用することができるのです。
+          }
+        >
+      >
+      +subsection{スコープと局所変数}<+p{
+        全ての変数割り当て（\dfn{変数バインディング}と呼ぶ）には、\dfn{スコープ}が存在します。
+        スコープとは、その変数バインディングを参照できるコードの範囲です。
+        utopインタプリタにて、トップレベル（単に\codem{let a = 123 \;\;}のように入力した場合など）
+        で定義した変数のスコープは、そのutop全体（つまりutop内であればどこでも参照可能）です。
+
+        一方で、インタプリタ全体ではなく式や計算過程で一時的な変数を利用したい場合が有ります。
+        このようにあるスコープの中で一時的に利用する変数を\dfn{局所変数}といい、以下の構文を用いて定義できます。
+
+        \d-code(```
+          let <variable> = <expr1> in <expr2>
+        ```);%
+
+        \ref-section(`Variables`);で示した変数の定義方法と似ていますが、ここでは式1（\codem{\<expr1\>}）の後ろに\codem{in}があり、最後に式2（\codem{\<expr2\>}）があります。
+        これは、\codem{\<expr1\>}のスコープは\codem{\<expr2\>}に限定される（つまり式2の中でのみ参照可能である）ことを示します。
+
+        具体的な例を以下に示します。
+
+        \d-code(```
+          utop # let x = 3 in x + x ;;
+          - : int = 6
+        ```);%
+
+        上記の例では、式2（\codem{x + x}）の中に出現する変数\codem{x}は、式1（\codem{3}）であることを示しており、
+        もう少しわかりやすく表現すると「一時的に変数\codem{x}を式1（\codem{3}）として定義し、式2（\codem{x + x}）を実行する」
+        ことを示しています。
+
+        そのため、\codem{x}という局所変数を\codem{3}で定義し、\codem{in}に続く\codem{x + x}は\codem{3 + 3}と評価され、
+        結果として\codem{6}が出力されています。
+
+        なお、局所変数\codem{x}のスコープが\codem{x + x}に限定されていることを確かめるには、
+        インタプリタのトップレベル（スコープ外）で\codem{x}を参照することで確認できます。
+
+        \d-code(```
+          utop # x ;;
+          Line 1, characters 0-1:
+          Error: Unbound value x
+        ```);%
+
+        上記のエラー内容は「\codem{x}という値はバインドされていない」ことを示しています。
+        つまり、トップレベルのスコープにはなく、\codem{x + x}のスコープでのみ変数名\codem{x}が参照可能であることが確認できました。
+      }>
+      +subsection{不変}<+p{
+        OCamlの変数は他のプログラミング言語と異なり\dfn{不変}です。
+        つまり、変数を定義した後に別の値で上書きできないのです。
+
+        これを確かめるために、局所変数で利用した構文を応用し以下のようにしてみます。
+
+        \d-code(```
+          let <variable0> = let <variable1> = <expr1> in <expr2>
+        ```);%
+
+        改行を入れても同じ意味になります。
+
+        \d-code(```
+          let <variable0> =
+            let <variable1> = <expr1> in
+            <expr2>
+        ```);%
+
+
+        これは、式1（\codem{\<expr1\>}）は変数1（\codem{\<variable1\>}）に束縛され、
+        スコープは式（2\codem{\<expr2\>}）に限定されており、
+        式2（\codem{\<expr2\>}）の結果が変数0（\codem{\<variable0\>}）に束縛されることを示しています。
+        もう少し直感的に表現すると「変数0（\codem{\<variable0\>}）は内部で局所変数1（\codem{\<variable1\>}）を持ち、式2（\codem{\<expr2\>}）の結果を変数0（\codem{\<variable0\>}）に束縛する」ことを示しています。
+
+        さらに、以下のように内部で複数の局所変数も定義可能です。
+
+        \d-code(```
+          let <variable0> =
+            let <variable1> = <expr1> in
+            let <variable2> = <expr2> in
+            <expr3>
+        ```);%
+
+        これは、変数0（\codem{\<variable0\>}）の内部で、
+        局所変数1（\codem{\<variable1\>}）に加えて局所変数2（\codem{\<variable2\>}）を定義し、
+        \codem{\<expr3\>}で利用することを示します。
+        このことを利用すると、
+        \codem{\<variable0\>}の内部で任意の局所変数を持つことが可能であることを分かります。
+
+        \d-code(```
+          let <variable0> =
+            let <variable1> = <expr1> in
+            let <variable2> = <expr2> in
+            ...
+            let <variable_n> = <expr_n> in
+            <expr3>
+        ```);%
+      }
+      +p{
+        さて、ここまで準備できた所で、局所変数の上書きを試みてみます。
+
+        \d-code(```
+          utop # let a = 
+            let pi = 3.14 in
+            let b = pi *. 2. in
+            let pi = 0. in
+            b ;;
+          Line 4, characters 5-7:
+          Warning 26 [unused-var]: unused variable pi.
+          val a : float = 6.28
+        ```);%
+
+        上記の例は、変数\codem{pi}を\codem{3.14}に束縛した後で、変数\codem{pi}を\codem{0}で上書きしているため、
+        計算過程は\codem{0.0 \*. 2.0}となるため、結果が\codem{0.0}であるかのように思われるかも知れません。
+        しかし結果は\codem{6.28}となっており、その計算過程は\codem{3.14 \*. 2.0}であることが分かります。
+        つまり、最初に定義した変数\codem{pi}を後述の\codem{let pi = 0.}で上書きしているわけではなく、
+        変数\codem{pi}という新しい変数が定義されます。
+        また、\codem{let pi = 0.}で定義する前に変数\codem{b}にて利用（\codem{let b = pi \*. 2.}）する際は、
+        利用する以前の定義（つまり\codem{let pi = 3.14}）を参照します。
+        最後に、警告\codem{Warning 26 [unused-var]: unused variable pi.}では「変数\codem{pi}が未使用である」ことが示されており、
+        このことからも最初に定義した変数\codem{pi}と最後に定義した\codem{pi}は異なる変数であることが分かります。
+      }>
+    >
+    +section?:(`Function`){関数}<
+      +p{
+        \dfn{関数}とは、任意の\dfn{引数}を受け取り、式を評価するための識別子です。
+        引数とは、関数に渡すパラメータのことで、数学の関数\codem{f(x)}で言えば、\codem{x}に該当します。
+        関数を定義するには以下の構文を利用します。
+
+        \d-code(```
+          let <function> <arguments...> = <expr>
+        ```);%w
+
+        上記の構文を見てお気付きかと思いますが、OCamlでは関数も変数と同じようにキーワード\codem{let}で定義できます。
+        \codem{\<function\>}は関数名を表し、\codem{\<arguments...\>}は引数を表します。
+        3つのドット（\codem{...}）は「後ろに2番目の引数、3番目の引数...のように0個以上の引数を取って良い」ことを示します。
+        \codem{\<expr\>}は、（変数で利用した構文同様に）式を表します。
+
+        また、OCamlの関数名は変数名と同様に、小文字またはアンダースコア（\codem{_}）で始まる必要があります。
+        2文字目以降は、大文字、小文字、数字、アンダースコア（\codem{_}）などを自由に利用できます。
+
+        次に、関数定義の最もシンプルな例を示します。
+
+        \d-code(```
+          utop # let add_one x = x + 1 ;;
+          val add_one : int -> int = <fun>
+
+          utop # add_one 10 ;;
+          - : int = 11
+        ```);%
+
+        上記の例では、インタプリタが\codem{add_one}という名前の関数を新たに定義しています。
+        関数\codem{add_one}は引数\codem{x}を受け取り、xに+1した結果を返します。
+
+        関数定義後のインタプリタの出力は
+        「\codem{add_one}という\codem{int -\> int}型の関数を定義し、その値は関数である」ことを示しています。
+        関数の型は\codem{A -\> B}のように表現し、「型Aの引数を受け取ったら型Bの値を返す、関数の型」を表します。
+
+        試しに\codem{add_one 10}を入力すると、その結果は\codem{11}となり、与えた引数に\codem{+1}されていることが分かります。
+
+        ここで、\codem{関数の型}と\codem{関数が返す型}を混同しないように注意して下さい。
+        上記の例で言えば、\codem{add_one 10}が\codem{11}を返しているため、
+        ついつい関数\codem{add_one}の型はint型だと考えてしまうかもしれませんが、
+        \codem{11}というのは関数が返した結果の値の型なのです。
+        関数\codem{add_one}自体は、int型の引数を1つだけ取りその結果としてint型を返す、すなわち\codem{int -\> int}型となります。
+      }
+      +frame<
+        +subsection{コラム； 型推論と型チェック}<
+          +p{
+            先程の関数\codem{add_one}を定義した際に、引数\codem{x}の型を指定しませんでした。
+            にも関わらず、\codem{x}の型はintであるという結果が得られました。
+            これは、関数の式にて\codem{x + 1}とある通り、整数の演算に用いられる\codem{+}が存在するため、\codem{x}の型はint型でなければいけません。
+
+            試しにxに整数以外（例えば実装）を渡すとエラーになります。
+
+            \d-code(```
+              utop # add_one 1.0 ;;
+              Line 1, characters 8-11:
+              Error: This expression has type float but an expression was expected of type
+            ```);%
+
+            インタプリタは\codem{let add_one x = x + 1}という関数定義からその関数が必要とする引数の型と関数が返す型\codem{val add_one : int -\> int = \<fun\>}を推論してくれました。
+            このように型を明示せずとも、関数の内容といった周辺情報及び文脈から引数の型や関数などが返す型を自動的（暗黙的）に推測してくれる機能のことを\dfn{型推論}といいます。
+            型推論のメリットは、私達が明示的に型を指定する必要がないことです。
+            
+            また、上記の例のように、引数として与えられた値が、関数の型と一致しているか（上記の例で言えば、\codem{add_one}の引数がint型であるか）をチェックすることを\dfn{型チェック}といいます。
+            型チェックのメリットは、誤った型が渡され実行されるのを未然に防げることです。
+            プログラムを書き終わって動かしている最中に間違いに気づくよりも、より早い段階で気づけた方が間違いを修正するためのコストが低く、ソフトウェア全体の信頼性向上につながります。
+          }
+        >
+      >
+      +subsection?:(`Multiargument functions`){複数の引数を持つ関数}<+p{
+        \ref-section(`Function`);で示した通り、関数は1つ以上の引数を取ることができます。
+        例えば、以下のような\dfn{第一引数}\footnote{
+          引数を与える順番に応じて、第一引数、第二引数、...、第N引数という呼び方をします。
+        }
+        と第二引数の差を返す関数を考えます。
+
+        \d-code(```
+          utop # let diff x y = x - y ;;
+          val diff : int -> int -> int = <fun>
+        ```);%
+
+        インタプリタの出力にある\codem{int -\> int -\> int}がこの関数の型になります。
+        この関数の型は右結合で解釈するため、\codem{(int -\> int) -\> int}ではなく、\codem{int -\> (int -\> int)}です。
+        この意味は「第一引数としてint型を受け取り、第二引数としてint型を受け取り結果としてint型を返す関数の型」となります。
+
+        これを、もう少し自然に解釈しようとすると「2つのint型な引数をとり、int型の結果を返す関数」になります。
+
+        最後に、\codem{\<fun\>}について説明します。
+        \codem{\<fun\>}は定義されたものが関数であることを示します。
+        整数や実数を定義した際は、その具体的な値が示されましたが、関数の場合はその内部まで示されることはありません。
+      }>
+      +subsection{匿名関数（無名関数）}<+p{
+        \dfn{匿名関数（無名関数）}とは、関数名を持たない関数です。
+        つまり、変数や前述の関数と違って、後から変数名や関数名を指定して再利用することができない、ということです。
+        しかしながら、関数名をつけるまでもない（例えば1度しか利用しない）関数の方が便利な場合もあるため、本節で説明します。
+        匿名関数を作るには以下の構文を利用します。
+
+        \d-code(```
+          fun <arguments...> -> <expr>
+        ```);%
+
+        これで、1つ以上の引数\codem{\<arguments...\>}を受け取って、式\codem{\<expr\>}を実行しその結果を返す、という関数を表します。
+        匿名関数を利用した例を以下に示します。
+
+        \d-code(```
+          utop # fun x -> x + 1 ;;
+          - : int -> int = <fun>
+
+          utop # (fun x -> x + 1) 10 ;;
+          - : int = 11
+        ```);%
+        
+        匿名関数定義後のインタプリタの出力は「直前(\codem{-})に入力した結果の型は\codem{int -\> int}型で、その値は関数である」ことを示しています。
+        匿名関数は特定の関数名にバインドされないため、匿名関数の後ろに\dfn{実引数}\footnote{
+          実引数とは、関数を利用する際に実際に渡される引数のことです。
+          一方で、関数定義の際に記述する引数（例えば\codem{fun x -\> x + 1}の\codem{x}に当たる部分）は\dfn{仮引数}と呼びます。
+        }を渡して利用します。
+        上記の例にもある通り、匿名関数に10を渡した場合\codem{(fun x -\> x + 1) 10}の結果、確かに\codem{+1}されて値が返ってきたことが分かります。
+      }
+      +p{
+        次の例は少し発展的ですが、関数の引数に関数を渡すことも可能です。
+
+        \d-code(```
+          utop # let add_note_header x = "Note: " ^ x ;;
+          val add_note_header : string -> string = <fun>
+
+          utop # (fun g -> g "Hello world.") add_note_header ;;
+          - : string = "Note: Hello world."
+        ```);%
+
+        上記の例では、まず\codem{add_note_header}という関数を定義しています。
+        この関数は引数に文字列を取り、その文字列の先頭に\codem{`Note: `#}という文字列を結合して返します。
+        次に\codem{(fun g -\> g "Hello world.")}について説明します。
+        \codem{(fun g -\> g "Hello world.")}は関数\codem{g}を引数として取り、その関数\codem{g}を"Hello world."に適用した結果を返す関数になります。
+        その結果、\codem{Note: Hello world.}という文字列を返しています。
+
+        OCamlの重要なポイントの1つとして、関数も通常の値として扱われることがあげられます。
+        つまり通常の値と同様に、ある関数に別の関数を引数として渡したり、ある関数から異なる関数を返すなど、が可能です。
+        また、\dfn{letバインディング}\footnote{
+          \codem{let}を用いたバインディングを指します。
+          なお、変数におけるバインディングもletバインディングですが、変数の場合は特に変数バインディングと呼びました。
+        }
+        を用いて、匿名関数に関数名をつけることもできます。
+
+        \d-code(```
+          utop # let add_one = (fun x -> x + 1) ;;
+          val add_one : int -> int = <fun>
+        ```);%
+
+        上記の例にて、匿名関数\codem{(fun x -\> x + 1)}に対して変数名\codem{add_one}をつけることができました。
+        \codem{add_one}という変数の値を匿名関数\codem{(fun x -\> x + 1)}で定義したことになります。
+      }
+      +p{
+        また\codem{add_one}は関数定義の構文に従って、以下のように定義するのと同等です。
+
+        \d-code(```
+          utop # let add_one x = x + 1 ;;
+          val add_one : int -> int = <fun>
+        ```);%
+
+        つまり、名前付き関数を定義する以下の構文
+
+        \d-code(```
+          let <function> <arguments...> = <expr>
+        ```);%
+
+        と、無名関数を用いて変数を定義する構文
+
+        \d-code(```
+          let <variable> <arguments...> = <expr>
+        ```);%
+
+        は、同等であり、名前付き関数を定義する構文は後者の\dfn{糖衣構文}\footnote{
+          読みやすさ・書きやすさのための導入される書き方をいいます。
+          複雑で分かりにくい構文を全く同じ意味となるように、シンプルで分かりやすい書き方で書けるようにしたもののことです。
+        }となります。
+      }>
+      +subsection?:(`Currying`){カリー化}<+p{
+        \ref-subsection(`Multiargument functions`);で紹介した関数\codem{diff}を思い出しましょう。
+        関数\codem{diff}は以下のように定義していました。
+
+        \d-code(```
+          utop # let diff x y = x - y ;;
+          val diff : int -> int -> int = <fun>
+        ```);%
+
+        これを匿名関数を利用して次のように書き直してみます。
+
+        \d-code(```
+          utop # let diff =  (fun x -> (fun y -> x - y)) ;;
+          val diff : int -> int -> int = <fun>
+        ```);%
+
+        \ref-subsection(`Multiargument functions`);でも説明した通り、関数\codem{diff}の型は\codem{int -\> (int -\> int)}でした。
+        ここで、匿名関数を利用し書き直した定義を見てみます。
+        \codem{let diff =  (fun x -\> (fun y -\> x - y))}は、int型の引数を1つ受け取る関数\codem{(fun x -\> (...))}であり、
+        その関数は別の関数\codem{(fun y -\> x - y)}を返す関数であることが分かります。
+        このことから、両者の意味するところが似ている（同じ）であることが読み取れます。
+
+        この関数\codem{diff}は内部的にネストしており、\codem{x - y}は「1つ外側の関数でバインドされた値\codem{x}」と「同関数内でバインドされた\codem{y}」を参照しています。
+
+        このように、複数の引数を取る関数を、「元の関数（この例では\codem{diff}）の最初の引数（この例では\codem{x}）だけを取り」且つ「元の関数の残りの引数（この例では\codem{y}）を取り結果を返す関数」となるような関数への変換あるいはその関数を\dfn{カリー化}と言います。
+      }
+      +p{
+        カリー化を利用すると関数\codem{diff}から次のような関数を生成できます。
+
+        \d-code(```
+          utop # let diff_from_ten y = diff 10 y ;;
+          val diff_from_ten : int -> int = <fun>
+
+          utop # diff_from_ten 5 ;;
+          - : int = 5
+        ```);%
+
+        上記の例では、関数\codem{diff_from_ten}を定義し、この関数は10と与えられた引数\codem{y}との差を返します。
+        このように、カリー化された関数（この例では\codem{diff}）に引数の一部を適用して新しい関数（この例では\codem{diff_from_ten}）を取得することができ、これを\dfn{部分適用}と言います。
+
+        また、匿名関数で利用した\codem{fun}キーワードはカリー化のための独自の構文をサポートしており、複数の引数を取ることができます。
+        その結果、前述の関数\codem{diff}は次のように書き直すこともできます。
+
+        \d-code(```
+          utop # let diff = (fun x y -> x - y) ;;
+          val diff : int -> int -> int = <fun>
+        ```);%
+      }
+      >
+      +subsection?:(`Recursive functions`){再帰関数}<+p{
+        \dfn{再帰関数}とは、関数内で自分自身の呼び出しが含まれている関数です。
+        自分自身の呼び出しを\dfn{再帰呼び出し}といいます。
+        再帰関数を定義するには以下の構文を利用します。
+
+        \d-code(```
+          let rec <function> <arguments...> = <expr>
+        ```);%
+
+        上記の構文は名前付きの関数とほとんど同じで、
+        唯一違う点は\codem{let}キーワードの後に\codem{rec}キーワードが追加されていることです。
+        この\codem{rec}キーワードを付与することで、この関数が再帰関数であることを示します。
+
+        再帰関数を利用する場合、単純に自分自身を呼び出してしまうと無限ループに陥ってしまうため、
+        後述する\dfn{条件分岐}や\dfn{パターンマッチ}を用いる必要があります。
+        そのため、本節では構文の紹介に留め、条件分岐やパターンマッチの節で改めて解説します。
+      }>
+    >
+    +section?:(`Practice of function`){実践}<
+      +p{
+       これまでに紹介したデータ、変数、関数を用いてプログラムを作成してみましょう。
+      }
+      +subsection{関数としての演算子}<+p{
+        \ref-chapter(`Basic data and type`);で、各データ及び型に対する演算子をいくつか紹介しました。
+        これまで見てきた例では、演算子は次のように値と値の間に置いていました\footnote{
+          これを\dfn{中置演算子}といいます。
+        }。
+
+        \d-code(```
+          utop # 2 + 3 ;;
+          - : int = 5        
+        ```);%
+
+        OCamlでは、中置演算子をカッコ\codem{(...)}で囲むことで関数として扱うことができます\footnote{
+          中置演算子と関数の違いは構文的な違いしかないのです。
+        }。
+        そのため、以下のように記述することができます。
+
+        \d-code(```
+          utop # (+) 2 3 ;;
+          - : int = 5
+        ```);%
+        
+        関数が次の文字で定義される場合、その関数は演算子として扱うことができます\footnote{
+          ただし、先頭の文字が\codem{\$}、\codem{!}、\codem{~}ではないことが条件です。
+        }。
+
+        \listing{
+          * \codem{+}
+          * \codem{-}
+          * \codem{\*}
+          * \codem{/}
+          * \codem{=}
+          * \codem{\<}
+          * \codem{\>}
+          * \codem{\$}
+          * \codem{\%}
+          * \codem{.}
+          * \codem{:}
+          * \codem{?}
+          * \codem{\@}
+          * \codem{^}
+          * \codem{!}
+          * \codem{~}
+        }%
+
+        一方で、\codem{mod}などの上記に含まれない文字で構成される、事前定義された中置演算子も存在します。
+        具体的な例として、与えられた2つの数を2倍してから可算する\codem{++}という演算子を作成してみます。
+
+        \d-code(```
+          utop # let (++) x y = (x * 2) + (y * 2) ;;
+          val ( ++ ) : int -> int -> int = <fun>
+
+          utop # 3 ++ 4 ;;
+          - : int = 14
+        ```);%
+
+        演算子を定義するには関数名を\codem{(...)}で囲む必要があります。
+        この演算子は\codem{(3 \* 2) + (4 \* 2) = 14}となっており、確かに想定通りに動作しています。
+      }
+      +p{
+        ただし、アスタリスク（\codem{\*}）だけは注意して下さい。
+        例えば、\codem{\*}を利用して独自の中置演算子を定義しようとして、以下のように記述するとエラーとなってしまいます。
+
+        \d-code(```
+          utop # let (***) x y = (x ** y) ** y;;
+          Line 1, characters 17-18:
+          Error: Unbound value x
+          Hint: If this is a recursive definition,
+          you should add the 'rec' keyword on line 1
+        ```);%
+
+        エラーには「xがバインドされていない」旨が示されていますが、引数で与えた\codem{x}はきちんと利用しています。
+        これはインタプリタが定義をうまく読み取れていないことになります。
+        その原因は、OCamlのコメントが\codem{(\*...\*)}で表現されるためです。
+        つまり、上記のかかき書き方の場合、\codem{(\*\*\*)}がコメントとして解釈され、
+        インタプリタが次のように解釈したのです。
+
+        \d-code(```
+          utop # let x y = (x ** y) ** y;;
+          Line 1, characters 17-18:
+          Error: Unbound value x
+          Hint: If this is a recursive definition,
+          you should add the 'rec' keyword on line 1
+        ```);%
+
+        上記の定義を見ると、丁度再帰関数のような定義に見えますが、再帰を表す\codem{rec}がないため、
+        インタプリタは\codem{rec}を付けるように指示しているわけです。
+        これを回避するためには、カッコ（\codem{(}及び\codem{)}）とアスタリスク（\codem{\*}）の間にスペースを挿入する必要があります。
+        以下のように定義すると意図した通りに\codem{\*\*\*}を定義できます。
+
+        \d-code(```
+          utop # let ( *** ) x y = (x ** y) ** y;;
+          val ( *** ) : float -> float -> float = <fun>
+        ```);%
+      }
+      +p{
+        次に少し実用的な中置演算子を定義してみます。
+        これはいくつかのサードパーティライブラリで提供されている場合がありますが、次のように容易に実装可能です。
+
+        \d-code(```
+          utop # let (|>) x f = f x ;;
+          val ( |> ) : 'a -> ('a -> 'b) -> 'b = <fun>
+        ```);%
+
+        この例では、中置演算子\codem{\|\>}を定義しており、
+        「多相型の引数\codem{x}」と「多相型の引数を1つとって多相型を返す関数\codem{f}」を受け取って、
+        「\codem{f x}（つまり関数\codem{f}に引数\codem{x}を適用した結果）を返す」関数になります。
+
+        これは、
+
+        \d-code(```
+          utop # f x ;;
+        ```);%
+
+        と書いていたものを、
+
+        \d-code(```
+          utop # x |> f ;;
+        ```);%
+
+        と書けるようにしたに過ぎません。
+        この中置演算子は、一見なんの意味もないように見えます。
+        しかし\codem{\|\>}は、シェルでいうところの\dfn{パイプ}と似た機能になります。
+
+        例えば、これまで見てきた関数の適用だけを利用すると、
+
+        \d-codem{
+          (\metasub(${n}){f} (\metasub(${n - 1}){f} (\metasub(${n - 2}){f} (... (\meta{f} \meta{x})))))
+        }%
+
+        のように書かなければならず、慣れていないと読みづらさを感じるかも知れませんが、
+        \codem{\|\>}を利用すると、丁度シェルで結果をパイプで渡していくような感覚で、
+
+        \d-codem{
+          \meta{x} `|>` \meta{f} \|\> ... `|>` \metasub(${n - 2}){f} `|>` \metasub(${n - 1}){f} `|>` \metasub(${n}){f}
+        }%
+
+        のように書くことができます。
+
+      }>
+      +subsection{ラベル付き引数}<
+        +p{
+          これまで定義してきた関数は、引数の位置（順番）によって意味を持たせていました。
+          OCamlは、\dfn{ラベル付き引数}という機構を利用して引数に名前を付け、位置に依存しない関数定義が可能です。
+          例えば、除算の商を出力する関数\codem{my_mod}を自作するとします。
+
+          \d-code(```
+            utop # let my_mod ~divisor ~dividend = dividend /. divisor ;;
+            val my_mod : divisor:float -> dividend:float -> float = <fun>
+
+            utop # my_mod 10. 1. ;;
+            - : float = 0.1
+          ```);%
+
+          上記の関数は、割る数\codem{~divisor}と割られる数\codem{~dividend}というラベルがついた引数を持ちます。
+          ラベル付き引数は仮引数名の先頭にチルダ\codem{~}を付けることで、それがラベル付き引数であることを示します。
+
+          ラベル付き引数を利用するには、ラベルと実引数をコロン（\codem{:}）で繋いで渡します。
+          ラベル付き引数は位置に依存しないため、引数の順序を入れ替えても同様の結果を得ることができます。
+
+          \d-code(```
+            utop # my_mod ~divisor:10. ~dividend:1. ;;
+            - : float = 0.1
+
+            utop # my_mod ~dividend:1. ~divisor:10. ;;
+            - : float = 0.1
+          ```);%
+
+          下記のようにこれまで通り引数の位置に応じて意味を持たせることもできます。
+
+          \d-code(```
+            utop # my_mod 10. 1. ;;
+            - : float = 0.1
+          ```);%
+
+          OCamlでは\dfn{ラベルパニング}と呼ばれる機構をサポートしており、これはラベルとその値として渡される変数の名前が一致している場合、
+          引数にラベルを記述するだけでそのラベル名と名称が一致する変数を参照してくれるものです。
+          この例を下記に示します。
+
+          \d-code(```
+            utop # let divisor = 10. in
+              let dividend = 1. in
+              my_mod ~divisor ~dividend ;;
+            - : float = 0.1
+          ```);%
+
+          ラベル付き引数は、次のケースで特に有用です。
+
+          \listing{
+            * 引数の位置（順序）に依存させたくない場合
+            * 引数の型からその意味が推測できない場合
+            * 同じ型の引数が複数あり、どの引数にどの意味が紐づくか混乱する場合
+            * 引数の数が多すぎる場合
+          }
+        }
+      >
+      +subsection{オプション型とオプショナル引数}<
+        +p{
+          これまでは関数の引数は1つも欠かすことができませんでした。
+          関数定義で定義した仮引数の数と、関数呼び出しで利用する実引数の数が一致している必要がありました。
+          一方、本節で説明する\dfn{オプショナル引数}を利用することで、これを省略することができます。
+        }
+        +p{        
+          オプショナル引数を説明する前に\dfn{オプション型}を説明します。
+          なぜならオプショナル引数を利用するにはオプション型が必要だからです。
+
+          OCamlにおけるオプション型は次のように定義されています。
+
+          \d-code(```
+            type 'a option = None
+                           | Some of 'a
+          ```);%
+
+          \codem{None}は値がないことを示すコンストラクタであり、\codem{Some}は多相型\codem{'a}の値が存在することを示すコンストラクタです。
+          つまり\codem{'a option}型は「値を持たないか、または'a型の値を持つ」ことを示します。
+        }
+        +p{
+          コメント用文字列を生成する関数\codem{add_comment}を用いて、オプショナル引数がどのようなものか見ていきましょう。
+
+          \d-code(```
+            utop # let add_comment ?comment_header x =
+              let comment_header = match comment_header with
+                | None -> "#"
+                | Some x -> x
+              in
+              comment_header ^ " " ^ x ;;
+            val add_comment : ?comment_header:string -> string -> string = <fun>
+          ```);%
+
+          上記関数は、オプショナル引数を表すクエスチョンマーク（\codem{?}）を用いて、第一引数の\codem{comment_header}がオプショナル引数であることを示しています。
+          関数呼び出しの際に、チルダ（\codem{~}）とコロン（\codem{:}）及びそれに続けて変数の値を記述することでオプショナル引数に値を渡すことができます。
+          関数呼び出しの例を下記に示します。
+
+          \d-code(```
+            utop # add_comment ~comment_header:"%" "comment body" ;;
+            - : string = "% comment body"
+          ```);%
+
+          上記の例を見ると、オプショナル引数の呼び出し方はラベル付き引数の呼び出し方と全く同じことが分かりますね。
+          また、オプショナル引数を省略した場合、関数定義の\codem{match comment_header with}の\codem{None -\> "\#"}が適用されます。
+
+          \d-code(```
+            utop # add_comment "comment body" ;;
+            - : string = "# comment body"
+          ```);%
+
+          オプショナル引数のメリットとして、呼び出し側が意識する必要のないまたはその必要性が薄い引数を無視できることがあげられます。
+          一方デメリットとして、オプショナル引数を明示的に指定しない場合、オプショナル引数の値は関数内部で暗黙的に補完され処理されるため、
+          意図しない動作を選択してしまう可能性があげられます。
+
+          そのため、ユーザから見える関数でのみオプショナル引数を利用し、ユーザから見えないような裏側で利用する関数はオプショナル引数の利用を避けたほうが良いでしょう。
+        }
+      >
+    >
+  >
+  +chapter?:(`Conditional branch`){条件分岐}<
+    +p{
+      \ref-chapter(`Variables and functions`);では、基本的な変数及び関数の定義を見てきましたが、
+      ユーザが与えたデータ（実際にはユーザが入力した値など）に応じて、プログラムの処理を切り替えたい場合があります。
+      本章では、単純な分岐を用いたプログラムについて説明します。
+    }
+    +section?:(`If expressions`){if式}<
+      +p{
+        条件分岐とは与えられた条件に応じて、処理を切り替えたい場合に用いられます。
+        OCamlでは、\dfn{if式}\footnote{
+          OCamlではifは式になります。他のプログラミング言語ではifは文（ステートメント）として表現される場合があり、
+          OCamlのいつくかのドキュメントでも他言語との親和性のためにif文やifステートメントと表現されることがあります。
+        }を用いることで条件に応じた場合分けが可能です。
+  
+        \d-code(```
+          if <boolean-condition> then <expr>
+          または
+          if <boolean-condition> then <expr> else <expr>
+        ```);%
+  
+        上記の構文の\codem{boolean-condition}は条件を示しており、条件は必ずbool型でなければなりません。
+        なお、if式はelse節を省略することができ、
+        これを表現したのが前者（\codem{if \<boolean-condition\> then \<expr\>}）になります。
+        また、if式中の\codem{then}直後の\codem{\<expr\>}及び\codem{else}直後の\codem{\<expr\>}は同じ型を返す必要があります。
+  
+        if式は条件\codem{boolean-condition}が\codem{true}の場合、\codem{then}節の\codem{\<expr\>}を実行します。
+        条件が\codem{false}の場合、もし\codem{else}節があれば\codem{else}節の\codem{\<expr\>}を実行します。
+  
+        以下にif式を利用した例を示します。
+  
+        \d-code(```
+          utop # if true then "ok" else "ng" ;;
+          - : string = "ok"
+  
+          utop # if false then "ok" else "ng" ;;
+          - : string = "ng"
+        ```);%
+  
+        上記の例では直接bool型を書きましたが、真偽値は比較演算子を利用することでも得られることを思い出して下さい。
+        比較演算子を利用し、次のように書くこともできます。
+  
+        \d-code(```
+          utop # if 1 < 2 then "ok" else "ng" ;;
+          - : string = "ok"
+  
+          utop # if 1 > 2 then "ok" else "ng" ;;
+          - : string = "ng"
+        ```);%
+  
+        なお、条件がbool型でない場合や\codem{then}節及び\codem{else}節の式が同じ型を返さない場合はエラーとなります。
+  
+        \d-code(```
+          utop # if 1 then "ok" else "ng" ;;
+          Line 1, characters 3-4:
+          Error: This expression has type int but an expression was expected of type 
+                 bool because it is in the condition of an if-statement
+  
+          utop # if 1 > 2 then "ok" else -1 ;;
+          Line 1, characters 24-26:
+          Error: This expression has type int but an expression was expected of type
+                   string
+        ```);%
+  
+        上記の例において、1つ目のエラーは「int型が与えられたが、ifステートメント条件にはbool型を期待していた」ことが示されており、2つ目のエラーは「\codem{else}節の式にてint型が与えられたが、string型を期待していた」ことが示されています。
+      }
+      +p{
+        しかしながら、これもあまり実用的な例ではないため、以下により実践的な例を示します。
+  
+        \d-code(```
+          utop # let min x y =
+            if x < y then x else y ;;
+          val min : 'a -> 'a -> 'a = <fun>
+  
+          utop # min 10 100 ;;
+          - : int = 10
+  
+          utop # min 1000 100 ;;
+          - : int = 100
+        ```);%
+  
+        上記の例では、インタプリタが\codem{min}という名前の関数を新たに定義しています。
+        関数\codem{min}は2つの引数を取り、それら2つの引数の大小を比較し、小さい方の値を返します。
+  
+        関数定義後のインタプリタの出力は、
+        「\codem{min}という\codem{'a -\> 'a -\> 'a}型の関数を定義し、その値は関数である」ことを示しています。
+      }
+      +p{
+        ここで\codem{'a}という新しい表現が登場しました。
+        これは\dfn{型変数}と呼ばれ、「どのような型に属してもよい」ということを表しています。
+        なお、型変数が複数ある場合は、\codem{'a}、\codem{'b}のように\codem{'}を付けた小文字のラテン文字で表されます。
+        型変数は自由に変化して良い変数であるため「型の一般化」と考えることができます。
+        型変数は式を評価する際に具体的な型に置き換わるため、例えばint型を入れた場合はint型として処理されます。
+        int型以外の型を与えることができる例として、string型とfloat型を与えた例を以下に示します。
+  
+        \d-code(```
+          utop # min "abc" "def" ;;
+          - : string = "abc"
+  
+          utop # min 100.0 10.0 ;;
+          - : float = 10.
+        ```);%
+  
+        このように、どのような型に属してもよいという性質を\dfn{多相性}といい、
+        また型変数を含むような型を\dfn{多相型}といいます。多相型を持つ関数を多相関数と呼びます。
+  
+        ここで、改めて\codem{'a -\> 'a -\> 'a}型を解釈し直してみると、
+        関数\codem{min}は'a型の引数を2つ受け取り、その結果として\'a型を返す関数だと分かります。
+        ただし、\'aに任意の型を当てはまることができるからといって、
+        第一引数の型と第二引数の型を異なる型にすることはできません。
+        \codem{'a}型は、その実行の時々で統一されている必要があります。
+      }
+      +p{
+        最後に、ifが式であることを利用して、簡潔にプログラムを表現できる例を紹介します。
+        まずは、これまで書いてきたようにifを利用する例を示します。
+  
+        \d-code(```
+          utop # let calc_with_tax price year =
+            if year < 2019 then price *. 1.08
+            else price *. 1.1 ;;
+          val calc_with_tax : float -> int -> float = <fun>
+        ```);%
+  
+        上記の例は、税込み価格を計算する関数\codem{calc_with_tax}を定義したもので、
+        第一引数にはモノの金額を取り、第二引数には購入年を取ることにします。
+        2019年より前に購入したものであれば、8\%の税率で、それ以外は10\%の税率で計算します。
+        （単純化のため、税率が変更された年月日と完全には一致していない且つ8\%以前の税率は考慮しないものとします）。
+        もちろん、これでも期待通りに動作しますが、\codem{then}及び\codem{else}節の\codem{price \*.}が重複しており、
+        少し冗長な気もします。
+  
+        この場合、ifを式と見なすことで次のようにコードを修正できます。
+  
+        \d-code(```
+          utop # let calc_with_tax price year =
+            price *. (if year < 2019 then 1.08 else 1.1) ;;
+          val calc_with_tax : float -> int -> float = <fun>
+        ```);%
+  
+        上記の変更は、if式が税率を返すことで\codem{price \*.}の重複を排除し、よりすっきりしたコードになりました。
+        このようにifは式として組み込めるため、場合によってはすっきりしたコードを書けるケースがあります。
+      }
+    >
+  >
+  +chapter?:(`Tuple and pattern matching`){タプルとパターンマッチ}<
+    +p{
+      \ref-chapter(`Conditional branch`);にて、if式を用いた条件分岐について説明しました。
+      if式は条件部分にbool型を取ることで条件分岐を行い、then節及びelse節のどちらか一方を実行するものでしたが、
+      より複雑なパターンやそれに応じた分岐を扱いたい場合もあります。
+      本章では、より複雑なパターンの表現方法やそれを用いた分岐について説明します。
+    }
+    +section?:(`Tuple`){タプル}<
+      +p{
+        \dfn{タプル}（Tuple）は1つ以上のデータ（要素）を並べてひとまとめのデータにしたものです。
+        別の言い方をすれば、タプルはそれぞれ異なる型の値を順序付けて並べたコレクションです。
+
+        OCamlにおいて、タプルは値をカンマ（\codem{,}）で区切って表現します。
+
+        \d-code(```
+          utop # (1, "one") ;;
+          - : int * string = (1, "one")
+        ```);%
+
+        タプルの型（tuple型）は、各要素の型をアスタリスク（\codem{\*}）でつないだものになります。
+        上記の例では、int型とstring型を要素として持つタプルを定義しています。
+        タプルはデータであるため、整数や実数のように変数にバインドできます。
+
+        \d-code(```
+          utop # let tuple = (1, "one") ;;
+          val tuple : int * string = (1, "one")
+        ```);%
+
+        また、タプルは要素にタプルをとることができます。
+
+        \d-code(```
+          utop # ((1, "one"), 1) ;;
+          - : (int * string) * int = ((1, "one"), 1)
+        ```);%
+
+        上記の例は、int型とstring型のタプル（\codem{(int \* string)}）とint型を要素に持つタプルを表します。
+      }
+    >
+    +section?:(`Pattern matching`){パターンマッチ}<
+      +p{
+        そもそも\dfn{パターン}とはなんでしょうか。
+        OCamlにおいて、パターンは厳密には式ではなく、これまで紹介した型（int型、char型、string型、bool型、...）や
+        \ref-section(`Tuple`);のtuple型、変数などの要素の並びを確かめるものです。
+        パターンはそれ単体で成り立つものではなく、後述する構文や一部の機能として利用されます。
+        以降でこのパターンの具体的な利用方法についても見ていきます。        
+      }
+      +subsection?:(`Let binding pattern support`){letバインディングにおけるパターン}<+p{
+        letバインティングは、パターンの利用をサポートしています。
+        パターンは、以下の構文で表現されます。
+
+        \d-code(```
+          (<variable>, ...)
+        ```);%
+
+        \codem{\<variable\>}は変数名を表し、それに続く3つのドット（\codem{...}）は
+        「後ろに2番目の変数、3番目の変数...のように0個以上の変数を取って良い」ことを示します。
+        パターンで用いるこの変数を\dfn{パターン変数}といいます。
+        letバインディングでは、パターンを以下のように利用できます。
+
+        \d-code(```
+          let (<variable>, ...) = <expr>
+        ```);%
+
+        上記の構文は、\codem{\<expr\>}が返すtuple型の要素をパターン\codem{(\<variable\>, ...)}にマッピングすることを示しています。
+        ここで、\codem{\<expr\>}が返すtuple型の要素数とパターンである\codem{(\<variable\>, ...)}の変数の数が一致する必要があることに注意して下さい。
+
+        以下にletバインディングにおけるパターンの利用例を示します。
+
+        \d-code(```
+          utop # let (x, y) = (1, "one") ;;
+          val x : int = 1
+          val y : string = "one"
+
+          utop # x ;;
+          - : int = 1
+
+          utop # y ;;
+          - : string = "one"
+        ```);%
+
+        上記の例では、タプル\codem{(1, "one")}の各要素を、変数\codem{x}及び\codem{y}にバインドしています。
+        変数\codem{x}にはタプルの1番目の要素である\codem{1}がバインドされ、
+        変数\codem{y}にはタプルの2番目の要素である\codem{"one"}がバインドされていることがわかります。
+        このように、パターンを用いることで一度に変数を定義することができます。
+
+        最後に、パターン変数の数とタプルの要素数が一致しない場合はエラーとなることに注意して下さい、
+
+        \d-code(```
+          utop # let (x, y) = (1, "one", 3.14) ;;
+          Line 1, characters 13-29:
+          Error: This expression has type 'a * 'b * 'c
+                 but an expression was expected of type 'd * 'e
+        ```);%
+
+        上記のエラーは「式\codem{(1, "one", 3.14)}は3つの要素を持つtuple型\codem{'a \* 'b \* 'c}を返すが、（パターンは2つの変数しかないため）2つの要素を持つtuple型\codem{'d \* 'e}が期待された」ことが示されています。
+        復習になりますが、\codem{'a,'b,'c,'d,'e}のように\codem{'}がついたものは型変数であり、
+        これは「どのような型に属してもよい」つまり「任意の型を当てはめてよい」性質を持つものだったことを思い出して下さい。
+      }>
+      +subsection?:(`Match expression`){match式}<+p{
+        if式は条件部分にbool型を取ることで条件分岐を行い、then節及びelse節のどちらか一方を実行するものでしたが、
+        より複雑なパターンやそれに応じた分岐を扱いたい場合もあります。
+        より複雑なパターンに対応するには、\dfn{match}式を利用します。
+        OCamlでは、match式の利用を\dfn{パターンマッチ}または\dfn{パターンマッチング}といいます。
+
+        パターンマッチは以下の構文を利用します。
+
+        \d-code(```
+          match <expr0> with
+          | <pattern1> -> <expr1>
+          | ...
+        ```);%
+
+        この構文は、まず\codem{\<expr0\>}を評価し、その結果を\codem{\<pattern\>}\footnote{
+          構文中には\codem{\<pattern\>}という表現は出現しておらず\codem{\<pattern1\>}という表現のみ出現していますが、
+          条件分岐のためのパターンを区別したいため、便宜上\codem{\<pattern1\>}としています。
+        }と照合します。
+        パターンは上から順に評価され、もし一致するパターンがあれば、その右辺にある\codem{\<expr\>}を評価します。
+        \codem{\|}は「または」を意味します。
+        また、各パターンの\codem{-\>}の右辺にある\codem{\<expr\>}は、全て同じ型を返す必要があります。
+        これは、if式のthen、else節の\codem{\<expr\>}が同じ型を返さなければいけないことと同じです。
+        パターンマッチを利用した例を以下に示します。
+
+        \d-code(```
+          utop # match (1, 2) with
+            | (x, y) -> x + y ;;
+          - : int = 3
+        ```);%
+
+        上記の例は、tuple型である\codem{(1,2)}に対してパターンマッチを適用し、
+        タプルの1番目の要素である\codem{1}をパターン中の\codem{x}に、タプルの2番目の要素である\codem{2}をパターン中の\codem{y}に
+        バインドし、最後に\codem{x + y}を実行した結果を返します。
+        match式において、\codem{(x, y)}がパターン変数に該当します。
+        また、パターンマッチを関数に組み込んで利用することもできます。
+
+        \d-code(```
+          utop # let add tuple = match tuple with
+            | (x, y) -> x + y ;;
+          val add : int * int -> int = <fun>
+        ```);%
+
+        上記の例では、インタプリタが\codem{add}という名前の関数を定義しています。
+        関数\codem{add}は引数として\codem{int \* int}型のタプルをとります。
+        以降の処理は前述したものと同じで、タプルの要素をパターン変数である\codem{x}及び\codem{y}にバインドし、
+        最後に\codem{x + y}の結果を返します。
+        関数の型は\codem{int \* int -\> int}であり、
+        2つのint型の要素を持つタプルを引数にとり、その結果としてint型を返すことが分かります。
+      }
+      +p{
+        また、letバインディングのパターンと一致しますが、関数\codem{add}の引数である\codem{tuple}は必ず2つの整数を要素として持つ必要があります。
+        これは、パターンが\codem{(x, y)}となっており、必ず2つの要素と照合するようになっているためです。
+        このことは、関数の型からも読み取ることができ、
+        関数の型\codem{int \* int -\> int}において引数の型が\codem{int \* int}となっていることからも2つの整数の要素が必要であることが分かります。
+      }
+      +p{
+        先程定義した関数は以下のように利用できます。
+
+        \d-code(```
+          utop # add (3, 4) ;;
+          - : int = 7
+        ```);%
+
+        また、OCamlでは引数にパターンを書くこともでき、次のような定義も可能です。
+
+        \d-code(```
+          utop # let add (x, y) = x + y ;;
+          val add : int * int -> int = <fun>
+
+          utop # add (3, 4) ;;
+          - : int = 7
+        ```);%
+
+        関数内でパターンマッチを利用した例と同じ結果が得られました。
+      }
+      +p{
+        次に、match式におけるパターンの注意点を説明します。
+        例えば、同じ値のペアを取得したいからといって、以下のようにパターンを書くことはできません。
+
+        \d-code(```
+          utop # let double tuple = match tuple with
+            | (x, x) -> x + x ;;
+          Line 2, characters 8-9:
+          Error: Variable x is bound several times in this matching
+        ```);%
+
+        上記の例の作者は、関数\codem{double}はタプルを受け取るのですが、そのタプルの値が同じであることを期待していました\footnote{
+          関数の名前的に、タプルの要素を2倍にしたかったのでしょう。
+        }。
+
+        しかしながら、エラーを読むと「パターン変数\codem{x}が複数回バインドされている」ことが分かります。        
+        このように、同じ名前のパターン変数を利用することはできず、
+        これはmatch式に限らず、letバインディングにおけるパターンの利用であっても同じです。
+        以下は、letバインディングにて同じ名前のパターン変数を利用しようとして、エラーとなった例です。
+
+        \d-code(```
+          utop # let (x, x) = (1, "one") ;;
+          Line 1, characters 8-9:
+          Error: Variable x is bound several times in this matching
+        ```);%
+
+        パターンはあくまで並びや配置に関してのみ利用できます。
+        同時に、パターン変数はお互いに異なる変数名である必要があります。
+        そのため、上記の1つ目の例を正しく動作させるためには、
+
+        \d-code(```
+          utop # let double tuple = match tuple with
+            | (x, y) -> x + y ;;
+          val double : int * int -> int = <fun>
+        ```);%
+
+        のようにお互いに異なるパターン変数名にするか、2倍にしたいという作者の意図を汲むのであれば、
+
+        \d-code(```
+          utop # let double x = x * 2 ;;
+          val double : int -> int = <fun>
+        ```);%
+
+        で良いかも知れません。
+      }
+      +p{
+        また、パターンマッチにおいていづれか\footnote{
+          「いづれ」は歴史的仮名遣いで、基本的に現代仮名遣いである「いずれ」を用いることが多いわけですが、
+          個人的に見た目が好きなのと発音した時の意識が「いづれ」であるため、あえて使わせて下さい（笑）。
+        }のパターン変数を利用しないケースも考えられます。
+        例えば、タプルの最初の要素の値を返す関数を作ることを考えます。
+        これまでの知識を利用して、以下のように関数を定義できます。
+
+        \d-code(```
+          utop # let return_first tuple = match tuple with
+            | (x, y) -> x ;;
+          val return_first : 'a * 'b -> 'a = <fun>
+
+          utop # return_first (1, "one");;
+          - : int = 1
+        ```);%
+
+        これは期待通りに動作しますが、パターン変数\codem{y}を利用していません。
+        利用しない変数を定義してしまうのはムダですし、思わぬバグの原因ともなりえます。
+
+        そこで、パターン変数には「どんな値にもマッチする且つパターン変数にバインドしない」ための
+        \dfn{ワイルドカードパターン}があり、これはアンダースコア（\codem{_}）で表されます。
+        ワイルドカードパターンに用いられるアンダースコア（\codem{_}）は、
+        \codem{-\>}の右にある式中で参照することはできないため、
+        利用しないパターン変数をワイルドカードパターンで置き換えることは良い考えです。
+
+        ワイルドカードパターンを利用すると、上記の関数は以下のように定義できます。
+
+        \d-code(```
+          utop # let return_first tuple = match tuple with
+            | (x, _) -> x ;;
+          val return_first : 'a * 'b -> 'a = <fun>
+        ```);%
+      }
+      +p{
+        最後に、match式がif式よりも複雑な条件分岐を行える例を紹介します。
+
+        ここでは、整数を文字列に変換する関数\codem{int_to_string}を考えてみます。
+        任意の整数を文字列に変換するためは（今まで紹介した知識では）膨大なプログラムを書く必要があるため、
+        ここでは1から3までの整数を変換することにします。
+        if式を利用して、以下のように関数を定義できます。
+
+        \d-code(```
+          utop # let int_to_string i =
+            if i = 1 then "one" else
+              if i = 2 then "two" else
+                if i = 3 then "three"
+                else "NaN" ;;
+          val int_to_string : int -> string = <fun>
+
+          utop # int_to_string 1 ;;
+          - : string = "one"
+          utop # int_to_string 2 ;;
+          - : string = "two"
+          utop # int_to_string 3 ;;
+          - : string = "three"
+          utop # int_to_string 4 ;;
+          - : string = "NaN"
+        ```);%
+
+        if式を用いた場合、上記のように\codem{else}節にさらにif式をネストさせることで複雑な条件分岐に対応できます。
+        しかしながら、式全体の構造に読みにくさを感じます。
+        そこで、match式を利用して、より読みやすい形で定義します。
+
+        \d-code(```
+          utop # let int_to_string i = match i with
+            | 1 -> "one"
+            | 2 -> "two"
+            | 3 -> "three"
+            | _ -> "NaN" ;;
+          val int_to_string : int -> string = <fun>
+
+          utop # int_to_string 1 ;;
+          - : string = "one"
+          utop # int_to_string 2 ;;
+          - : string = "two"
+          utop # int_to_string 3 ;;
+          - : string = "three"
+          utop # int_to_string 4 ;;
+          - : string = "NaN"
+        ```);%
+
+        ずっと読みやすくなった気がします。
+        さらに、ワイルドカードパターンを用いることで、1、2、3以外の整数が与えられた場合は\codem{"NaN"}と表示するようにしており、
+        「想定する値以外は〇〇する」という意図が伝わりやすい表現になっているかと思います。
+        このように、複雑な条件分岐を扱いたい場合はmatch式の利用を検討してみると良いでしょう。
+      }
+      +p{
+        ここまで読んで、「あれ？パターンって\codem{(...)}のようなタプルの見た目をしたものだと思っていたのに、
+        \ref-subsection(`Match expression`);で\codem{\| 整数 -\> ...}っていう表現が出てきて混乱してきた」
+        と思われた方もいるのではないでしょうか。
+        パターンとは、あくまで対象となる型や変数の並びを表したものであり、何か特定の表現ではないことに注意して下さい。
+      }>
+    >
+    +section?:(`Practice of pattern matching`){実践}<
+      +p{
+    }>
+  >
+  +chapter?:(`List and record`){リストとレコード}<
+    +p{
+      \ref-section(`Other data`);で少しだけ紹介しましたが、
+      本章では\dfn{リスト}と\dfn{レコード}について詳しく説明します。
+      リストやレコードは、これまで紹介したような基本的なデータと型やタプルでは表現しきれなかったデータ構造を表すために利用できます。
+    }
+    +section?:(`List`){リスト}<
+      +p{
+        リストは、同じ型を持つ全ての要素が任意の個数並んだデータのことです。
+        タプルでは特定の値の並びしか定義できませんでしたが、リストは型が同じでさえあれば要素を好きなだけ並べることができます。
+
+        リストを作成するには以下の構文を利用します。
+
+        \d-code(```
+          [ <expr>; ... ]
+        ```);%
+
+        \codem{\<expr\>}はこれまで見てきた通り式を表します。この\codem{\<expr\>}を\codem{\;}で区切り、
+        \codem{[}と\codem{]}で囲むことでリストを生成できます。
+        間の3つのドット（\codem{...}）は「後ろに2番目の要素、3番目の要素...のように0個以上の要素を取って良い」ことを示します。
+        
+        utopにて、整数のリストを表現する例を示します。
+
+        \d-code(```
+          utop # [1; 2; 3;] ;;
+          - : int list = [1; 2; 3]
+        ```);%
+
+        なお、リストの末尾の要素を区切るための\codem{\;}は省略できます。
+
+        \d-code(```
+          utop # [1; 2; 3] ;;
+          - : int list = [1; 2; 3]
+        ```);%
+
+        前述したように、リストの要素は全て同じ型でなければいけません。
+
+        \d-code(```
+          utop # [1; "two"; 3] ;;
+          Line 1, characters 4-9:
+          Error: This expression has type string but an expression was expected of type
+                   int
+        ```);%
+
+        上記のエラーは、「リストの要素にstring型が含まれているが、期待したものはint型である」旨が示されています。
+      }
+      +p{
+        また、要素を1つも持たないリストを\dfn{空リスト}または\dfn{空のリスト}といいます。
+        空リストは\codem{[]}で表現します。
+
+        \d-code(```
+          utop # [] ;;
+          - : 'a list = []
+        ```);%
+
+        空リストは要素を持たないため、要素の型をこの時点で決定できないため、要素の型は多相型\codem{'a}となっています。
+        そして、このリストの型は\codem{'a list}となります。
+      }
+      +p{
+        OCamlでは、リストの先頭に要素を追加するため
+        （正確には、リストの先頭にある要素を追加した結果を得るため）\codem{::}を利用します。
+        \codem{::}はリストを構成するための\dfn{コンストラクタ}\footnote{
+          OCamlにおけるコンストラクタとは、何らかの型（\ref-section(`Variants`);で説明します）の値を生成するものを指します。
+          ここでは、短く「型の値を生成するためのもの」という解釈で構いません。
+        }、
+        で、\dfn{コンス（\codem{cons}）}と呼ばれます。
+        \codem{::}が関数ではないことに注意して下さい。
+        そのため、\ref-chapter(`Basic data and type`);で見たような演算子、
+        例えば\codem{+、-、\*、/}のように引数を取るような形で書くことができません。
+        つまり、関数であれば
+
+        \d-code(```
+          utop # (+) 4 3 ;;
+          - : int = 7
+
+          utop # (-) 5 3 ;;
+          - : int = 2
+        ```);%
+
+        のようにできるのですが、\codem{::}はコンストラクタのため上記のように記述することができないことに注意して下さい。
+        実際に\codem{::}を利用して整数1つを空リストに追加する例を見てみます。
+
+        \d-code(```
+          utop # 3 :: [] ;;
+          - : int list = [3]
+        ```);%
+
+        上記の結果\codem{[3]}という整数\codem{3}だけを持つリストが生成できました。
+        空リストは\codem{'a list}で、多相型を要素として持つ\dfn{多相リスト}であるため、あらゆる型を持つことができます。
+        コンスがリストの先頭に同じ型を持つ要素を追加することによってリストの値（上記の例では\codem{[3]}）を得られたことから、
+        次のように複数の要素を一度に追加できることが分かります。
+
+        \d-code(```
+          utop # 5 :: 4 :: 3 :: [] ;;
+          - : int list = [5; 4; 3]
+        ```);%
+
+        コンスは右結合であるため、上記の例は
+
+        \d-code(```
+          utop # 5 :: (4 :: (3 :: [])) ;;
+          - : int list = [5; 4; 3]
+        ```);%
+
+        と同じになります。
+        これまでは空リストに値を追加するためにコンスを利用する例を見てきましたが、
+        すでに要素を持つリストに対しても利用することができます。
+
+        \d-code(```
+          utop # 5 :: [4; 3] ;;
+          - : int list = [5; 4; 3]
+        ```);%
+
+        このことは、\codem{5 :: (4 :: (3 :: []))}からも明白ですね。
+      }
+      +subsection{リストとパターンマッチ}<+p{
+        パターンマッチ\codem{match...with...}を利用して、リストの要素を参照することができます。
+
+        ここでパターンマッチの構文をおさらいします。
+
+        \d-code(```
+          match <expr0> with
+          | <pattern1> -> <expr1>
+          | <pattern2> -> <expr2>
+          | ...
+          | <pattern_n> -> <expr_n>
+        ```);%
+
+        構文の表現が\ref-subsection(`Match expression`);のものと若干異なりますが、内容は同じものを示しています。
+        \codem{...}で省略していた部分を少し詳細に書いたものになります。
+
+        ただし、リストにパターンマッチを適用するには、必ず空リスト\codem{[]}にマッチするパターンを書く必要があります。
+        具体的には、次のような形になります。
+
+        \d-code(```
+          match <expr0> with
+          | [] -> <expr1>
+          | <pattern2> -> <expr2>
+          | ...
+          | <pattern_n> -> <expr_n>
+        ```);%
+        
+        パターンマッチを用いて、リストの最初の要素を取り出す例を考えてみます。        
+
+        \d-code(```
+          utop # match [3; 4; 5] with
+            | [] -> 0
+            | first :: rest -> first ;;
+          - : int = 3
+        ```);%
+
+        ここで、\codem{first}は\codem{3}にマッチし、\codem{rest}は\codem{[4\; 5]}にマッチします。 
+        \codem{[3\; 4\; 5]}というのは、\codem{3 :: [4\; 5]}と同じであることを考えると、
+        \codem{first}に\codem{3}がマッチし、\codem{rest}が\codem{[4\; 5]}にマッチすることが分かります。
+
+        もちろん、match式に空リストを渡すと0が返ります。
+
+        \d-code(```
+          utop # match [] with
+            | [] -> 0
+            | first :: rest -> first ;;
+            - : int = 0
+        ```);%
+
+        また、先程の例では\codem{rest}を利用してなかったため、
+        ワイルドカード\codem{_}を利用して、次のように書き換える方が実際の実装としては望ましいでしょう。
+
+        \d-code(```
+          utop # match [3; 4; 5] with
+            | [] -> 0
+            | first :: _ -> first ;;
+          - : int = 3
+        ```);%
+      }
+      +p{
+        ここで、仮に空リストのパターンを書かなかった場合はどうなるでしょうか。
+
+        \d-code(```
+          utop # match [3; 4; 5] with
+            | first :: rest -> first ;;
+          Lines 1-2, characters 0-26:
+          Warning 8 [partial-match]: this pattern-matching is not exhaustive.
+          Here is an example of a case that is not matched:
+          []
+          - : int = 3
+        ```);%
+
+        警告が発生しましたが、リストの先頭要素である\codem{3}は返されています。
+        この警告は、「パターンマッチにおいて全てのパターンが網羅されおらず、\codem{[]}のパターンにマッチしない」ことを表しています。
+        この逆で、パターンマッチに空リストを渡し、空リストにのみマッチするパターンを書いた場合も同様に警告が発生します。
+
+        \d-code(```
+          utop # match [] with
+            | [] -> 0 ;;
+          Lines 1-2, characters 0-11:
+          Warning 8 [partial-match]: this pattern-matching is not exhaustive.
+          Here is an example of a case that is not matched:
+          _::_
+          - : int = 0
+        ```);%
+
+        ただし先程の警告とは異なり、マッチしないパターンが\codem{_::_}となっています。
+        これはリストの長さが1以上のものにマッチするパターンがないことを表しています。
+
+        インタプリタはリストに要素がある場合とそうでない（空リストの）場合があることを知っており、
+        パターンマッチが網羅的でない場合にどのようなパターンの漏れがあるかを出力してくれます。
+      }
+      +p{
+        逆にマッチするパターンを書かなかった場合はどうなるでしょうか。
+        例えば、空リストを渡すにも関わらず、空リストに対するパターンが記載されない場合です。
+
+        \d-code(```
+          utop # match [] with
+            | first :: rest -> first ;;
+          Warning 8 [partial-match]: this pattern-matching is not exhaustive.
+          Here is an example of a case that is not matched:
+          []
+          Exception: Match_failure ("//toplevel//", 1, 0).
+        ```);%
+
+        エラー（正確には\dfn{例外}）が発生しました。
+        例外は\codem{Match_failure}であり、
+        これは、「パターンマッチを適用したが該当するパターンが見つからなかった」ことを示しています。
+        
+      }
+      >
+    >
+    +section?:(`Record`){レコード}<
+      +p{
+        タプルでは要素の順序を意識する必要がありました。
+        しかし、扱うデータによっては要素の順番を意識する必要がなかったり、
+        そもそも要素の順番が一定でないデータもあります。
+        またタプルには、各要素の値が何を表しているかといった、要素に対する名称をつけることができませんでした。
+        そのような場合は、レコードを利用することで、
+        要素の順番を気にせず且つ要素に対する名称を与えることができます。
+
+        レコードを利用するには以下の構文を利用します。
+
+        \d-code(```
+          {
+            <field> = <value> ;
+            ...
+          }
+        ```);%
+
+        \codem{\<field\>}がレコードの要素名を表し、\codem{\<value\>}がその要素の値を表します。
+        なお、レコードではこの要素名のことを\dfn{フィールド}といいます。
+      }
+      +p{
+        ここで注意点があります。
+        レコードを利用するには、まずレコードの型を定義し、
+        その後で（前述したような）レコードを利用するための構文を使う必要があります。
+        そこで、まずはレコードを定義するための構文を確認します。
+        レコードの新しい型を定義するには、以下の構文を利用します。
+
+        \d-code(```
+          type <record> = {
+            <field> : <type> ;
+            ...
+          }
+        ```);%
+
+        上記の構文において、\codem{\<record\>}は定義する型名を表しています。そして型名に続く\codem{\{...\}}の中に、
+        レコードのフィールド名\codem{\<field\>}、コロン（\codem{:}）、フィールド名の型\codem{\<type\>}、
+        レコードの末尾を表すセミコロン（\codem{\;}）の順で記述します。
+        \codem{\{\}}中の3つのドット（\codem{...}）は「後ろに\codem{\<field\> : \<type\> \;}...形をした別名のフィールドを書いて良い」ことを示します。
+
+        なお、全てのフィールド名は小文字で始まる必要があります。
+        さらに、フィールド名はその型定義の中で一意でなければなりません。
+        つまり、重複するようなフィールド名を持つことはできません。
+        以下に、重複したフィールド名を定義した場合の例を示します。
+
+        \d-code(```
+          utop # type profile = {
+            name : string ;
+            name : int ;
+          } ;;
+          Line 3, characters 2-6:
+          Error: Two labels are named name
+        ```);%
+        上記の例では、\codem{profile}というレコード型を定義しようとしていますが、
+        エラーには「\codem{name}という名称が2つ存在する」ことが示されています。
+      }
+      +p{
+        また、レコードに限らず独自の型を定義する場合にも\codem{type}キーワードを利用できます。
+        独自の型を定義するには以下の構文を使います。
+
+        \d-code(```
+          type <type> = <def>
+        ```);%
+
+        \codem{\<typ\>}は型名を表し、\codem{\<def\>}は型定義を表します。
+        これは前述したレコードの型を定義する構文と一致していることが分かります。
+      }
+      +p{
+        ここで、個人情報を扱うためのデータとしてレコードを利用する例を考えてみます。
+        レコードには、氏名と年齢を個人情報として持つように設計したとすると、以下のように定義できます。
+
+        \d-code(```
+          utop # type personal_info = {
+            name : string ;
+            age  : int ;
+          } ;;
+          type personal_info = { name : string; age : int; }
+        ```);%
+        
+        上記の例では、string型で表現される\codem{name}フィールドと、
+        int型で表現される\codem{age}フィールドから構成される、\codem{personal_info}という型を定義しています。
+      }
+    >
+    +section?:(`Practice of list and record`){実践}<
+      +p{
+        https://dev.realworldocaml.org/records.htmlを書く
+      }
+    >
+  >
+  +chapter?:(`Variants`){バリアントとパターンマッチ}<
+    +p{
+      \ref-chapter(`List and record`);にて、レコードを紹介しましたが、
+      レコードは全てのフィールドが揃っている必要がありました。
+      つまり、たった1つでもフィールドの記述が漏れているとエラーとなってしまうのでした。
+      現実のプログラミングでは、いつも全てのフィールドが揃っているとは限りません。
+      本章では、複数のデータを1つの型で表現する手法について説明します。
+    }
+    +section?:(`Variants`){バリアント}<
+      +p{
+        \dfn{バリアント}は複数のデータを1つの型として扱うためのデータです。
+        この時のデータの型を\dfn{バリアント型}といいます。
+
+        OCamlにおけるバリアントの型を定義するための構文は以下の通りです。
+
+        \d-code(```
+          type <variant> =
+            | <Tag> [ of <type> [* <type>]... ]
+            ...
+        ```);%
+
+        上記の構文は、コンストラクタを表す\codem{\<Tag\>}が、「または」を表す\codem{\|}でつながっており、
+        \codem{\<variant\>}はコンストラクタのいづれかを値として取ります。
+        \codem{\<Tag\>}の先頭が大文字から始まっているのは、コンストラクタの先頭が大文字から始まる必要があるためです。
+        \codem{[...]}は0回以上の出現を表しており、\codem{\<Tag\> \| ...}のように定義（以下がその例です）できたり、
+
+        \d-code(```
+          utop # type color =
+            | Black
+            | Blue
+            | Green
+            | Red
+            | White ;;
+          type color = Black | Blue | Green | Red | White
+        ```);%
+
+        \codem{\<Tag\> of \<type\> \| ...}、\codem{\<Tag\> of \<type\> \* \<type\> \| ...}のように書くことができます（以下がその例です）。
+        \codem{of}以降の\codem{\<type\> \* \<type\>}はタプルの構造と非常によく似ていますね。
+
+        \d-code(```
+          utop # type my_custom_type =
+            | Int of int
+            | Tuple of int * int
+            | Unknown ;;
+          type my_custom_type = Int of int | Tuple of int * int | Unknown
+        ```);%
+
+        これまでの説明だけではイメージしづらいため、ありきたりな例ですが、
+        複数の図形をまとめて1つのデータ型を定義したいとしましょう。
+
+        例えば、
+        \listing{
+          * 円： 半径の長さを取る          
+          * 長方形： 長辺と短辺の長さを取る
+          * 正方形： 1辺の長さを取る
+        }%
+        のように、異なるデータを1つの型として表現したいケースを考えてみます。
+
+        円と正方形は1つの長さを持てば良さそうですが、長方形は長辺と短辺の2つの長さを持つ必要があります。
+        このようなケースでは、以下のようなバリアント型を定義することができます。
+
+        \d-code(```
+          utop # type figure = 
+            | Circle of int
+            | Rectangle of int * int
+            | Square of int
+            | Unknown ;;
+          type figure = Circle of int | Rectangle of int * int | Square of int | Unknown
+        ```);%
+
+        上記で定義した\codem{figure}は、コンストラクタである\codem{Circle}、\codem{Rectangle}、\codem{Square}、\codem{Unknown}のいづれかを取ります。つまり、これらは\codem{figure}の値です。
+
+        上記を定義した後で、以下のようにインタプリタ上で\codem{Circle}、\codem{Rectangle}、\codem{Square}、\codem{Unknown}を入力すると、それが\codem{figure}型の値であることが分かります。
+
+        \d-code(```
+          utop # Circle 3 ;;
+          - : figure = Circle 3
+          utop # Rectangle (3, 4) ;;
+          - : figure = Rectangle (3, 4)
+          utop # Square 5 ;;
+          - : figure = Square 5
+          nutop # Unknown ;;
+          - : figure = Unknown
+        ```);%
+      }
+      +p{
+        なお、コンストラクタは先頭が大文字で始まる必要があると説明しました。
+        一方で、変数及び関数は大文字で始めることができない点に注意して下さい。
+
+        \d-code(```
+          utop # let SomthingValue = "something" ;;
+          Line 1, characters 4-17:
+          Error: Unbound constructor SomthingValue
+
+          utop # let SomethingFunction = (fun x -> x);;
+          Line 1, characters 4-21:
+          Error: Unbound constructor SomethingFunction
+        ```);%
+      }
+      +subsection?:(`Variants and pattern matching`){バリアントとパターンマッチ}<+p{
+        レコード及びリストではパターンマッチ\codem{match...with...}を利用して、その要素を取り出しました。
+        バリアントでも同様にmatch式を利用して、その値にアクセスすることができます。
+        バリアント型は複数のコンストラクタの値を持つため、match式ではそのコンストラクタによるパターンマッチを行います。
+        以下では、パターンマッチを利用して、引数として与えられたバリアント型の変数figureのコンストラクタに応じて、その面積を返す関数\codem{calc_area}を定義しています。
+
+        \d-code(```
+          utop # let calc_area fig = match fig with
+            | Circle x -> x * x * 3
+            | Rectangle (x, y) -> x * y
+            | Square x -> x * x
+            | Unknown -> 0 ;;
+            val calc_area : figure -> int = <fun>
+
+            utop # let circle = Circle 3 ;;
+            val circle : figure = Circle 3
+            utop # calc_area circle ;;
+            - : int = 27
+
+            utop # let rect = Rectangle (3, 4) ;;
+            val rect : figure = Rectangle (3, 4)
+            utop # calc_area rect ;;
+            - : int = 12
+
+            utop # let square = Square 5 ;;
+            val square : figure = Square 5
+            utop # calc_area square ;;
+            - : int = 25
+
+            utop # calc_area Unknown ;;
+            - : int = 0
+        ```);%
+
+        バリアントにおけるパターンマッチにおいても、これまで見てきたレコードやリストのパターンマッチと同様に、
+        バリアント型が取りうる全てのパターンを書く必要があります。
+        上記の関数calc_areaにおいて、\codem{Unknown}を取り除いた例を以下に示します。
+
+        \d-code(```
+          utop # let calc_area fig = match fig with
+            | Circle x -> x * x * 3
+            | Rectangle (x, y) -> x * y
+            | Square x -> x * x ;;
+
+          Lines 1-4, characters 20-21:
+          Warning 8 [partial-match]: this pattern-matching is not exhaustive.
+          Here is an example of a case that is not matched:
+          Unknown
+          val calc_area : figure -> int = <fun>
+        ```);%
+
+        上記の場合は警告が発生し、
+        この警告は「パターンマッチにおいて全てのパターンが網羅されておらず、\codem{Unknown}のパターンにマッチしない」ことを示しています。
+      }>
+    >
+    +section?:(`Practice of variants`){実践}<
+      +p{
+        バリアントを利用して実践的なプログラムを書いてみましょう。
+      }
+      +subsection{列挙型との類似性}<+p{
+        他のいくつかの言語では、定数または識別子（\dfn{列挙子}）を持つ集合からなるデータ型を\dfn{列挙型}といいます。
+        以下はプログラミング言語Goの例ですが、以下のような書き方になります。
+
+        \d-code(```
+          type Color int
+          const (
+            Black Color = iota
+            Blue
+            Green
+            Red
+            Whilte
+          )
+        ```);%
+
+        OCamlでもバリアントを利用することで同様の定義が可能です。
+
+        \d-code(```
+          utop # type color =
+            | Black
+            | Blue
+            | Green
+            | Red
+            | White ;;
+          type color = Black | Blue | Green | Red | White
+        ```);%
+
+        しかし、他の言語（ここではGoで話を進めます）では各コンストラクタの実体は整数であるため、コンストラクタ同士の演算が可能ですが、
+        OCamlではコンストラクタ同士の演算は定義されていません。
+        もしコンストラクタ同士の演算を行いたい場合は、それ用の演算子（関数）を定義する必要があります。
+
+        \d-code(```
+          utop # type color =
+            | Black
+            | Blue
+            | DarkBlue
+            | Green
+            | DarkGreen
+            | Red
+            | DarkRed
+            | Gray
+            | White
+            | Unknown ;;
+          type color =
+              Black
+            | Blue
+            | DarkBlue
+            | Green
+            | DarkGreen
+            | Red
+            | DarkRed
+            | Gray
+            | White
+            | Unknown
+
+          utop # let (++) c1 c2 = match (c1, c2) with
+            | (Black, Blue) -> DarkBlue
+            | (Black, Green) -> DarkGreen
+            | (Black, Red) -> DarkRed
+            | (Black, White) -> Gray
+            | (Black, _) | (_, Black) -> Black
+            | (White, _) | (_, White) -> White
+            | (_, _) -> Unknown ;;
+          val ( ++ ) : color -> color -> color = <fun>
+
+          utop # Black ++ Green ;;
+          - : color = DarkGreen
+        ```);%
+
+        上記の例は、バリアント型であるcolorを拡張し、\codem{DarkBlue}、\codem{DarkGreen}、\codem{DarkRed}を追加で定義し、
+        色を混ぜ合わせた結果を返す演算子\codem{++}\footnote{
+          他の色の組み合わせも考えられますが、行数が長くなりすぎるため、ここではBlackとの組み合わせにフォーカスしています。
+        }を定義しています。
+        このような演算子を定義することで、コンストラクタ同士の演算が可能になります。
+
+        また、\codem{(Black, _) \| (_, Black) -\> ...}、\codem{(White, _) \| (_, White) -\> ...}のように、
+        複数のパターンにおける処理をまとめることができ、これを\dfn{orパターン}といいます。
+      }>
+      +subsection?:(`Recursive variant type`){再帰バリアント型と木構造}<+p{
+        バリアントの型定義において、ofの後ろにバリアント型自身を書くことで\dfn{再帰バリアント型}を定義できます。
+        ここでは例として「木」を考えてみます。
+        木は、
+        \listing{
+          * 葉
+          * 節（ノード）
+        }
+        から構成されることとします。
+
+        \d-code(```
+          +-----------+
+          | Node (10) |
+          +-----------+
+             |
+             |  +----------+
+             +--| Node (5) |
+             |  +----------+
+             |     |
+             |     |     +----------+
+             |     +-----| Leaf (4) |
+             |     |     +----------+
+             |     |
+             |     |     +----------+
+             |     +-----| Leaf (3) |
+             |           +----------+
+             |
+             |  +----------+
+             +--| Leaf (7) |
+                +----------+
+        ```);%
+
+        葉\codem{Leaf}は木の一番先を表し、何か1つのデータを持つコンストラクタを示します。
+        一方で節\codem{Node}は木の幹が分かれている部分を表し、節自身も何か1つのデータを持つ且つ
+        さらにその先に2つの節を持つことができるコンストラクタです。
+        このように必ず2つの葉を持つような木構造を\dfn{2分木}と呼びます。
+        
+        これをヴァリアント型で定義すると以下のように定義することができます。
+        \d-code(```
+          utop # type tree =
+            | Empty
+            | Leaf of int
+            | Node of tree * int * tree ;;
+          type tree = Empty | Leaf of int | Node of tree * int * tree
+        ```);%
+
+        上記の例から分かるとおり、バリアント型である\codem{tree}は\codem{Empty}\footnote{
+          Emptyは一見不要なように思えますが、木構造自体が空であること及び木構造に値を追加する関数を実装する際に必要となるため、予め定義しています。
+        }、\codem{Leaf}、\codem{Node}の3つのコンストラクタから構成されます。
+        Emptyは空であることを表します。Leafはint型を持ち、Nodeは\codem{(tree, int, tree)}という組み合わせを持つことを表します。
+        Nodeコンストラクタのof以降に自分自身である\codem{tree}を持っているため、これは再帰バリアント型となります。
+        また、自分自身を含むコンストラクタを持つバリアント型は\dfn{自己参照している}といいます。
+        自己参照するような（再帰的な）ケースでは、無限ループとならないように必ず自己参照しないケースを含めるようにして下さい。
+        上記の例ではLeafが存在するため大丈夫そうです。
+      }
+      +p{
+        なお、上記のtreeはint型しか持つことができない定義になってしまっていますが、
+        これを任意の型を持てるようにするには、以下のように木及び各コンストラクタが多相型な値を持てるよう定義します。
+
+        \d-code(```
+          utop # type 'a tree = 
+            | Empty
+            | Leaf of 'a
+            | Node of 'a tree * 'a * 'a tree ;;
+          type 'a tree = Empty | Leaf of 'a | Node of 'a tree * 'a * 'a tree
+        ```);%
+      }
+      +p{
+        木構造は、Unixファイルシステムにも採用されていたり、様々な場面で利用されています。
+        そのため木構造を自身で実装し利用できることは有用です。
+        int型だけを持つtreeでも多相型のtreeでも良いですが、ここでは単純化のためint型だけを持つtreeを用いて、
+        具体的な利用例を見ていきます。
+
+        \d-code(```
+          utop # type tree =
+            | Empty
+            | Leaf of int
+            | Node of tree * int * tree ;;
+          type tree = Empty | Leaf of int | Node of tree * int * tree
+
+          utop # Empty ;;
+          - : tree = Empty
+
+          utop # Leaf 3 ;;
+          - : tree = Leaf 3
+          utop # Leaf 4 ;;
+          - : tree = Leaf 4
+
+          utop # Node (Leaf 3, 5, Leaf 4) ;;
+          - : tree = Node (Leaf 3, 5, Leaf 4)
+        ```);%
+
+        Leafは、これまで見てきたバリアント型と同じように利用でき、
+        \codem{\<constructor\> \<value\>}のように書くことでtreeのLeafコンストラクタの値を生成できます。
+        上記では、3の値を持つLeafと4の値を持つLeafをインタプリタに入力しています。
+
+        一方、Nodeは\codem{(tree \* int \* tree)}であり、
+        上記では\codem{Leaf 3}、\codem{Leaf 4}、そして5の値を持つNodeを作成しています。
+        なお、Nodeはtree型であれば何でも持つことができるため、以下のようにNodeが別のNodeを持つことも可能です。
+
+        \d-code(```
+          utop # Node (Node (Leaf 3, 5, Leaf 4), 10, Leaf 7) ;;
+          - : tree = Node (Node (Leaf 3, 5, Leaf 4), 10, Leaf 7)
+        ```);%
+
+        これは図示した木構造をプログラムで表現したものであり、頂点\footnote{
+          この頂点を特に根（ルート）と呼びます。
+        }に10を持ち、
+        そこから7の値を持つ葉と5の値を持つ節が伸びている形を表現しています。
+        加えて、5の値を持つ節は、3と4の葉を持つことが示されています。
+
+        \d-code(```
+          Node ( +---+, 10, +---+ )
+                   |          |
+             Leaf ( 7 )    Node ( +---+, 5, +---+ )
+                                    |         |
+                              Leaf ( 3 )   Leaf ( 4 )
+        ```);%
+
+        ここで、節が左または右に別の木構造（具体的には節、葉、空（Empty））を持つ場合、この別の木構造を\dfn{部分木}といいます。
+      }>
+      +subsection{木構造とその関数}<+p{
+        \ref-subsection(`Recursive variant type`);で説明した木構造に対して、いくつかの関数（ここではその深さと節の数を数える関数）を考えてみます。
+        木構造の深さを計算する関数は、以下のように定義できます。
+
+        \d-code(```
+          utop # let rec tree_depth = function
+            | Empty -> 0
+            | Leaf _ -> 0
+            | Node (left, _, right) -> 1 + (max (tree_depth left) (tree_depth right)) ;;
+          val tree_depth : tree -> int = <fun>
+
+          utop # let my_tree = Node (Node (Leaf 3, 5, Leaf 4), 10, Leaf 7) ;;
+          val my_tree : tree = Node (Node (Leaf 3, 5, Leaf 4), 10, Leaf 7)
+
+          utop # tree_depth my_tree ;;
+          - : int = 2
+        ```);%
+
+        深さとは、頂点を1としてそれに続く節を数え上げていき、頂点から最も遠い節までの節の合計のことを指します。
+        ここで最も遠い節と言っているのは、節は複数に枝分かれし、節によっては深さがバラバラな場合があり、
+        頂点から最も遠くまで伸びている節を木の深さとして採用する必要があるためです。
+        上記の関数は、Leafの場合は\codem{0}を返し、Nodeの場合は現在の節\codem{1}と「左と右に伸びる節の内、大きい方の値」を可算します。
+        特に\codem{tree_depth left}及び\codem{tree_depth right}は自分自身を呼び出しているため再帰になっています。
+        また、\codem{tree_depath}内で利用している関数\codem{max}は、与えられた2つの引数の内大きい方を返す関数で、
+        maxを用いることで左と右でより深い方の値を返すように実装しています。
+        
+        次に、節（ノード）の数を数え上げる関数を考えてみます。
+        木構造の節の数を数える関数は、以下のように定義できます。
+
+        \d-code(```
+          utop # let rec tree_size = function
+            | Empty -> 0
+            | Leaf _ -> 0
+            | Node (left, _, right) -> 1 + (tree_size left) + (tree_size right) ;;
+          val tree_size : tree -> int = <fun>
+
+          utop # let my_tree = Node (Node (Leaf 3, 5, Leaf 4), 10, Leaf 7) ;;
+          val my_tree : tree = Node (Node (Leaf 3, 5, Leaf 4), 10, Leaf 7)
+
+          utop # tree_size my_tree ;;
+          - : int = 2
+        ```);%
+
+        前述の深さを出力する関数\codem{tree_depth}と同様に再帰関数であり、Nodeの場合に「現在の節\codem{1} + 左のノード数 + 右のノード数」を返します。
+      }
+      +p{
+        なお、上記では節が2つしかない木構造を扱いました。節が2つのものを\dfn{2分木}といいます。
+        それ以外の、例えば節が3つのものを3分木、4つのものを4分木、...n個の節を持つ木を\dfn{n分木}といいます。
+        特に、2分木\codem{${t}}に対して
+
+        \d-codem{
+          ${tree\_size(t) \leqq 2^{tree\_depth(t)} - 1}
+        }
+        が成り立ちます。
+        また、2分木\codem{${t}}に対して
+
+        \d-codem{
+          ${tree\_size(t) = 2^{tree\_depth(t)} - 1}
+        }
+        となるような2分木を\dfn{完全2分木}といいます。
+
+        以下に完全2分木の例を示します。
+
+        \d-code(```
+          utop # let comp_tree = Node(
+            Node(Node(Leaf 2, 4, Leaf 3), 8, Node(Leaf 5, 7, Leaf 6)),
+            16,
+            Node(Node(Leaf 9, 11, Leaf 10), 15, Node(Leaf 12, 14, Leaf 13))) ;;
+          val comp_tree : tree =
+            Node (Node (Node (Leaf 2, 4, Leaf 3), 8, Node (Leaf 5, 7, Leaf 6)), 16,
+             Node (Node (Leaf 9, 11, Leaf 10), 15, Node (Leaf 12, 14, Leaf 13)))
+
+          utop # tree_depth comp_tree ;;
+          - : int = 3
+
+          utop # tree_size comp_tree ;;
+          - : int = 7
+        ```);%
+
+        上記の例から\codem{${tree\_size(t) = 7}}且つ\codem{${tree\_depth(t) = 3}}であることが分かります。
+        これらを\codem{${tree\_size(t) = 2^{tree\_depth(t)} - 1}}に代入すると
+        \codem{${7 = 2^3 - 1}}となるため、等式を満たしていることが分かりますね。
+      }
+      +p{
+        次に、木構造から値を列挙する関数を定義してみます。
+        木構造から値を取り出すには次の方法があります。
+
+        \listing{
+          * \dfn{行きがけ順（preorder）}： 訪れた節の値にラベルを付け、左の部分木、右の部分木の順で探索（走査）及び値を見つけ次第ラベルを付ける方法
+          * \dfn{通りがけ順（inorder）}： 左の部分木を辿れなくなるまで探索（走査）及び値にラベルを付け、1つ上の節、右の部分木の順で探索（走査）及び値を見つけ次第ラベルを付ける方法
+          * \dfn{帰りがけ順（postorder）}： 左の部分木を辿れなくなるまで探索（走査）及び値にラベルを付け、1つ上の節の右の部分木を探索（走査）及び値を見つけ次第ラベル付けし、左右両方の走査が完了次第1つ上の節の値をラベル付けする。これを頂点まで繰り返す方法
+        }
+
+        行きがけ順の関数は以下のように定義できます。
+
+        \d-code(```
+          utop # let rec preorder = function
+            | Leaf x -> [x]
+            | Node (left, x, right) -> x :: (preorder left) @ (preorder right) ;;
+          val preorder : tree -> int list = <fun>
+
+          utop # preorder comp_tree ;;
+          - : int list = [15; 8; 4; 2; 3; 7; 5; 6; 14; 10; 8; 9; 13; 11; 12]
+        ```);%
+
+        通りがけ順は以下のように定義できます。
+
+        \d-code(```
+          utop # let rec inorder = function
+            | Leaf x -> [x]
+            | Node (left, x, right) -> (inorder left) @ (x :: inorder right) ;;
+          val inorder : tree -> int list = <fun>
+
+          utop # inorder comp_tree ;;
+          - : int list = [2; 4; 3; 8; 5; 7; 6; 15; 8; 10; 9; 14; 11; 13; 12]
+        ```);%
+
+        帰りがけ順は以下のように定義できます。
+
+        \d-code(```
+          utop # let rec postorder = function
+            | Leaf x -> [x]
+            | Node (left, x, right) -> (postorder left) @ (postorder right) @ [x];;
+          val postorder : tree -> int list = <fun>
+
+          utop # postorder comp_tree ;;
+          - : int list = [2; 3; 4; 5; 6; 7; 8; 8; 9; 10; 11; 12; 13; 14; 15]
+        ```);%
+
+        各探索方法に図を入れてもっと書く。
+        comptreeの定義も変えたので結果を更新しておく。
+      }>
+      +subsection{2分探索木}<+p{
+        \dfn{2分探索木}は、検索を高速に行えるように、一定の規則に従ってデータを格納したデータ構造（木構造）です。
+        2分探索木は
+
+        \listing{
+          * 左の部分木には、その節のデータよりも小さいデータのみ格納される
+          * 右の部分木には、その節のデータよりも大きいデータのみ格納される
+        }
+
+        というルールがあります。
+        このような木構造を探索することを\dfn{2分探索}といいます。
+
+        2分探索木の例を以下に示します。
+
+        \d-code(```
+               Node ( +---+,              10,              +---+ )
+                        |                                    |
+          Node ( +---+, 5, +---+ )            Node ( +---+,   15,   +---+ )
+                   |         |                         |              |
+               Leaf ( 3 )   Leaf ( 4 )  Node ( +---+, 14, +---+ )   Leaf ( 16 )
+                                                 |          |
+                                             Leaf ( 12 )   Leaf ( 13 )
+        ```);%
+
+        蛇足ですが、2分探索木であり且つ完全2分木である木構造も存在します。
+
+        \d-code(```
+               Node ( +---+,          10,          +---+ )
+                        |                            |
+          Node ( +---+, 5, +---+ )    Node ( +---+, 15, +---+ )
+                   |         |                 |          |
+               Leaf ( 3 )   Leaf ( 4 )   Leaf ( 14 )  Leaf ( 16 )
+        ```);%
+
+        上記のような2分探索木を探索（走査）するための関数は、以下のように定義できます。
+
+        \d-code(```
+          utop # let rec search tree data = match tree with
+            | Empty -> false
+            | Leaf x -> data = x
+            | Node (left, x, right) ->
+              if x = data then true
+              else
+                if data < x then search left data
+                else search right data ;;
+           val search : tree -> int -> bool = <fun>
+        ```);%
+
+        上記の関数は、検索対象となる木構造\codem{tree}と検索したい値\codem{data}を引数にとります。
+        treeが空\codem{Empty}である場合は、検索したい値が見つからなかったと判断し\codem{false}を返します。
+        葉\codem{Leaf}である場合は、葉の値とdataを比較し、その結果を返します。
+        節（Node）である場合は、節が持つ値とdataを比較し一致していれば\codem{true}を返します。
+        節が持つ値と一致しなければ、節が持つ値とdataの大小を比較し、
+        \codem{data \< x}であれば左の部分木\codem{left}をsearch関数の第一引数として与え、再帰的に検索を行います。
+        そうでなければ（つまり\codem{data \> x}）、右の部分木\codem{right}をsearch関数の第一引数として与え、再帰的に検索を行います。
+
+        \d-code(```
+          utop # let comp_binary_search_tree = Node(
+            Node(Node(Empty, 3, Leaf 4), 5, Node(Leaf 6, 7, Leaf 8)),
+            9,
+            Node(Node(Leaf 10, 11, Leaf 12), 13, Node(Leaf 14, 15, Empty))) ;;
+          val comp_binary_search_tree : tree =
+            Node (Node (Node (Empty, 3, Leaf 4), 5, Node (Leaf 6, 7, Leaf 8)), 9,
+             Node (Node (Leaf 10, 11, Leaf 12), 13, Node (Leaf 14, 15, Empty)))
+
+          utop # search comp_binary_search_tree 1 ;;
+          - : bool = false
+
+          utop # search comp_binary_search_tree 4 ;;
+          - : bool = true
+
+          utop # search comp_binary_search_tree 6 ;;
+          - : bool = true
+
+          utop # search comp_binary_search_tree 9 ;;
+          - : bool = true
+
+          utop # search comp_binary_search_tree 13 ;;
+          - : bool = true
+
+          utop # search comp_binary_search_tree 20 ;;
+          - : bool = false
+        ```);%
+
+        上記の例では、完全2分木に対して探索（走査）を行っていますが、2分探索木であれば上記のsearch関数を用いて値の有無を確認できます。
+        また、2分探索木において探索と同じくらい重要な操作として「追加」があります。
+        追加関数を考える場合、2分探索木のルールに則った実装が必要です。
+        つまり、これから追加したい値に対して、節が持つ値よりも小さい場合は左の部分木に値を挿入し、大きい場合は右の部分木に値を挿入します。
+
+        \d-code(```
+          utop # let rec add tree data = match tree with
+            | Empty -> Leaf data
+            | Leaf x ->
+              if data = x then Leaf x
+              else      
+                if data < x then Node ((Leaf data), x, Empty)
+                else Node (Empty, x, (Leaf data)) 
+            | Node (left, x, right) ->
+              if data = x then Node (left, x, right)
+              else
+                if data < x then Node ((add left data), x, right)
+                else Node (left, x, (add right data)) ;;
+          val add : tree -> int -> tree = <fun>
+
+          utop # add Empty 1 ;;
+          - : tree = Leaf 1
+
+          utop # add (Leaf 3) 4 ;;
+          - : tree = Node (Empty, 3, Leaf 4)
+
+          utop # let binary_search_tree = Node(
+            Node(Node(Leaf 2, 3, Leaf 4), 5, Empty),
+            9,
+            Node(Node(Leaf 10, 11, Leaf 12), 13, Node(Leaf 14, 15, Leaf 16))) ;;
+          val binary_search_tree : tree =
+            Node (Node (Node (Leaf 2, 3, Leaf 4), 5, Empty), 9,
+             Node (Node (Leaf 10, 11, Leaf 12), 13, Node (Leaf 14, 15, Leaf 16)))
+
+          utop # add binary_search_tree 6 ;;
+          - : tree =
+          Node (Node (Node (Leaf 2, 3, Leaf 4), 5, Leaf 6), 9,
+           Node (Node (Leaf 10, 11, Leaf 12), 13, Node (Leaf 14, 15, Leaf 16)))
+
+          utop # add binary_search_tree 20 ;;
+          - : tree =
+          Node (Node (Node (Leaf 2, 3, Leaf 4), 5, Empty), 9,
+           Node (Node (Leaf 10, 11, Leaf 12), 13,
+            Node (Leaf 14, 15, Node (Empty, 16, Leaf 20))))
+        ```);%
+
+        他にも特定の値を削除する関数などが考えられますが、エラーハンドリングの知識が必要になりますので、ここでは割愛します。
+      }>
+    >
+  >
+  +chapter?:(`Error handling`){エラーハンドリング}<
+    +p{
+      \dfn{エラーハンドリング}は、プログラムが実行される際にその処理が妨げられるような入力や計算結果となった場合、
+      これをエラーとして処理することまたはその処理方法を指す言葉です。
+      実はこれまで扱ってきた関数でも、if式やmatch式によるエラーハンドリングを行ってきました。
+      例えば、リスト操作で空リストが渡された場合、\codem{[] -\> []}と書いていましたが、
+      これも一種のエラーハンドリングと考えることができます。
+      しかし、\codem{mod}関数のような除算の商を出力する関数において、割る数に0を代入された場合、安易に0を返すことができません。
+      なぜなら正しく計算された結果として商が0となったのか、エラーとしての0なのかが区別できないからです。
+      OCamlでは\dfn{例外}という機構を用いてこれに対処可能です。
+      本章ではエラーハンドリングを行うための「戻り値」「例外」「Result型」を説明します。
+    }
+    +section?:(`Error aware return types`){戻り値によるエラーハンドリング}<
+      +p{
+        最も簡単なエラーハンドリングは、関数がエラーである旨を戻り値で示すという方法です。
+        これまで見てきた関数定義でも扱った事項ですが、改めて下記の例を見てみましょう。
+
+        \d-code(```
+          utop # let rec find data = function
+            | [] -> false
+            | x :: xs -> if data = x then true else find data xs ;;
+          val find : 'a -> 'a list -> bool = <fun>
+        ```);%
+
+        上記の例では、関数\codem{find}を定義しており、これは多相型であるdataと多相リストを引数に取ります。
+        \codem{[] -\> false}で、空リストの場合つまりdataが見つからなかった場合\codem{false}を返します。
+        この部分はこれまで見てきた通りですが、これをオプション型で表現することもできます。
+
+        \d-code(```
+          utop # let rec find data = function
+            | [] -> None
+            | x :: xs -> if data = x then Some x else find data xs ;;
+          val find : 'a -> 'a list -> 'a option = <fun>
+        ```);%
+        戻り値の\codem{None}はdataが見つからなかったことを示し、\codem{Some x}は見つかった値をオプション型で返すことを示しています。
+        このようなエラーハンドリングでは、関数の呼び出し元がNoneかそれ以外かによって明示的且つ適切に処理する必要があります。
+      }
+    >
+  >
+>

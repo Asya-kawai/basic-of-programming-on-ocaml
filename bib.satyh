@@ -1,0 +1,48 @@
+@import: settings
+
+let bibliography = [
+  (`Asai-OCaml`, Book(|
+    author = {| 浅井 健一 |};
+    title = {プログラミングの基礎};
+    publisher = {サイエンス社};
+    year = 2007;
+  |));
+  (`Real-World-OCaml`, WebSite(|
+    author = {| Yaron Minsky | Anil Madhavapeddy |};
+    title = {Real World OCaml};
+    url = `https://dev.realworldocaml.org/`;
+    year = 2020;
+  |));
+  (`Objective-Caml-Introduction`, WebSite(|
+    author = {| 五十嵐 淳 |};
+    title = {Objective-Caml-Introduction};
+    url = `https://www.fos.kuis.kyoto-u.ac.jp/~igarashi/class/isle4-07w/mltext/index.html`;
+    year = 2007;
+  |));
+  (`Functional-Programming-in-OCaml`, WebSite(|
+    author = {| Michael R. Clarkson |};
+    title = {Functional Programming in OCaml};
+    url = `https://www.cs.cornell.edu/courses/cs3110/2020fa/textbook/`;
+    year = 2020;
+  |));
+  (`TaPL-ja`, Book(|
+    author = {| Benjamin C. Pierce
+      （住井 英二郎 監訳，遠藤 侑介 訳，酒井 政裕 訳，今井 敬吾 訳，黒木 裕介 訳，今井 宜洋 訳，才川 隆文 訳，今井 健男 訳）
+    |};
+    title = {型システム入門};
+    publisher = {オーム社};
+    year = 2013;
+  |));
+  (`OCaml-org`, WebSite(|
+    author = {| Ashish Agarwal | Amir Chaudhry | Louis Gesbert | Fabrice Le Fessant | Anil Madhavapeddy | David Sheets | Christophe Troestler  | Philippe Wang |};
+    title = {OCaml.org};
+    url = `https://ocaml.org/learn/`;
+    year = 2020;
+  |));
+  (`The-Caml-Light-system`, WebSite(|
+    author = {| Xavier Leroy |};
+    title = {The Caml Light system, documentation and user's guide};
+    url = `https://caml.inria.fr/pub/docs/manual-caml-light/index.html`;
+    year = 1997;
+  |));
+]
