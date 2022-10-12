@@ -1,0 +1,359 @@
+% -*- conding: utf-8 -*-
+@import: settings
+
+let basic-data-and-types = '<
+    +p{
+      本章では、プログラミングの基本となるデータとその型を説明します。
+      少し退屈な章ですが...ご了承下さい。
+
+      本章を読み進めるにあたって、初学者の方は、
+      お手元のインタプリタ（例えば、\codem{utop}コマンドや\codem{ocaml}コマンド）
+      を利用して、確かめながら読み進めてみて下さい。
+    }
+    +section{整数}<
+      +p{
+        \dfn{整数}とは0とそれに1ずつ加えて得られる数（自然数、例えば1、2、3...）
+        及び1ずつ引いて得られる数（例えば、-1、-2、-3...）の総称です\footnote{
+          整数全体からなる集合は太字の${\bm{Z}}または黒板太字の${\mathbb{Z}}で表されることがあります。
+        }。
+
+        OCamlにおいて、整数は\codem{int}という型で表現されます。
+
+        それでは、\codem{utop}で整数をインタプリタに与えた例を見てみます。
+        \d-code(```
+          utop # 2 ;;
+          - : int = 2
+        ```);%
+
+        例えば1行目に関して言えば、\codem{2}と入力\footnote{
+          末尾の2つのセミコロン\codem{\;\;}は、入力の終わりをインタプリタに示すものです。
+        }した時、その結果が2行目に表示されており、
+        「直前(\codem{-})に入力した結果の型は\codem{int}であり、結果の値は\codem{2}である」ことを表しています。
+
+        int型には（みなさんが紙面上で計算する時に用いるような）次の四則演算があります。
+        可算を表す\codem{+}、減算を表す\codem{-}、乗算を表す\codem{\*}、
+        除算の商を表す\codem{/}及び余りを表す\codem{mod}があります。
+
+        \d-code(```
+          utop # 4 + 3 ;;
+          - : int = 7
+          utop # 5 - 3 ;;
+          - : int = 2
+          utop # 6 * 3 ;;
+          - : int = 18
+          utop # 7 / 3 ;;
+          - : int = 2
+          utop # 8 mod 3 ;;
+          - : int = 2
+        ```);%
+      }
+      % +centering{
+      %   \tabular(fun t -> (
+      %     let (c, l, r) = (t#c, t#l, t#r) in
+      %     let m = t#m in
+      %     let e = t#e in
+      %     [
+      %       [c {演算子}; c {説明}; ];
+      %       [c {+}     ; l {整数同士の可算を表します}; ];
+      %       [c {-}     ; l {整数同士の減算を表します}; ];
+      %       [c {\*}    ; l {整数同士の乗算を表します}; ];
+      %       [c {/}     ; l {整数同士の除算の商を表します}; ];
+      %       [c {mod}   ; l {整数同士の除算の余りを表します}; ];
+      %     ]
+      %   ))(fun xs ys -> (
+      %     match (xs, List.reverse xs, ys, List.reverse ys) with
+      %     | (xL :: _, xR :: _, yT :: y2 :: _, yB :: _) ->
+      %       [
+      %         stroke 1pt Color.black (Gr.line (xL, yT) (xR, yT));
+      %         stroke 0.5pt Color.black (Gr.line (xL, y2) (xR, y2));
+      %         stroke 1pt Color.black (Gr.line (xL, yB) (xR, yB));
+      %       ]
+      %     | _ -> []
+      %   ));
+      % }
+    >
+    +section{実数}<
+      +p{
+        \dfn{実数}とは連続した量を表すための数で、イメージとしては数直線上に並べることができる全ての数を言います\footnote{
+          実数全体からなる集合は太字の${\bm{R}}または黒板太字の${\mathbb{R}}で表されることがあります。
+        }。
+        実数の中には前節で説明した整数も含まれます。
+
+        OCamlにおいて、実数は\codem{float}という型で表現されます。
+
+        \codem{utop}で実数をインタプリタに与えた例を見てみます。
+        \d-code(```
+          utop # 3.14 ;;
+          - : float = 3.14
+        ```);%
+
+        float型にもint型同様に四則演算が定義されています。
+        ここで注意点ですが、OCamlはint型とfloat型を明確に区別しています。
+        そのため、int型で使用可能な\codem{+}などを利用することができず、float型用の四則演算を利用する必要があります。
+        可算を表す\codem{+.}、減算を表す\codem{-.}、乗算を表す\codem{\*.}、除算の商を表す\codem{/.}があります。
+        int型の四則演算とは違い、後ろにドット（\codem{.}）がついた形になっていますね。
+
+        \d-code(```
+          utop # 3.14 +. 4.0 *. 5.0 /. 3.0 ;;
+          - : float = 9.80666666666666664
+        ```);%
+
+        また、小数点以下が0の場合は、その0を省略することができます。次の例は前述の式と同じ式になります。
+
+        \d-code(```
+          utop # 3.14 +. 4. *. 5. /. 3. ;;
+          - : float = 9.80666666666666664
+        ```);%
+
+        加えて、int型には無い\codem{べき乗を求める\*\*}という関数も定義されています。
+        なお、\codem{\*\*}にはドット（\codem{.}）が付かないことに注意して下さい。
+
+        \d-code(```
+          utop # 3. ** 3. ;;
+          - : float = 27.
+        ```);%
+      }
+      +p{
+        最後に、int型の四則演算をfloat型に適用した場合またはその逆（float型の四則演算をint型に適用した場合）について説明します。
+        int型の四則演算はint型の値のみを受け取ることができ、float型の四則演算ではfloat型の値のみ受け取ることができます。
+        四則演算に渡される型が1つでも合わない場合は、エラーとなります。
+
+        \d-code(```
+          utop # 3 ** 3. ;;
+          Line 1, characters 0-1:
+          Error: This expression has type int but an expression was expected of type
+                   float
+          Hint: Did you mean `3.'?
+        ```);%
+
+        上記はよくある（ありそうな）間違いですが、\codem{\*\*}にint型を適用してしまった例です。
+        1行目にはエラーとなった箇所が示されており、「（与えられた入力の）1行目の0から1文字目（でエラーとなった）」という内容になります。
+        また、2行目にはエラーメッセージが示されており、内容は「この式はint型を受け取ったが、式はfloat型を期待していた」となります。
+        さらに3行目にはエラー箇所に対するヒントとして「3.ではないですか？」という内容が示されています。
+
+        % int型の四則演算がint型の値のみ受け取ること及び
+        % float型の四則演算がfloat型のみ受け取ることを確かめるためには、インタプリタに以下のように入力します。
+        % \d-code(```
+        %   utop # (+) ;;
+        %   - : int -> int -> int = <fun>
+        %   utop # (-) ;;
+        %   - : int -> int -> int = <fun>
+        %   utop # ( * ) ;;
+        %   - : int -> int -> int = <fun>
+        %   utop # (/) ;;
+        %   - : int -> int -> int = <fun>
+        %   utop # (mod) ;;
+        %   - : int -> int -> int = <fun>
+
+        %   utop # (+.) ;;
+        %   - : float -> float -> float = <fun>
+        %   utop # (-.) ;;
+        %   - : float -> float -> float = <fun>
+        %   utop # ( *. ) ;;
+        %   - : float -> float -> float = <fun>
+        %   utop # ( /. ) ;;
+        %   - : float -> float -> float = <fun>
+        % ```);%
+
+        % OCamlでは四則演算は関数として定義されます。
+      }
+      +frame<
+        +subsection{コラム； エラーメッセージを読もう}<
+          +p{
+            OCamlを含めいくつかのプログラミング言語では、エラー箇所、エラー原因、エラー解消のヒントが示される場合があります。
+            エラーメッセージを注意深く読むことでエラーを解決できる場合や、
+            エラーメッセージから分からない場合は当該メッセージをWebで検索することで答えが見つかる場合があります。
+            エラーが発生したからと言って慌てずに、落ち着いてエラーメッセージを読んで対処しましょう。
+          }
+        >
+      >
+    >
+    +section{文字}<
+      +p{
+        \dfn{文字}は8bitで表現される1文字を表し、文字を扱いたい場合は引用符\codem{'...'}で囲みます。
+        OCamlにおいて、文字は\codem{char}という型で表現されます。
+
+        utopで文字をインタプリタに与えた例を見てみます。
+        \d-code(```
+          utop # 'a' ;;
+          - : char = 'a'
+        ```);%
+
+        なお、文字は1文字の表現であるため\codem{'ab'}のように2文字をシングルクォート（\codem{'}）で囲むことはできません。
+        加えて、空文字\codem{''}を書くこともできません。
+        \d-code(```
+          utop # 'ab' ;;
+          Error: Syntax error
+          utop # '' ;;
+          Error: Syntax error
+        ```);%
+
+      }
+    >
+    +section{文字列}<
+      +p{
+        \dfn{文字列}は単なる文字のリスト（文字を結合したもの）ではありません。
+        そのため、文字とは異なるデータであり、文字列を扱いたい場合は引用符\codem{"..."}で囲みます。
+
+        OCamlにおいて、文字列は\codem{string}という型で表現されます。
+
+        utopで文字列をインタプリタに与えた例は以下の通りです。
+        \d-code(```
+          utop # "abc" ;;
+          - : string = "abc"
+        ```);%
+
+        文字とは異なり、文字列は1文字であってもダブルクォート（\codem{"}）で囲みさえすればきちんと文字列として評価されます。
+        また、空の文字列\codem{""}も書くことができます。
+
+        \d-code(```
+          utop # "a" ;;
+          - : string = "a"
+          utop # "" ;;
+          - : string = ""
+        ```);%
+
+        さらに、文字列には文字列同士を結合する命令\footnote{
+          命令と表現していますが、内部的には関数として扱われます。
+          本章及びそれ以前で、まだ関数の説明を行っていないため、便宜上この表現を用いています。
+        }
+        である\codem{^}が定義されています。
+
+        \d-code(```
+          utop # "a" ^ "bc" ^ "def" ;;
+          - : string = "abcdef"
+        ```);%
+
+        もちろん、\codem{^}を用いて空の文字列と結合することも可能です。
+
+        \d-code(```
+          utop # "a" ^ "" ;;
+          - : string = "a"
+        ```);%
+
+      }
+    >
+    +section{真偽値}<
+      +p{
+        \dfn{真偽値}は真または偽を表す値です。
+        真を\codem{true}で表し、偽を\codem{false}で表します。
+        OCamlにおいて、真偽値は\codem{bool}という型で表現されます。
+
+        真偽値をインタプリタに与えた例を見てみます。
+        \d-code(```
+          utop # true ;;
+          - : bool = true
+          utop # false ;;
+          - : bool = false
+        ```);%
+
+        整数や実数では四則演算が定義されていましたが、真偽値においては論理演算が定義されています。
+        OCamlでは、「且つ」を表す\codem{&&}、「または」を表す\codem{\|\|}、「否定」を表す\codem{not}があります。
+
+        \d-code(```
+          utop # true && true ;;
+          - : bool = true
+          utop # true && false ;;
+          - : bool = false
+          utop # false && false ;;
+          - : bool = false
+
+          utop # true || true ;;
+          - : bool = true
+          utop # true || false ;;
+          - : bool = true
+          utop # false || false ;;
+          - : bool = false
+
+          utop # not true ;;
+          - : bool = false
+          utop # not false ;;
+          - : bool = true
+        ```);%
+
+        また四則演算では加減算よりも乗除算の方が優先度が高い（つまり乗除算を先に計算する）というルールがありますが、
+        真偽値においては優先度の高い順から「否定」、「且つ」、「または」というルールがあります。
+        そのため、次の2つの式は同じ意味となります。
+
+        \d-code(```
+          utop # not (true && false || not true && not false) ;;
+          - : bool = true
+          utop # not ((true && false) || ((not true) && (not false))) ;;
+          - : bool = true
+        ```);%
+      }
+      +p{
+        次に、2つ（または2つ以上）の値を比較した結果として\codem{bool}型を返す方法について説明します。
+        比較演算子として、2つの値が等しいかどうかを表す\codem{=}、2つの値が異なるかどうかを表す\codem{\<\>}、
+        与えられた1つ目の値が2つ目の値よりも大きいかどうかを表す\codem{\>}、
+        与えられた1つ目の値が2つ目の値以上かどうかを表す\codem{\>=}、
+        与えられた1つ目の値が2つ目の値よりも小さいかどうかを表す\codem{\<}、
+        与えられた1つ目の値が2つ目の値以下かどうかを表す\codem{\<=}、
+        などがあり、これらを用いてその大小を比較することができます。
+
+        \d-code(```
+          utop # 3 = 3 ;;
+          - : bool = true
+          utop # 3 <> 3 ;;
+          - : bool = false
+          utop # 3 > 2 ;;
+          - : bool = true
+          utop # 3 >= 2 ;;
+          - : bool = true
+          utop # 3 < 2 ;;
+          - : bool = false
+          utop # 3 <= 2 ;;
+          - : bool = false
+
+          utop # "abc" = "abc" ;;
+          - : bool = true
+          utop # "abc" <> "abc" ;;
+          - : bool = false
+        ```);%
+
+        文字や文字列においては、ラテン文字（abc...xyz、ABC...XYZのこと）の先頭から末尾に行くに連れて大きな値となっており、
+        ちょうど辞書の並びと一致するようになっています。
+        そのため、文字や文字列も整数や実装と同じようにその大小を比較できます。
+
+        \d-code(```
+          utop # 'b' > 'a' ;;
+          - : bool = true
+          utop # 'b' < 'a' ;;
+          - : bool = false
+
+          utop # "def" > "abc" ;;
+          - : bool = true
+          utop # "def" < "abc" ;;
+          - : bool = false
+        ```);%
+
+        なお、文字や文字列に大小関係があるからといって、整数や実数などの異なる型と比較することはできません。
+        \d-code(```
+          utop # 'a' < 1 ;;
+          Line 1, characters 6-7:
+          Error: This expression has type int but an expression was expected of type char
+
+          utop # "pi" = 3.14 ;;
+          Line 1, characters 7-11:
+          Error: This expression has type float but an expression was expected of type
+                   string
+        ```);%
+
+        最後に蛇足的な情報ですが、\codem{true}と\codem{false}にも値の大小があるため、同様の比較が可能です。
+        \d-code(```
+          utop # true > false ;;
+          - : bool = true
+          utop # true < false ;;
+          - : bool = false
+        ```);%
+
+        しかしながら、これはプログラムの読み手にとって分かりづらいかも知れないので、避けたほうが無難でしょう。
+      }
+    >
+    +section?:(`Other data`){その他のデータ}<
+      +p{
+        OCamlにおける基本的なデータは前述の通りですが、この他にもタプル、リスト、レコードなどのデータと型が存在します。
+        これらのデータについては、後ほど説明します。
+      }
+    >
+>

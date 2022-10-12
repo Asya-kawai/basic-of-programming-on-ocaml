@@ -1,0 +1,624 @@
+@import: settings
+
+let variants = '<
+    +p{
+      \ref-chapter(`List and record`);にて、レコードを紹介しましたが、
+      レコードは全てのフィールドが揃っている必要がありました。
+      つまり、たった1つでもフィールドの記述が漏れているとエラーとなってしまうのでした。
+      現実のプログラミングでは、いつも全てのフィールドが揃っているとは限りません。
+      本章では、複数のデータを1つの型で表現する手法について説明します。
+    }
+    +section?:(`Variants`){バリアント}<
+      +p{
+        \dfn{バリアント}は複数のデータを1つの型として扱うためのデータです。
+        この時のデータの型を\dfn{バリアント型}といいます。
+
+        OCamlにおけるバリアントの型を定義するための構文は以下の通りです。
+
+        \d-code(```
+          type <variant> =
+            | <Tag> [ of <type> [* <type>]... ]
+            ...
+        ```);%
+
+        上記の構文は、コンストラクタを表す\codem{\<Tag\>}が、「または」を表す\codem{\|}でつながっており、
+        \codem{\<variant\>}はコンストラクタのいづれかを値として取ります。
+        \codem{\<Tag\>}の先頭が大文字から始まっているのは、コンストラクタの先頭が大文字から始まる必要があるためです。
+        \codem{[...]}は0回以上の出現を表しており、\codem{\<Tag\> \| ...}のように定義（以下がその例です）できたり、
+
+        \d-code(```
+          utop # type color =
+            | Black
+            | Blue
+            | Green
+            | Red
+            | White ;;
+          type color = Black | Blue | Green | Red | White
+        ```);%
+
+        \codem{\<Tag\> of \<type\> \| ...}、\codem{\<Tag\> of \<type\> \* \<type\> \| ...}のように書くことができます（以下がその例です）。
+        \codem{of}以降の\codem{\<type\> \* \<type\>}はタプルの構造と非常によく似ていますね。
+
+        \d-code(```
+          utop # type my_custom_type =
+            | Int of int
+            | Tuple of int * int
+            | Unknown ;;
+          type my_custom_type = Int of int | Tuple of int * int | Unknown
+        ```);%
+
+        これまでの説明だけではイメージしづらいため、ありきたりな例ですが、
+        複数の図形をまとめて1つのデータ型を定義したいとしましょう。
+
+        例えば、
+        \listing{
+          * 円： 半径の長さを取る          
+          * 長方形： 長辺と短辺の長さを取る
+          * 正方形： 1辺の長さを取る
+        }%
+        のように、異なるデータを1つの型として表現したいケースを考えてみます。
+
+        円と正方形は1つの長さを持てば良さそうですが、長方形は長辺と短辺の2つの長さを持つ必要があります。
+        このようなケースでは、以下のようなバリアント型を定義することができます。
+
+        \d-code(```
+          utop # type figure = 
+            | Circle of int
+            | Rectangle of int * int
+            | Square of int
+            | Unknown ;;
+          type figure = Circle of int | Rectangle of int * int | Square of int | Unknown
+        ```);%
+
+        上記で定義した\codem{figure}は、コンストラクタである\codem{Circle}、\codem{Rectangle}、\codem{Square}、\codem{Unknown}のいづれかを取ります。つまり、これらは\codem{figure}の値です。
+
+        上記を定義した後で、以下のようにインタプリタ上で\codem{Circle}、\codem{Rectangle}、\codem{Square}、\codem{Unknown}を入力すると、それが\codem{figure}型の値であることが分かります。
+
+        \d-code(```
+          utop # Circle 3 ;;
+          - : figure = Circle 3
+          utop # Rectangle (3, 4) ;;
+          - : figure = Rectangle (3, 4)
+          utop # Square 5 ;;
+          - : figure = Square 5
+          nutop # Unknown ;;
+          - : figure = Unknown
+        ```);%
+      }
+      +p{
+        なお、コンストラクタは先頭が大文字で始まる必要があると説明しました。
+        一方で、変数及び関数は大文字で始めることができない点に注意して下さい。
+
+        \d-code(```
+          utop # let SomthingValue = "something" ;;
+          Line 1, characters 4-17:
+          Error: Unbound constructor SomthingValue
+
+          utop # let SomethingFunction = (fun x -> x);;
+          Line 1, characters 4-21:
+          Error: Unbound constructor SomethingFunction
+        ```);%
+      }
+      +subsection?:(`Variants and pattern matching`){バリアントとパターンマッチ}<+p{
+        レコード及びリストではパターンマッチ\codem{match...with...}を利用して、その要素を取り出しました。
+        バリアントでも同様にmatch式を利用して、その値にアクセスすることができます。
+        バリアント型は複数のコンストラクタの値を持つため、match式ではそのコンストラクタによるパターンマッチを行います。
+        以下では、パターンマッチを利用して、引数として与えられたバリアント型の変数figureのコンストラクタに応じて、その面積を返す関数\codem{calc_area}を定義しています。
+
+        \d-code(```
+          utop # let calc_area fig = match fig with
+            | Circle x -> x * x * 3
+            | Rectangle (x, y) -> x * y
+            | Square x -> x * x
+            | Unknown -> 0 ;;
+            val calc_area : figure -> int = <fun>
+
+            utop # let circle = Circle 3 ;;
+            val circle : figure = Circle 3
+            utop # calc_area circle ;;
+            - : int = 27
+
+            utop # let rect = Rectangle (3, 4) ;;
+            val rect : figure = Rectangle (3, 4)
+            utop # calc_area rect ;;
+            - : int = 12
+
+            utop # let square = Square 5 ;;
+            val square : figure = Square 5
+            utop # calc_area square ;;
+            - : int = 25
+
+            utop # calc_area Unknown ;;
+            - : int = 0
+        ```);%
+
+        バリアントにおけるパターンマッチにおいても、これまで見てきたレコードやリストのパターンマッチと同様に、
+        バリアント型が取りうる全てのパターンを書く必要があります。
+        上記の関数calc_areaにおいて、\codem{Unknown}を取り除いた例を以下に示します。
+
+        \d-code(```
+          utop # let calc_area fig = match fig with
+            | Circle x -> x * x * 3
+            | Rectangle (x, y) -> x * y
+            | Square x -> x * x ;;
+
+          Lines 1-4, characters 20-21:
+          Warning 8 [partial-match]: this pattern-matching is not exhaustive.
+          Here is an example of a case that is not matched:
+          Unknown
+          val calc_area : figure -> int = <fun>
+        ```);%
+
+        上記の場合は警告が発生し、
+        この警告は「パターンマッチにおいて全てのパターンが網羅されておらず、\codem{Unknown}のパターンにマッチしない」ことを示しています。
+      }>
+    >
+    +section?:(`Practice of variants`){実践}<
+      +p{
+        バリアントを利用して実践的なプログラムを書いてみましょう。
+      }
+      +subsection{列挙型との類似性}<+p{
+        他のいくつかの言語では、定数または識別子（\dfn{列挙子}）を持つ集合からなるデータ型を\dfn{列挙型}といいます。
+        以下はプログラミング言語Goの例ですが、以下のような書き方になります。
+
+        \d-code(```
+          type Color int
+          const (
+            Black Color = iota
+            Blue
+            Green
+            Red
+            Whilte
+          )
+        ```);%
+
+        OCamlでもバリアントを利用することで同様の定義が可能です。
+
+        \d-code(```
+          utop # type color =
+            | Black
+            | Blue
+            | Green
+            | Red
+            | White ;;
+          type color = Black | Blue | Green | Red | White
+        ```);%
+
+        しかし、他の言語（ここではGoで話を進めます）では各コンストラクタの実体は整数であるため、コンストラクタ同士の演算が可能ですが、
+        OCamlではコンストラクタ同士の演算は定義されていません。
+        もしコンストラクタ同士の演算を行いたい場合は、それ用の演算子（関数）を定義する必要があります。
+
+        \d-code(```
+          utop # type color =
+            | Black
+            | Blue
+            | DarkBlue
+            | Green
+            | DarkGreen
+            | Red
+            | DarkRed
+            | Gray
+            | White
+            | Unknown ;;
+          type color =
+              Black
+            | Blue
+            | DarkBlue
+            | Green
+            | DarkGreen
+            | Red
+            | DarkRed
+            | Gray
+            | White
+            | Unknown
+
+          utop # let (++) c1 c2 = match (c1, c2) with
+            | (Black, Blue) -> DarkBlue
+            | (Black, Green) -> DarkGreen
+            | (Black, Red) -> DarkRed
+            | (Black, White) -> Gray
+            | (Black, _) | (_, Black) -> Black
+            | (White, _) | (_, White) -> White
+            | (_, _) -> Unknown ;;
+          val ( ++ ) : color -> color -> color = <fun>
+
+          utop # Black ++ Green ;;
+          - : color = DarkGreen
+        ```);%
+
+        上記の例は、バリアント型であるcolorを拡張し、\codem{DarkBlue}、\codem{DarkGreen}、\codem{DarkRed}を追加で定義し、
+        色を混ぜ合わせた結果を返す演算子\codem{++}\footnote{
+          他の色の組み合わせも考えられますが、行数が長くなりすぎるため、ここではBlackとの組み合わせにフォーカスしています。
+        }を定義しています。
+        このような演算子を定義することで、コンストラクタ同士の演算が可能になります。
+
+        また、\codem{(Black, _) \| (_, Black) -\> ...}、\codem{(White, _) \| (_, White) -\> ...}のように、
+        複数のパターンにおける処理をまとめることができ、これを\dfn{orパターン}といいます。
+      }>
+      +subsection?:(`Recursive variant type`){再帰バリアント型と木構造}<+p{
+        バリアントの型定義において、ofの後ろにバリアント型自身を書くことで\dfn{再帰バリアント型}を定義できます。
+        ここでは例として「木」を考えてみます。
+        木は、
+        \listing{
+          * 葉
+          * 節（ノード）
+        }
+        から構成されることとします。
+
+        \d-code(```
+          +-----------+
+          | Node (10) |
+          +-----------+
+             |
+             |  +----------+
+             +--| Node (5) |
+             |  +----------+
+             |     |
+             |     |     +----------+
+             |     +-----| Leaf (4) |
+             |     |     +----------+
+             |     |
+             |     |     +----------+
+             |     +-----| Leaf (3) |
+             |           +----------+
+             |
+             |  +----------+
+             +--| Leaf (7) |
+                +----------+
+        ```);%
+
+        葉\codem{Leaf}は木の一番先を表し、何か1つのデータを持つコンストラクタを示します。
+        一方で節\codem{Node}は木の幹が分かれている部分を表し、節自身も何か1つのデータを持つ且つ
+        さらにその先に2つの節を持つことができるコンストラクタです。
+        このように必ず2つの葉を持つような木構造を\dfn{2分木}と呼びます。
+        
+        これをヴァリアント型で定義すると以下のように定義することができます。
+        \d-code(```
+          utop # type tree =
+            | Empty
+            | Leaf of int
+            | Node of tree * int * tree ;;
+          type tree = Empty | Leaf of int | Node of tree * int * tree
+        ```);%
+
+        上記の例から分かるとおり、バリアント型である\codem{tree}は\codem{Empty}\footnote{
+          Emptyは一見不要なように思えますが、木構造自体が空であること及び木構造に値を追加する関数を実装する際に必要となるため、予め定義しています。
+        }、\codem{Leaf}、\codem{Node}の3つのコンストラクタから構成されます。
+        Emptyは空であることを表します。Leafはint型を持ち、Nodeは\codem{(tree, int, tree)}という組み合わせを持つことを表します。
+        Nodeコンストラクタのof以降に自分自身である\codem{tree}を持っているため、これは再帰バリアント型となります。
+        また、自分自身を含むコンストラクタを持つバリアント型は\dfn{自己参照している}といいます。
+        自己参照するような（再帰的な）ケースでは、無限ループとならないように必ず自己参照しないケースを含めるようにして下さい。
+        上記の例ではLeafが存在するため大丈夫そうです。
+      }
+      +p{
+        なお、上記のtreeはint型しか持つことができない定義になってしまっていますが、
+        これを任意の型を持てるようにするには、以下のように木及び各コンストラクタが多相型な値を持てるよう定義します。
+
+        \d-code(```
+          utop # type 'a tree = 
+            | Empty
+            | Leaf of 'a
+            | Node of 'a tree * 'a * 'a tree ;;
+          type 'a tree = Empty | Leaf of 'a | Node of 'a tree * 'a * 'a tree
+        ```);%
+      }
+      +p{
+        木構造は、Unixファイルシステムにも採用されていたり、様々な場面で利用されています。
+        そのため木構造を自身で実装し利用できることは有用です。
+        int型だけを持つtreeでも多相型のtreeでも良いですが、ここでは単純化のためint型だけを持つtreeを用いて、
+        具体的な利用例を見ていきます。
+
+        \d-code(```
+          utop # type tree =
+            | Empty
+            | Leaf of int
+            | Node of tree * int * tree ;;
+          type tree = Empty | Leaf of int | Node of tree * int * tree
+
+          utop # Empty ;;
+          - : tree = Empty
+
+          utop # Leaf 3 ;;
+          - : tree = Leaf 3
+          utop # Leaf 4 ;;
+          - : tree = Leaf 4
+
+          utop # Node (Leaf 3, 5, Leaf 4) ;;
+          - : tree = Node (Leaf 3, 5, Leaf 4)
+        ```);%
+
+        Leafは、これまで見てきたバリアント型と同じように利用でき、
+        \codem{\<constructor\> \<value\>}のように書くことでtreeのLeafコンストラクタの値を生成できます。
+        上記では、3の値を持つLeafと4の値を持つLeafをインタプリタに入力しています。
+
+        一方、Nodeは\codem{(tree \* int \* tree)}であり、
+        上記では\codem{Leaf 3}、\codem{Leaf 4}、そして5の値を持つNodeを作成しています。
+        なお、Nodeはtree型であれば何でも持つことができるため、以下のようにNodeが別のNodeを持つことも可能です。
+
+        \d-code(```
+          utop # Node (Node (Leaf 3, 5, Leaf 4), 10, Leaf 7) ;;
+          - : tree = Node (Node (Leaf 3, 5, Leaf 4), 10, Leaf 7)
+        ```);%
+
+        これは図示した木構造をプログラムで表現したものであり、頂点\footnote{
+          この頂点を特に根（ルート）と呼びます。
+        }に10を持ち、
+        そこから7の値を持つ葉と5の値を持つ節が伸びている形を表現しています。
+        加えて、5の値を持つ節は、3と4の葉を持つことが示されています。
+
+        \d-code(```
+          Node ( +---+, 10, +---+ )
+                   |          |
+             Leaf ( 7 )    Node ( +---+, 5, +---+ )
+                                    |         |
+                              Leaf ( 3 )   Leaf ( 4 )
+        ```);%
+
+        ここで、節が左または右に別の木構造（具体的には節、葉、空（Empty））を持つ場合、この別の木構造を\dfn{部分木}といいます。
+      }>
+      +subsection{木構造とその関数}<+p{
+        \ref-subsection(`Recursive variant type`);で説明した木構造に対して、いくつかの関数（ここではその深さと節の数を数える関数）を考えてみます。
+        木構造の深さを計算する関数は、以下のように定義できます。
+
+        \d-code(```
+          utop # let rec tree_depth = function
+            | Empty -> 0
+            | Leaf _ -> 0
+            | Node (left, _, right) -> 1 + (max (tree_depth left) (tree_depth right)) ;;
+          val tree_depth : tree -> int = <fun>
+
+          utop # let my_tree = Node (Node (Leaf 3, 5, Leaf 4), 10, Leaf 7) ;;
+          val my_tree : tree = Node (Node (Leaf 3, 5, Leaf 4), 10, Leaf 7)
+
+          utop # tree_depth my_tree ;;
+          - : int = 2
+        ```);%
+
+        深さとは、頂点を1としてそれに続く節を数え上げていき、頂点から最も遠い節までの節の合計のことを指します。
+        ここで最も遠い節と言っているのは、節は複数に枝分かれし、節によっては深さがバラバラな場合があり、
+        頂点から最も遠くまで伸びている節を木の深さとして採用する必要があるためです。
+        上記の関数は、Leafの場合は\codem{0}を返し、Nodeの場合は現在の節\codem{1}と「左と右に伸びる節の内、大きい方の値」を可算します。
+        特に\codem{tree_depth left}及び\codem{tree_depth right}は自分自身を呼び出しているため再帰になっています。
+        また、\codem{tree_depath}内で利用している関数\codem{max}は、与えられた2つの引数の内大きい方を返す関数で、
+        maxを用いることで左と右でより深い方の値を返すように実装しています。
+        
+        次に、節（ノード）の数を数え上げる関数を考えてみます。
+        木構造の節の数を数える関数は、以下のように定義できます。
+
+        \d-code(```
+          utop # let rec tree_size = function
+            | Empty -> 0
+            | Leaf _ -> 0
+            | Node (left, _, right) -> 1 + (tree_size left) + (tree_size right) ;;
+          val tree_size : tree -> int = <fun>
+
+          utop # let my_tree = Node (Node (Leaf 3, 5, Leaf 4), 10, Leaf 7) ;;
+          val my_tree : tree = Node (Node (Leaf 3, 5, Leaf 4), 10, Leaf 7)
+
+          utop # tree_size my_tree ;;
+          - : int = 2
+        ```);%
+
+        前述の深さを出力する関数\codem{tree_depth}と同様に再帰関数であり、Nodeの場合に「現在の節\codem{1} + 左のノード数 + 右のノード数」を返します。
+      }
+      +p{
+        なお、上記では節が2つしかない木構造を扱いました。節が2つのものを\dfn{2分木}といいます。
+        それ以外の、例えば節が3つのものを3分木、4つのものを4分木、...n個の節を持つ木を\dfn{n分木}といいます。
+        特に、2分木\codem{${t}}に対して
+
+        \d-codem{
+          ${tree\_size(t) \leqq 2^{tree\_depth(t)} - 1}
+        }
+        が成り立ちます。
+        また、2分木\codem{${t}}に対して
+
+        \d-codem{
+          ${tree\_size(t) = 2^{tree\_depth(t)} - 1}
+        }
+        となるような2分木を\dfn{完全2分木}といいます。
+
+        以下に完全2分木の例を示します。
+
+        \d-code(```
+          utop # let comp_tree = Node(
+            Node(Node(Leaf 2, 4, Leaf 3), 8, Node(Leaf 5, 7, Leaf 6)),
+            16,
+            Node(Node(Leaf 9, 11, Leaf 10), 15, Node(Leaf 12, 14, Leaf 13))) ;;
+          val comp_tree : tree =
+            Node (Node (Node (Leaf 2, 4, Leaf 3), 8, Node (Leaf 5, 7, Leaf 6)), 16,
+             Node (Node (Leaf 9, 11, Leaf 10), 15, Node (Leaf 12, 14, Leaf 13)))
+
+          utop # tree_depth comp_tree ;;
+          - : int = 3
+
+          utop # tree_size comp_tree ;;
+          - : int = 7
+        ```);%
+
+        上記の例から\codem{${tree\_size(t) = 7}}且つ\codem{${tree\_depth(t) = 3}}であることが分かります。
+        これらを\codem{${tree\_size(t) = 2^{tree\_depth(t)} - 1}}に代入すると
+        \codem{${7 = 2^3 - 1}}となるため、等式を満たしていることが分かりますね。
+      }
+      +p{
+        次に、木構造から値を列挙する関数を定義してみます。
+        木構造から値を取り出すには次の方法があります。
+
+        \listing{
+          * \dfn{行きがけ順（preorder）}： 訪れた節の値にラベルを付け、左の部分木、右の部分木の順で探索（走査）及び値を見つけ次第ラベルを付ける方法
+          * \dfn{通りがけ順（inorder）}： 左の部分木を辿れなくなるまで探索（走査）及び値にラベルを付け、1つ上の節、右の部分木の順で探索（走査）及び値を見つけ次第ラベルを付ける方法
+          * \dfn{帰りがけ順（postorder）}： 左の部分木を辿れなくなるまで探索（走査）及び値にラベルを付け、1つ上の節の右の部分木を探索（走査）及び値を見つけ次第ラベル付けし、左右両方の走査が完了次第1つ上の節の値をラベル付けする。これを頂点まで繰り返す方法
+        }
+
+        行きがけ順の関数は以下のように定義できます。
+
+        \d-code(```
+          utop # let rec preorder = function
+            | Leaf x -> [x]
+            | Node (left, x, right) -> x :: (preorder left) @ (preorder right) ;;
+          val preorder : tree -> int list = <fun>
+
+          utop # preorder comp_tree ;;
+          - : int list = [15; 8; 4; 2; 3; 7; 5; 6; 14; 10; 8; 9; 13; 11; 12]
+        ```);%
+
+        通りがけ順は以下のように定義できます。
+
+        \d-code(```
+          utop # let rec inorder = function
+            | Leaf x -> [x]
+            | Node (left, x, right) -> (inorder left) @ (x :: inorder right) ;;
+          val inorder : tree -> int list = <fun>
+
+          utop # inorder comp_tree ;;
+          - : int list = [2; 4; 3; 8; 5; 7; 6; 15; 8; 10; 9; 14; 11; 13; 12]
+        ```);%
+
+        帰りがけ順は以下のように定義できます。
+
+        \d-code(```
+          utop # let rec postorder = function
+            | Leaf x -> [x]
+            | Node (left, x, right) -> (postorder left) @ (postorder right) @ [x];;
+          val postorder : tree -> int list = <fun>
+
+          utop # postorder comp_tree ;;
+          - : int list = [2; 3; 4; 5; 6; 7; 8; 8; 9; 10; 11; 12; 13; 14; 15]
+        ```);%
+
+        各探索方法に図を入れてもっと書く。
+        comptreeの定義も変えたので結果を更新しておく。
+      }>
+      +subsection{2分探索木}<+p{
+        \dfn{2分探索木}は、検索を高速に行えるように、一定の規則に従ってデータを格納したデータ構造（木構造）です。
+        2分探索木は
+
+        \listing{
+          * 左の部分木には、その節のデータよりも小さいデータのみ格納される
+          * 右の部分木には、その節のデータよりも大きいデータのみ格納される
+        }
+
+        というルールがあります。
+        このような木構造を探索することを\dfn{2分探索}といいます。
+
+        2分探索木の例を以下に示します。
+
+        \d-code(```
+               Node ( +---+,              10,              +---+ )
+                        |                                    |
+          Node ( +---+, 5, +---+ )            Node ( +---+,   15,   +---+ )
+                   |         |                         |              |
+               Leaf ( 3 )   Leaf ( 4 )  Node ( +---+, 14, +---+ )   Leaf ( 16 )
+                                                 |          |
+                                             Leaf ( 12 )   Leaf ( 13 )
+        ```);%
+
+        蛇足ですが、2分探索木であり且つ完全2分木である木構造も存在します。
+
+        \d-code(```
+               Node ( +---+,          10,          +---+ )
+                        |                            |
+          Node ( +---+, 5, +---+ )    Node ( +---+, 15, +---+ )
+                   |         |                 |          |
+               Leaf ( 3 )   Leaf ( 4 )   Leaf ( 14 )  Leaf ( 16 )
+        ```);%
+
+        上記のような2分探索木を探索（走査）するための関数は、以下のように定義できます。
+
+        \d-code(```
+          utop # let rec search tree data = match tree with
+            | Empty -> false
+            | Leaf x -> data = x
+            | Node (left, x, right) ->
+              if x = data then true
+              else
+                if data < x then search left data
+                else search right data ;;
+           val search : tree -> int -> bool = <fun>
+        ```);%
+
+        上記の関数は、検索対象となる木構造\codem{tree}と検索したい値\codem{data}を引数にとります。
+        treeが空\codem{Empty}である場合は、検索したい値が見つからなかったと判断し\codem{false}を返します。
+        葉\codem{Leaf}である場合は、葉の値とdataを比較し、その結果を返します。
+        節（Node）である場合は、節が持つ値とdataを比較し一致していれば\codem{true}を返します。
+        節が持つ値と一致しなければ、節が持つ値とdataの大小を比較し、
+        \codem{data \< x}であれば左の部分木\codem{left}をsearch関数の第一引数として与え、再帰的に検索を行います。
+        そうでなければ（つまり\codem{data \> x}）、右の部分木\codem{right}をsearch関数の第一引数として与え、再帰的に検索を行います。
+
+        \d-code(```
+          utop # let comp_binary_search_tree = Node(
+            Node(Node(Empty, 3, Leaf 4), 5, Node(Leaf 6, 7, Leaf 8)),
+            9,
+            Node(Node(Leaf 10, 11, Leaf 12), 13, Node(Leaf 14, 15, Empty))) ;;
+          val comp_binary_search_tree : tree =
+            Node (Node (Node (Empty, 3, Leaf 4), 5, Node (Leaf 6, 7, Leaf 8)), 9,
+             Node (Node (Leaf 10, 11, Leaf 12), 13, Node (Leaf 14, 15, Empty)))
+
+          utop # search comp_binary_search_tree 1 ;;
+          - : bool = false
+
+          utop # search comp_binary_search_tree 4 ;;
+          - : bool = true
+
+          utop # search comp_binary_search_tree 6 ;;
+          - : bool = true
+
+          utop # search comp_binary_search_tree 9 ;;
+          - : bool = true
+
+          utop # search comp_binary_search_tree 13 ;;
+          - : bool = true
+
+          utop # search comp_binary_search_tree 20 ;;
+          - : bool = false
+        ```);%
+
+        上記の例では、完全2分木に対して探索（走査）を行っていますが、2分探索木であれば上記のsearch関数を用いて値の有無を確認できます。
+        また、2分探索木において探索と同じくらい重要な操作として「追加」があります。
+        追加関数を考える場合、2分探索木のルールに則った実装が必要です。
+        つまり、これから追加したい値に対して、節が持つ値よりも小さい場合は左の部分木に値を挿入し、大きい場合は右の部分木に値を挿入します。
+
+        \d-code(```
+          utop # let rec add tree data = match tree with
+            | Empty -> Leaf data
+            | Leaf x ->
+              if data = x then Leaf x
+              else      
+                if data < x then Node ((Leaf data), x, Empty)
+                else Node (Empty, x, (Leaf data)) 
+            | Node (left, x, right) ->
+              if data = x then Node (left, x, right)
+              else
+                if data < x then Node ((add left data), x, right)
+                else Node (left, x, (add right data)) ;;
+          val add : tree -> int -> tree = <fun>
+
+          utop # add Empty 1 ;;
+          - : tree = Leaf 1
+
+          utop # add (Leaf 3) 4 ;;
+          - : tree = Node (Empty, 3, Leaf 4)
+
+          utop # let binary_search_tree = Node(
+            Node(Node(Leaf 2, 3, Leaf 4), 5, Empty),
+            9,
+            Node(Node(Leaf 10, 11, Leaf 12), 13, Node(Leaf 14, 15, Leaf 16))) ;;
+          val binary_search_tree : tree =
+            Node (Node (Node (Leaf 2, 3, Leaf 4), 5, Empty), 9,
+             Node (Node (Leaf 10, 11, Leaf 12), 13, Node (Leaf 14, 15, Leaf 16)))
+
+          utop # add binary_search_tree 6 ;;
+          - : tree =
+          Node (Node (Node (Leaf 2, 3, Leaf 4), 5, Leaf 6), 9,
+           Node (Node (Leaf 10, 11, Leaf 12), 13, Node (Leaf 14, 15, Leaf 16)))
+
+          utop # add binary_search_tree 20 ;;
+          - : tree =
+          Node (Node (Node (Leaf 2, 3, Leaf 4), 5, Empty), 9,
+           Node (Node (Leaf 10, 11, Leaf 12), 13,
+            Node (Leaf 14, 15, Node (Empty, 16, Leaf 20))))
+        ```);%
+
+        他にも特定の値を削除する関数などが考えられますが、エラーハンドリングの知識が必要になりますので、ここでは割愛します。
+      }>
+    >
+>

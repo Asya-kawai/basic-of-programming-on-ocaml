@@ -1,0 +1,144 @@
+@import: settings
+
+let conditional-branch = '<
+    +p{
+      \ref-chapter(`Variables and functions`);では、基本的な変数及び関数の定義を見てきましたが、
+      ユーザが与えたデータ（実際にはユーザが入力した値など）に応じて、プログラムの処理を切り替えたい場合があります。
+      本章では、単純な分岐を用いたプログラムについて説明します。
+    }
+    +section?:(`If expressions`){if式}<
+      +p{
+        条件分岐とは与えられた条件に応じて、処理を切り替えたい場合に用いられます。
+        OCamlでは、\dfn{if式}\footnote{
+          OCamlではifは式になります。他のプログラミング言語ではifは文（ステートメント）として表現される場合があり、
+          OCamlのいつくかのドキュメントでも他言語との親和性のためにif文やifステートメントと表現されることがあります。
+        }を用いることで条件に応じた場合分けが可能です。
+  
+        \d-code(```
+          if <boolean-condition> then <expr>
+          または
+          if <boolean-condition> then <expr> else <expr>
+        ```);%
+  
+        上記の構文の\codem{boolean-condition}は条件を示しており、条件は必ずbool型でなければなりません。
+        なお、if式はelse節を省略することができ、
+        これを表現したのが前者（\codem{if \<boolean-condition\> then \<expr\>}）になります。
+        また、if式中の\codem{then}直後の\codem{\<expr\>}及び\codem{else}直後の\codem{\<expr\>}は同じ型を返す必要があります。
+  
+        if式は条件\codem{boolean-condition}が\codem{true}の場合、\codem{then}節の\codem{\<expr\>}を実行します。
+        条件が\codem{false}の場合、もし\codem{else}節があれば\codem{else}節の\codem{\<expr\>}を実行します。
+  
+        以下にif式を利用した例を示します。
+  
+        \d-code(```
+          utop # if true then "ok" else "ng" ;;
+          - : string = "ok"
+  
+          utop # if false then "ok" else "ng" ;;
+          - : string = "ng"
+        ```);%
+  
+        上記の例では直接bool型を書きましたが、真偽値は比較演算子を利用することでも得られることを思い出して下さい。
+        比較演算子を利用し、次のように書くこともできます。
+  
+        \d-code(```
+          utop # if 1 < 2 then "ok" else "ng" ;;
+          - : string = "ok"
+  
+          utop # if 1 > 2 then "ok" else "ng" ;;
+          - : string = "ng"
+        ```);%
+  
+        なお、条件がbool型でない場合や\codem{then}節及び\codem{else}節の式が同じ型を返さない場合はエラーとなります。
+  
+        \d-code(```
+          utop # if 1 then "ok" else "ng" ;;
+          Line 1, characters 3-4:
+          Error: This expression has type int but an expression was expected of type 
+                 bool because it is in the condition of an if-statement
+  
+          utop # if 1 > 2 then "ok" else -1 ;;
+          Line 1, characters 24-26:
+          Error: This expression has type int but an expression was expected of type
+                   string
+        ```);%
+  
+        上記の例において、1つ目のエラーは「int型が与えられたが、ifステートメント条件にはbool型を期待していた」ことが示されており、2つ目のエラーは「\codem{else}節の式にてint型が与えられたが、string型を期待していた」ことが示されています。
+      }
+      +p{
+        しかしながら、これもあまり実用的な例ではないため、以下により実践的な例を示します。
+  
+        \d-code(```
+          utop # let min x y =
+            if x < y then x else y ;;
+          val min : 'a -> 'a -> 'a = <fun>
+  
+          utop # min 10 100 ;;
+          - : int = 10
+  
+          utop # min 1000 100 ;;
+          - : int = 100
+        ```);%
+  
+        上記の例では、インタプリタが\codem{min}という名前の関数を新たに定義しています。
+        関数\codem{min}は2つの引数を取り、それら2つの引数の大小を比較し、小さい方の値を返します。
+  
+        関数定義後のインタプリタの出力は、
+        「\codem{min}という\codem{'a -\> 'a -\> 'a}型の関数を定義し、その値は関数である」ことを示しています。
+      }
+      +p{
+        ここで\codem{'a}という新しい表現が登場しました。
+        これは\dfn{型変数}と呼ばれ、「どのような型に属してもよい」ということを表しています。
+        なお、型変数が複数ある場合は、\codem{'a}、\codem{'b}のように\codem{'}を付けた小文字のラテン文字で表されます。
+        型変数は自由に変化して良い変数であるため「型の一般化」と考えることができます。
+        型変数は式を評価する際に具体的な型に置き換わるため、例えばint型を入れた場合はint型として処理されます。
+        int型以外の型を与えることができる例として、string型とfloat型を与えた例を以下に示します。
+  
+        \d-code(```
+          utop # min "abc" "def" ;;
+          - : string = "abc"
+  
+          utop # min 100.0 10.0 ;;
+          - : float = 10.
+        ```);%
+  
+        このように、どのような型に属してもよいという性質を\dfn{多相性}といい、
+        また型変数を含むような型を\dfn{多相型}といいます。多相型を持つ関数を多相関数と呼びます。
+  
+        ここで、改めて\codem{'a -\> 'a -\> 'a}型を解釈し直してみると、
+        関数\codem{min}は'a型の引数を2つ受け取り、その結果として\'a型を返す関数だと分かります。
+        ただし、\'aに任意の型を当てはまることができるからといって、
+        第一引数の型と第二引数の型を異なる型にすることはできません。
+        \codem{'a}型は、その実行の時々で統一されている必要があります。
+      }
+      +p{
+        最後に、ifが式であることを利用して、簡潔にプログラムを表現できる例を紹介します。
+        まずは、これまで書いてきたようにifを利用する例を示します。
+  
+        \d-code(```
+          utop # let calc_with_tax price year =
+            if year < 2019 then price *. 1.08
+            else price *. 1.1 ;;
+          val calc_with_tax : float -> int -> float = <fun>
+        ```);%
+  
+        上記の例は、税込み価格を計算する関数\codem{calc_with_tax}を定義したもので、
+        第一引数にはモノの金額を取り、第二引数には購入年を取ることにします。
+        2019年より前に購入したものであれば、8\%の税率で、それ以外は10\%の税率で計算します。
+        （単純化のため、税率が変更された年月日と完全には一致していない且つ8\%以前の税率は考慮しないものとします）。
+        もちろん、これでも期待通りに動作しますが、\codem{then}及び\codem{else}節の\codem{price \*.}が重複しており、
+        少し冗長な気もします。
+  
+        この場合、ifを式と見なすことで次のようにコードを修正できます。
+  
+        \d-code(```
+          utop # let calc_with_tax price year =
+            price *. (if year < 2019 then 1.08 else 1.1) ;;
+          val calc_with_tax : float -> int -> float = <fun>
+        ```);%
+  
+        上記の変更は、if式が税率を返すことで\codem{price \*.}の重複を排除し、よりすっきりしたコードになりました。
+        このようにifは式として組み込めるため、場合によってはすっきりしたコードを書けるケースがあります。
+      }
+    >
+>
