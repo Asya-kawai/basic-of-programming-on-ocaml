@@ -1,41 +1,487 @@
 @import: settings
 
 let error-handling = '<
+  +p{
+    プログラムが実行される際にその処理が妨げられるような入力や計算結果となった場合、
+    これをエラーとして処理することまたはその処理方法を\dfn{エラーハンドリング}と言います。
+    実はこれまで扱ってきた関数でも、if式やmatch式によるエラーハンドリングを行ってきました。
+    例えば、リスト操作で空リストが渡された場合、\codem{[] -\> []}と書いていましたが、
+    これも一種のエラーハンドリングと考えることができます。
+    しかし、戻り値の一部にエラーの意味を持たせることが適切でない場合があります。
+    例えば、\codem{mod}関数のような除算の商を出力する関数において、
+    割る数に0を代入した時にエラーの意味として0や負の数を返すことは適切でしょうか。
+    % https://club.informatix.co.jp/?p=8895 
+    % https://nlab.itmedia.co.jp/nl/articles/1710/15/news005.html
+    ご存知の通り0で割る計算はできない（定義できない）ため、何らかの値を返すことは適切ではないと言えます。
+    また、仮に何らかの値を返す場合であっても、
+    正しく計算された結果なのか、エラーとしての値なのかが区別できないという問題もあります。
+    OCamlでは\dfn{例外}という機構を用いてこれに対処可能です。
+    本章ではエラーハンドリングを行うための「戻り値」「Result型」「例外」を説明します。
+  }
+  +section?:(`Error aware return values`){戻り値によるエラーハンドリング}<
     +p{
-      \dfn{エラーハンドリング}は、プログラムが実行される際にその処理が妨げられるような入力や計算結果となった場合、
-      これをエラーとして処理することまたはその処理方法を指す言葉です。
-      実はこれまで扱ってきた関数でも、if式やmatch式によるエラーハンドリングを行ってきました。
-      例えば、リスト操作で空リストが渡された場合、\codem{[] -\> []}と書いていましたが、
-      これも一種のエラーハンドリングと考えることができます。
-      しかし、\codem{mod}関数のような除算の商を出力する関数において、割る数に0を代入された場合、安易に0を返すことができません。
-      なぜなら正しく計算された結果として商が0となったのか、エラーとしての0なのかが区別できないからです。
-      OCamlでは\dfn{例外}という機構を用いてこれに対処可能です。
-      本章ではエラーハンドリングを行うための「戻り値」「例外」「Result型」を説明します。
+      最も簡単なエラーハンドリングは、関数がエラーである旨を戻り値で示すという方法です。
+      これまで見てきた関数定義でも扱った事項ですが、改めて下記の例を見てみましょう。
+
+      \d-code(```
+        utop # let rec find data = function
+          | [] -> false
+          | x :: xs -> if data = x then true else find data xs ;;
+        val find : 'a -> 'a list -> bool = <fun>
+      ```);%
+
+      上記の例では、関数\codem{find}を定義しており、
+      これは多相型であるdata（\codem{'a}）と多相リスト（\codem{'a list}）を引数に取ります。
+      コード中の\codem{[] -\> false}は、引数として受け取った多相リストが空リストの場合、falseを返すことを意味します。
     }
-    +section?:(`Error aware return types`){戻り値によるエラーハンドリング}<
-      +p{
-        最も簡単なエラーハンドリングは、関数がエラーである旨を戻り値で示すという方法です。
-        これまで見てきた関数定義でも扱った事項ですが、改めて下記の例を見てみましょう。
+    +p{
+      真偽値を返す関数に対してエラーハンドリングにするには以下のような処理を書きます。
 
-        \d-code(```
-          utop # let rec find data = function
-            | [] -> false
-            | x :: xs -> if data = x then true else find data xs ;;
-          val find : 'a -> 'a list -> bool = <fun>
-        ```);%
+      \d-code(```
+      utop # if (find "one" ["one"; "two"; "three"]) then
+        Printf.printf "Found!\n"
+      else
+        Printf.printf "Not found...\n" ;;
+      Found!
+      - : unit = ()
 
-        上記の例では、関数\codem{find}を定義しており、これは多相型であるdataと多相リストを引数に取ります。
-        \codem{[] -\> false}で、空リストの場合つまりdataが見つからなかった場合\codem{false}を返します。
-        この部分はこれまで見てきた通りですが、これをオプション型で表現することもできます。
+      utop # if (find "four" ["one"; "two"; ""]) then
+        Printf.printf "Found!\n"
+      else
+        Printf.printf "Not found...\n" ;;
+      Not found...
+      - : unit = ()
+      ```);%
 
-        \d-code(```
-          utop # let rec find data = function
-            | [] -> None
-            | x :: xs -> if data = x then Some x else find data xs ;;
-          val find : 'a -> 'a list -> 'a option = <fun>
-        ```);%
-        戻り値の\codem{None}はdataが見つからなかったことを示し、\codem{Some x}は見つかった値をオプション型で返すことを示しています。
-        このようなエラーハンドリングでは、関数の呼び出し元がNoneかそれ以外かによって明示的且つ適切に処理する必要があります。
-      }
+      このように、関数の戻り値が真偽値の場合はif式を用いた条件分岐を使ったり、
+      その他の値によってはパターンマッチを用いて適切に処理します。
+    }
+  >
+  +section?:(`Encoding errors with option type`){オプション型によるエラーハンドリング}<
+    +p{
+      % プログラミングの基礎 18章 例外と例外処理
+      % 18.2 オプション型を使った例外処理
+  
+      エラーハンドリングはオプション型で表現することもできます。
+  
+      \d-code(```
+        utop # let rec find data = function
+          | [] -> None
+          | x :: xs -> if data = x then Some x else find data xs ;;
+        val find : 'a -> 'a list -> 'a option = <fun>
+      ```);%
+  
+      コード中の\codem{[] -\> None}はdataが見つからなかった場合にNoneを返すことを示し、
+      \codem{if data = x then Some x}は見つかった値（x）をオプション型で返すことを示しています。
+  
+      つまり、関数の戻り値がNoneかそれ以外（Some x）かによって関数の実行結果が明示的に示されます。
+      その結果、関数の呼び出し元では戻り値であるNoneとSome xの両方またはどちらかを処理するコードの記述が必要です。
+    }
+    +p{
+      例えば、次のようにfind関数を呼び出し、戻り値を処理できます。
+  
+      \d-code(```
+      utop # let find_one =
+        let data_list = ["one"; "two"; "three"] in
+        match (find "one" data_list) with
+          | None -> ""
+          | Some x -> x ;;
+      val find_one : string = "one"
+      ```);%
+  
+      上記の例では、関数\codem{find_one}を定義し、この関数は\codem{data_list}がoneという文字列を持つかどうかを判別します。
+      find_one関数はfindの戻り値がNoneの場合は空文字列（""）を返し、要素（ここでは"one"）が見つかればその要素自身（"one"）を返します。
+    }
+    +p{
+      ここで、オプション型を返すfind関数を用いて、"four"を見つける関数も定義してみます。
+  
+      \d-code(```
+      utop # let find_four =
+        let data_list = ["one"; "two"; "three"] in
+        match (find "four" data_list) with
+          | None -> ""
+          | Some x -> x ;;
+      val find_four : string = ""
+      ```);%
+  
+      "four"という文字列はdata_listに存在しないため、find関数はNoneを返します。
+      Noneを受け取ったfind_four関数は、空文字（""）を返すことで"four"が存在しなかったことを示します。
+
+      このように、オプション型を用いたエラーハンドリングでは、
+      パターンマッチによってNoneを適切に処理する必要があります。
+    }
+    +p{
+      さて、ここではdata_listを関数内で定義していますが、これを外部から受け取る場合
+      （しかも自分以外のだれかが定義したもの）、data_listの仕様を完全に把握できないかもしれません。
+      つまり、外部から受け取るデータ（ここではdata_list）がどのような値を含むか事前に分からないことがあります。
+
+      オプション型は、特定の結果（ここでは"four"が見つからないこと）をエラーとして扱って良いのか悪いのかが明確でないことを強調しています。
+      このように、扱うデータに曖昧さが含まれる場合であっても、オプション型を使えば両方のケースをうまく処理できるという利点があります。
+    }
+  >
+  +section?:(`Encoding errors with result`){Result型によるエラーハンドリング}<
+    +p{
+      しかしオプション型でエラーハンドリングすることが常に良いとは限りません。
+      例えば、Noneを受け取った側でそれが致命的なエラーかどうかを判別し、
+      場合によってはユーザにエラーが発生したことを伝える必要があります
+      （オプション型ではNoneによって隠れてしまっていました）。
+    }
+    +p{
+      OCamlには\dfn{Result型}があり、これを用いて上記の欠点を補うことができます。
+      StdlibモジュールにてResult型は以下のように定義されます。
+
+      % https://docs.mirage.io/ocaml/Stdlib/Result/index.html
+      \d-code(```
+        type ('a, 'b) result =
+          | Ok of 'a
+          | Error of 'b
+      ```);%
+
+      Result型は、コンストラクタ\codem{Ok}またはコンストラクタ\codem{Error}をとります。
+      Okコンストラクタは処理の成功を意味し、Errorコンストラクタは処理の失敗を意味します。
+      % https://ocaml.org/docs/error-handling
+      
+      例えば、Result型は以下のように利用できます。
+
+      \d-code(```
+      utop # Ok "This is OK!" ;;
+      - : (string, 'a) result = Ok "This is OK!"
+
+      utop # Error "This is NG!" ;;
+      - : ('a, string) result = Error "This is NG!"
+      ```);%
+
+      Stdlibモジュールは自動でopenされるためOkコンストラクタ及びErrorコンストラクタを直接呼び出せるため、
+      上記ではいきなりOk、Errorを呼び出していますが、
+      もちろんStdlib.Result.OkやResult.Okのような呼び出しも可能です。
+      % https://dev.realworldocaml.org/error-handling.html
+      % https://v2.ocaml.org/manual/core.html
+      % https://v2.ocaml.org/manual/stdlib.html
+      % https://ocaml.janestreet.com/ocaml-core/odoc/stdlib/Stdlib/index.html
+
+      \d-code(```
+      utop # Stdlib.Result.Ok "This is OK!" ;;
+      - : (string, 'a) result = Result.Ok "This is OK!"
+
+      utop # Result.Ok "This is OK!" ;;
+      - : (string, 'a) result = Result.Ok "This is OK!"
+      ```);%
+    }
+    +p{
+      % https://discuss.ocaml.org/t/exception-vs-result/6931/16
+      % https://keleshev.com/composable-error-handling-in-ocaml
+
+      ここで、先程のオプション型を用いたfind関数をResult型を返すように変更してみましょう。
+
+      \d-code(```
+      utop # let rec find data = function
+        | [] -> Error "Not Found"
+        | x :: xs ->
+          if data = "" then Error "Input is empty"
+          else
+            if data = x then Ok x else find x xs ;;
+      val find : string -> string list -> (string, string) result = <fun>
+      ```);%
+
+      次にResult型を返すfind関数を利用してfind_four関数を定義し直してみると以下のように書けます。
+
+      \d-code(```
+      utop # let find_four =
+        let data_list = ["one"; "two"; "three"] in
+        match (find "four" data_list) with
+          | Error x -> Printf.printf "ERROR: %s\n" x
+          | Ok x -> Printf.printf "OK: %s\n" x ;;
+      ERROR: Not Found
+      val find_four : unit = ()
+      ```);%
+
+      上記の例では"four"が見つからなかったため、標準出力に"ERROR: Not Found"と表示しています。
+      標準出力にメッセージを表示することでfind関数が失敗したこと（"four"が見つからなかったこと）を強く主張しています。
+
+      ここまではオプション型と同じように思いますが、以下のように空文字（""）をfindの入力として与えてみましょう。
+
+      \d-code(```
+      utop # find "" ["one"; "two"; "three";];;
+      - : (string, string) result = Error "Input is empty"
+      ```);%
+
+      find関数は空文字を付けつけることができないことが示されています。
+      オプション型は、どのような場合もNoneを返すためエラーの種別を伝える術を持ちませんでした。
+
+      このように、戻り値やオプション型との違いは「Result型の場合はエラーの特性について言及できる」点にあります\footnote{
+        この例では、オプション型とResult型の違いをはっきりと分別できるような表現になっていないかも知れません。
+      }。
+    }
+  >
+  +section?:(`Exceptions`){例外によるエラーハンドリング}<
+    +p{
+      % https://ja.wikipedia.org/wiki/例外処理
+      \dfn{例外}とは、プログラムで想定されておらず解決できない問題であり、
+      これに対処する方法を\dfn{例外処理}と言います。
+
+      オプション型やResult型を用いたエラーハンドリングは処理を即座に停止しませんでしたが、
+      例外は残りの処理を実行せず、すぐに呼び出し元に返します。
+
+      % https://dev.realworldocaml.org/error-handling.html
+      OCamlにおける例外処理とは、
+      何らかの計算によって例外が発生した場合にこれを検知・処理するとともに、
+      計算を終了しエラーを報告する仕組みです。
+      なお、他のプログラミング言語における例外もほとんど同じ仕組みです。
+    }
+    +p{
+      % https://dev.realworldocaml.org/error-handling.html
+      例外を発生させる一般的な方法は0での除算です。
+
+      \d-code(```
+      utop # 3 / 0 ;;
+      Exception: Division_by_zero.
+      ```);%
+
+      上記の例は、3を0で割った際に例外\codem{Division_by_zero}が発生したことを示しています。
+      % プログラミングの基礎 18章 例外と例外処理
+      後述する例外処理の構文を用いない場合、その時点で処理の停止及び例外の報告を行い、プログラムを終了します。      
+    }
+    +p{
+      ここでDivision_by_zeroについて説明します。
+      これはOCamlで予め定義されている例外です。
+
+      utopを利用している場合、インタプリタに例外名を入力して定義を確認できます。
+
+      \d-code(```
+      utop # Division_by_zero ;;
+      - : exn = Division_by_zero
+      ```);%
+
+      % https://qiita.com/zenwerk/items/bfc1978718b5da3f463b
+      % https://v2.ocaml.org/manual/extensiblevariants.html
+      % https://ocaml.org/docs/error-handling
+      \codem{exn}とは、拡張可能なバリアント型で表現される例外の型を示します。
+      拡張可能とは任意のバリアント型なコンストラクタを追加できるという意味です。
+      つまり例外定義とは、exn型に新しいコンストラクタ（ここではDivision_by_zeroを指す）を追加することを意味します。
+    }
+    +p{
+      % raiseはキーワードではないことに注意
+      % https://v2.ocaml.org/manual/manual070.html
+      任意のタイミングで例外を発生させるにはStdlibモジュールで定義される\codem{raise}関数を用います\footnote{
+        Stdlibモジュール以外にもBaseというモジュールで定義されたraiseも存在します。
+      }。
+      Stdlibモジュールは自動でオープンされるため、Stdlib.raiseと書かず直接raiseと書きます。
+      raiseは以下の通り定義されています。      
+
+      \d-code(```
+      utop # raise ;;
+      - : exn -> 'a = <fun>
+      ```);%
+
+      raiseは引数に例外であるexn型を受け取り、多相型（'a）を返す関数の型です\footnote{
+        % https://www.fos.kuis.kyoto-u.ac.jp/~igarashi/class/isle4-02w/mltext/ocaml005.html
+        % https://dev.realworldocaml.org/error-handling.html
+        あたかもraiseが多相型を生成して返しているように見えますが、実はraise自身は何も返しません。
+        raiseのように関数自身が何も返さない場合は多相型を返します。
+        例えば、無限ループとなるような関数もraise同様に何も返さないため、多相型を返す関数として定義されます。
+        これは、これらの関数をどのような場所から呼び出しても良いということを意味します。
+      }。
+      exnにはDivision_by_zeroなどの例外名が入ります。
+
+      % https://dev.realworldocaml.org/error-handling.html
+      % プログラミングの基礎 18章 例外と例外処理
+      例外がプログラムの深くネストされたところで発生した場合でも、全ての処理を終了します。
+
+      例えば、Division_by_zeroを発生させるには下記のように記述します。
+
+      \d-code(```
+      utop # raise Division_by_zero ;;
+      Exception: Division_by_zero.
+      ```);%      
+    }
+    +p{
+      % プログラミングの基礎 18章 例外と例外処理
+      発生可能な例外にはOCamlで定義済みのものがいくつかありますが、
+      独自の例外を定義することも可能です。
+      これはexnが拡張可能なことに由来します。
+
+      % https://v2.ocaml.org/manual/typedecl.html#ss:exndef
+      独自の例外を定義するには下記の構文を用います\footnote{
+        本章では例外定義のための一部の構文のみを取り上げています。
+        本来の定義はもう少し複雑です。
+      }。
+
+      \d-code(```
+        exception <constr-name> [ of <constr-args> ]
+      ```);%
+
+      \codem{constr-name}はコンストラクタ名を表し、\codem{constr-args}がコンストラクタの引数を表します。
+      上記の構文は、単一のコンストラクタ名を取るか、またはコンストラクタ名、of、コンストラクタ引数の3つを取ることを表現しています。
+      また、コンストラクタは先頭が大文字で始まる必要があるためconstr-nameも大文字から始めます\footnote{
+        先頭以外の文字として使用可能なものは、大文字・小文字、数字、アンダースコア（_）、シングルクォート（'）があります。
+      }。
+      constr-argsには引数として受け取れる型（例えばint、stringなど）が入ります。
+
+      例えば、以下のような定義を作成できます。
+
+      \d-code(```
+      utop # exception My_not_found ;;
+      exception My_not_found
+      ```);%
+
+      引数を取る例外は以下のように定義できます。
+
+      \d-code(```
+      utop # exception My_not_found of string ;;
+      exception My_not_found of string
+      ```);%
+
+      上記は、文字列の引数を取る\codem{My_not_found}コンストラクタを例外として定義したことを示しています。
+      文字列は例外を説明するために利用でき、次のように使用できます。
+
+      \d-code(```
+      utop # raise (My_not_found "Item") ;;
+      Exception: My_not_found "Item"
+      ```);%
+
+      コンストラクタが引数を取る場合、必ずコンストラクタ名とその引数をカッコ（）で囲む必要があります。
+      上記の例では、アイテム\codem{Item}が見つからなかったことを示す例外が発生したことがわかります。
+    }
+    +p{
+      また、raiseによって定義済みの例外を発生させる以外にも、文字列から例外を発生させる\codem{failwith}関数もあります。
+
+      \d-code(```
+      utop # failwith ;;
+      - : string -> 'a = <fun>
+      ```);%
+
+      failwith関数は文字列を受け取って、例外\codem{Failure}を発生させます。
+      Failureは文字列を引数に取る例外です。
+
+      以下にfailwithの実行例を示します。
+
+      \d-code(```
+      utop # failwith "Not found my item" ;;
+      Exception: (Failure "Not found my item")
+      ```);%
+    }
+    +p{
+      % 例外処理      
+      例外が発生した際に、単にエラーを報告するだけでなく、これをきちんと処理した上でプログラムを終了したい場合があります。
+      これは例外処理によって行います。
+      例外処理には\dfn{try式}を用います。
+
+      % https://v2.ocaml.org/manual/expr.html#sss:expr-exception-handling
+      \d-code(```
+      try <expr_0> with
+      | <pattern_1> -> <expr_1>
+      | ...
+      | <pattern_n> -> <expr_n>
+      ```);%
+
+      この構文は、まずtry〜withの間にある\codem{expr_0}を評価します。
+      expr_0が例外を発生させない場合、つまりexpr_0が正常に処理された場合、この構文全体の結果としてexpr_0の値を返します。
+      この時、with句以降の処理はいずれも実行されず無視されます。
+
+      一方、expr_0の評価にて例外が発生した場合、例外値は\codem{pattern_1}から\codem{pattern_n}の間でパターンマッチが行われます。
+      いずれかのパターンにマッチすると、対応する式（pattern_1にマッチした場合はexpr_1、pattern_nにマッチした場合はexpr_n）を評価し、
+      その式の値が構文全体の値になります。
+
+      つまり例外処理とは、expr_0が発生させた例外をwith句以下で捕らえ、
+      その例外に対応する式を評価することで例外発生後の処理をきちんを行う仕組みです。
+
+      もし発生した例外が複数のパターンにマッチする場合、try式で一番最初にマッチするパターンが選択されます。
+
+      一方、どのパターンにもマッチしない場合、例外はtry式を透過的に通過するため、
+      プログラムは例外が発生したことを通知して終了します\footnote{
+        透過的とは、try式を書かずexpr_0をそのまま評価した場合と同じ結果を返すということを意味します。
+      }。      
+    }
+    +p{
+      % try式の例を書く
+      % https://dev.realworldocaml.org/error-handling.html - Catching Specific Exceptions
+      try式を用いて例外処理の例を示します。
+      ここでは例外を発生させる関数として、\ref-section(`Tuple`);で扱ったタプルを要素に持つリストから、
+      特定のデータを取り出す関数を作成します\footnote{
+        タプルとは、1つ以上のデータをカンマ（,）で区切り、それをカッコ（(及び)）で囲んだものでした。
+      }。
+      この関数は、もし特定のデータを取り出せない場合に例外を発生させるものとします。
+
+      まずは特定のデータが取り出せなかった際に発生する例外を定義します。
+
+      \d-code(```
+      utop # exception Key_not_found of string ;;
+      exception Key_not_found of string
+      ```);%
+
+      次にタプルのリストを定義します。
+
+      \d-code(```
+      utop # let alist = [("first", 1); ("second", 2); ("third", 3)] ;;
+      val alist : (string * int) list = [("first", 1); ("second", 2); ("third", 3)]
+      ```);%
+
+      最後に、特定のデータを取り出す関数を定義します。
+      この関数は、要素の1番目（上記の例ではfirst，second，thirdのいずれか）を検索キーとして、
+      これにマッチする2番目の値（上記の例では1，2，3のいずれか）を返すことにします。
+
+      \d-code(```
+      utop # let rec find_exn key = function
+        | [] -> raise (Key_not_found key)
+        | (key', data) :: xs -> if key' = key then data else find_exn key xs ;;
+      val find_exn : string -> (string * 'a) list -> 'a = <fun>
+      ```);%
+
+      上記の関数\codem{find_exn}はキーとタプルリストを引数に取り、
+      タプルの1番目の値がキーと一致した場合に、当該タプルの2番目の値を返します\footnote{
+        例外が発生する可能性がある関数であることを示すために、
+        関数名の末尾に\codem{_exn}を付与するルールを定めるライブラリも存在します。
+      }。
+      見つからない場合は、例外\codem{Key_not_found}を発生させます。
+
+      find_exnの動作は以下のようになります。
+
+      \d-code(```
+      utop # find_exn "first" alist ;;
+      - : int = 1
+
+      utop # find_exn "four" alist ;;
+      Exception: Key_not_found "four".
+      ```);%
+
+      1つ目の例では、"first"を要素に持つタプルがalist中に存在するため、当該タプルの2番目のデータである1が返されています。
+      2つ目の例では、alist中に"four"を要素に持つタプルが存在しないため、例外が発生しています。
+      この例外Key_not_foundは引数にstring型を取るため、
+      検索キーであるkeyを渡して、どのキーの検索が失敗したかを通知できるようになっています。
+      find_exnにtry式を適用し、例外が発生した際にすぐにプログラムを終了するのでなく、0を返すようにしてみます。
+
+      \d-code(```
+      utop # try find_exn "four" alist with
+        | Key_not_found _ -> 0 ;;
+      - : int = 0
+      ```);%
+
+      "four"を検索すると例外Key_not_foundが発生するため、これをwith句で補足します。
+      なお、例外Key_not_foundはstring型を引数に取りますが、任意の値を処理できるようにアンダースコア（\codem{_}）を用いています。
+    }
+    +frame<
+      +subsection{コラム； 戻り値と例外のどちらを使うべきか}<
+        +p{
+          % https://dev.realworldocaml.org/error-handling.html - Choosing an Error-Handling Strategy
+          エラー報告とそのハンドリングにどちらを用いるべきか、という議論を見ることが有ります。
+          重要なのはそれぞれのメリットデメリットを理解し、使い分けることです。
+        }
+        +p{
+          戻り値によるエラーハンドリングは、戻り値の型が明示的であるため、エラーを無視しづらくなるメリットがあります。
+          例えば、エラーを無視しようとしてパターンマッチで特定の戻り値に関するパターンが漏れていると、コンパイラが警告を出します。
+          一方で、エラーが発生した時点で処理をすぐに打ち切ることができないというデメリットがあります。
+        }
+        +p{
+          例外は戻り値のメリットデメリットの逆で、エラーが発生した時点で処理をすぐに終了できるメリットがあります。
+          また、例外処理を関数の外のより大きなスコープに任せることができ、型の乱用を避けることができます。
+          一方で、例外処理を無視することが容易にできてしまうというデメリットがあります。
+        }
+        +p{
+          上記のメリットデメリットに加えて、経験則的ですが、
+          返しうる値が予測可能であり且つ局所的なエラーを含まない場合は、戻り値によるエラーハンドリングを選択し、
+          エラーが発生した際にすぐに終了する必要があるまたは局所的なエラーを含む場合は、例外を選択するのが良いと考えています。
+        }
+      >
     >
+  >
 >

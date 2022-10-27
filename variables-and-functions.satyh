@@ -1,61 +1,170 @@
 @import: settings
 
+% https://www.fos.kuis.kyoto-u.ac.jp/~igarashi/class/isle4-07w/mltext/ocaml003.html
+
 let variables-and-functions = '<
     +p{
-      本章では、プログラミングの基本的な考え方である変数と関数を説明します。
+      \ref-chapter(`Basic data and types`);では基本的なデータと型を扱いました。
+      簡単な計算や何らかの演算を行うだけであれば、値を直接書けばよいため事足りるでしょう。
 
-      変数及び関数の定義方法からその利用方法について見ていきます。
+      % プログラミングの基礎 - 第3章 変数の必要性
+      しかし、複雑で巨大な式中の値を1つ変更しようとした場合には、とても手間がかかります。
+      同じ値が式中に何度も登場する場合、それらを見逃さず全て変更しなければなりません。
+      このように変更対象となる値や複数回出現し同じ意味を持つ値に対して、参照や変更できる仕組みは有用であることが分かります。
+      同様に式に対しても同じことが言え、ある程度まとまった式に対して、参照等ができると有用です。
+      これらを実現してくれるのが変数と関数です。
+
+      % https://dev.realworldocaml.org/variables-and-functions.html
+      変数と関数はプログラミングを行う上で基本的な考え方です。      
+      本章では、プログラミングの基本的な考え方である変数と関数を説明します。      
     }
     +section?:(`Variables`){変数}<
       +p{
-        \dfn{変数}とは、ある値をバインド（束縛）するための識別子です。
-        変数をバインドするには以下の構文を利用します。
+        % https://dev.realworldocaml.org/variables-and-functions.html - Variables
+        OCamlにておいて\dfn{変数}とは、ある値にバインド（束縛）された識別子です。
+        値を変数にバインドするには\codem{let}キーワードを使用します。
+        変数にバインドする構文は以下のとおりです\footnote{
+          ここに示したletによる変数の定義は正確なものではありません。
+          分かりやすさのため簡略化した表記としています。
+        }。
 
+        % https://v2.ocaml.org/manual/expr.html#hevea_manual.kwd23
+        % let-binding  ::= pattern = expr
+        % | value-name {parameter} [:typexpr] [:>typexpr] = expr
+        % | value-name : poly-typexpr = expr
         \d-code(```
           let <variable> = <expr>
         ```);%
 
+        このようにletキーワードを用いて変数等を定義することを\dfn{letバインディング}と言います。
         \codem{\<variable\>}は変数名を表し、\codem{\<expr\>}は式を表します。
-        これは具体的には以下のような入力になります。
+        具体的には以下のような入力になります。
 
         \d-code(```
           utop # let a = 123 ;;
           val a : int = 123
         ```);%
 
-        上記の例では、インタプリタが\codem{a}という名前の変数を新たに定義し、その値を\codem{123}という整数にバインドします。
+        上記の例では、インタプリタが\codem{a}という名前の変数を新たに定義し、その値である整数値\codem{123}にバインドします。
         インタプリタの出力結果は
         「\codem{a}というint型の変数を定義し、その値（\codem{val}）は\codem{123}である」ことを示しています。
-
+      }
+      +p{
+        % https://dev.realworldocaml.org/variables-and-functions.html - Variables
         なお、OCamlの変数名は小文字またはアンダースコア（\codem{_}）で始まる必要があることに注意して下さい。
-        2文字目以降は、大文字、小文字、数字、アンダースコア（\codem{_}）などを自由に利用できます。
+        2文字目以降は、大文字、小文字、数字、アンダースコア（_）、シングルクォート（\codem{'}）を利用できます\footnote{
+          ただし\dfn{予約語}は除きます。
+        }。
+
+        % https://v2.ocaml.org/manual/lex.html#lowercase-ident
+        参考までに変数名に関するルールを下記に示します。
+
+        \d-code(```
+        <variable> ::= (a..z | _) { a..zA..Z | 0..9 | _ | ' }
+        ```);%
+
+        上記の構文は次のルールを表しています。
+        \listing{
+          * \codem{(a..z \| _)}：先頭の文字は、a〜zの小文字またはアンダースコア（_）です
+          * \codem{\{...\}}：カッコ（\codem{\{}及び\codem{\}}）内は0回以上繰り返します
+          * \codem{a..zA..Z \| 0..9 \| _ \| '}：a〜z、A〜Z、0〜9、アンダースコア（_）またはシングルクォート（'）を利用できます
+        }%
+
+        この表記は、\dfn{BNF}（バッカス・ナウア記法）という「文法を定義するために用いられるメタ言語」を拡張したのです。
+        拡張されたBNFを\dfn{EBNF}と言います。
+      }
+      +p{
+        本書では上記のようなEBNFの表現をたびたび用いるため、EBNFの表記について簡単に説明します。
+        なお、以降の節及び章で登場するEBNFはその都度説明するため、本段落は読み飛ばしても構いません。
+
+        \d-code(```
+        <symbol> ::= <expr>
+        ```);%
+        
+        基本文法は上記のように\codem{\<symbol\>}と\codem{\<expr\>}からなります。
+        \<symbol\>は単一の記号であり、その名のとおり文法上のシンボルであり、具体的には変数名や関数名等に該当します。
+        \<epxr\>は\<symbol\>を構成するための記号列を表します。
+        以下に具体的な例を示します。
+
+        \d-code(```
+        <variable> ::= a..z
+        ```);%
+
+        上記の例は「\<variable\>というシンボルは、a〜zの単一の文字から構成される」ことを意味します。
+        \<variable\>はその名のとおり変数名を表します。
+        つまり「変数名はa〜zの単一の文字で構成される」ことを表した例であると言えます。        
+
+        \d-code(```
+        <variable> ::= a..z | 0..9
+        ```);%
+
+        上記の例は「\<variable\>というシンボルは、a〜zの単一の文字または0〜9の単一の数字から構成される」ことを意味します。
+        つまり\codem{\|}は「または」を表します。
+
+        本書ではこれ以外に以下の拡張を用いて表現することにします。
+
+        \listing{
+          * \codem{\[...\]}：カッコ（\codem{\[}及び\codem{\]}）内は省略可能です。例えば\codem{\<integer\> ::= \[-\] 0..9}は、integerシンボルはマイナス（\codem{-}）0〜9のいずれかをとるか、マイナス（-）を省略した0〜9のいずれかをとることを意味します
+          * \codem{\{...\}}：カッコ（\codem{\{}及び\codem{\}}）内は0回以上繰り返します。例えば\codem{\<variable\> ::= a..z \{ a..z \}}は、variableシンボルは先頭に小文字をとり、1文字以上の子文字から構成されることを意味します
+          * \codem{...+}：\codem{+}より前のものを1回以上繰り返します。例えば\codem{\<variable\> ::= a..z a..z+}は、variableシンボルは先頭が小文字且つ2文字以上の子文字から構成されることを意味します
+        }%
       }
       +frame<
         +subsection{コラム； 変数を使う理由}<
           +p{
-            変数がない場合を考えてみましょう。
+            本章の冒頭でも説明しましたが、改めて変数がない場合を考えてみましょう。
             一度計算した値やその計算に利用した値を再度利用したいとなった場合、
             式全体を書き換えて再びインタプリタに入力する必要があります。
+            例えば、100円、200円、300円の商品を購入した際の税込み合計金額を算出する式を考えてみます。
 
-            そこで再度利用しそうな計算結果や値を変数にバインドしておくことで何度も利用することができるのです。
+            \d-code(```
+            utop # 100. *. 1.1 +. 200. *. 1.1 +. 300. *. 1.1 ;;
+            - : float = 660.
+            ```);%
+
+            ここに更に400円の商品を追加購入した場合の税込み合計金額を算出する式は以下のようになります。
+
+            \d-code(```
+            utop # 100. *. 1.1 +. 200. *. 1.1 +. 300. *. 1.1 +. 400. *. 1.1 ;;
+            - : float = 1100.
+            ```);%
+
+            \codem{100. \*. 1.1 +. 200. \*. 1.1 +. 300. \*. 1.1}の部分を再度入力しており煩雑です。
+            そこで再度利用しそうな計算結果や値を変数にバインドしておくことで何度も利用できます。
+            例えば、100円、200円、300円の商品を購入した際の税込み合計金額を以下のように変数にバインドしておくと、
+            400円の商品を追加購入した場合の式を以下のように記述できます。
+
+            \d-code(```
+            utop # let sum = 100. *. 1.1 +. 200. *. 1.1 +. 300. *. 1.1 ;;
+            val sum : float = 660.
+
+            utop # sum +. 400. *. 1.1 ;;
+            - : float = 1100.
+            ```);%
+
+            上記では、変数\codem{sum}に100円、200円、300円の商品を購入した際の税込み合計金額を保持し、
+            後からその結果（合計金額）を利用することで簡潔に記述しています。
           }
         >
       >
       +subsection{スコープと局所変数}<+p{
-        全ての変数割り当て（\dfn{変数バインディング}と呼ぶ）には、\dfn{スコープ}が存在します。
+        % https://dev.realworldocaml.org/variables-and-functions.html
+        % プログラミングの基礎 - 第14章 局所変数定義
+        全ての変数割り当て（\dfn{変数バインディング}と呼びます）には、\dfn{スコープ}が存在します。
         スコープとは、その変数バインディングを参照できるコードの範囲です。
-        utopインタプリタにて、トップレベル（単に\codem{let a = 123 \;\;}のように入力した場合など）
+        utopインタプリタにて、トップレベル（単にlet a = 123 \;\;のように入力した場合など）
         で定義した変数のスコープは、そのutop全体（つまりutop内であればどこでも参照可能）です。
-
+        }
+        +p{
         一方で、インタプリタ全体ではなく式や計算過程で一時的な変数を利用したい場合が有ります。
         このようにあるスコープの中で一時的に利用する変数を\dfn{局所変数}といい、以下の構文を用いて定義できます。
 
         \d-code(```
-          let <variable> = <expr1> in <expr2>
+          let <variable> = <expr_1> in <expr_2>
         ```);%
 
-        \ref-section(`Variables`);で示した変数の定義方法と似ていますが、ここでは式1（\codem{\<expr1\>}）の後ろに\codem{in}があり、最後に式2（\codem{\<expr2\>}）があります。
-        これは、\codem{\<expr1\>}のスコープは\codem{\<expr2\>}に限定される（つまり式2の中でのみ参照可能である）ことを示します。
+        \ref-section(`Variables`);で示した変数の定義方法と似ていますが、ここでは式1（\codem{\<expr_1\>}）の後ろに\codem{in}があり、最後に式2（\codem{\<expr_2\>}）があります。
+        これは、\<expr_1\>のスコープは\<expr_2\>に限定される（つまり式2の中でのみ参照可能である）ことを意味します。
 
         具体的な例を以下に示します。
 
@@ -64,15 +173,15 @@ let variables-and-functions = '<
           - : int = 6
         ```);%
 
-        上記の例では、式2（\codem{x + x}）の中に出現する変数\codem{x}は、式1（\codem{3}）であることを示しており、
-        もう少しわかりやすく表現すると「一時的に変数\codem{x}を式1（\codem{3}）として定義し、式2（\codem{x + x}）を実行する」
-        ことを示しています。
+        上記の例では、式2（\<expr_2\>）にあたる\codem{x + x}の中に出現する変数\codem{x}は、式1（\<expr_1\>）にあたる\codem{3}であることを示しています。
+        より分かりやすく表現すると「まず3という値を変数xにバインドし、その変数xを用いて式2（x + x）を評価する」になります。
 
-        そのため、\codem{x}という局所変数を\codem{3}で定義し、\codem{in}に続く\codem{x + x}は\codem{3 + 3}と評価され、
+        つまり、局所変数xを3に束縛し、\codem{in}に続くx + xは3 + 3と評価され、
         結果として\codem{6}が出力されています。
 
-        なお、局所変数\codem{x}のスコープが\codem{x + x}に限定されていることを確かめるには、
-        インタプリタのトップレベル（スコープ外）で\codem{x}を参照することで確認できます。
+        % https://dev.realworldocaml.org/variables-and-functions.html を参考
+        なお、局所変数xのスコープがx + xに限定されていることを確かめるには、
+        インタプリタのトップレベル（スコープ外）でxを参照することで確認できます。
 
         \d-code(```
           utop # x ;;
@@ -80,86 +189,131 @@ let variables-and-functions = '<
           Error: Unbound value x
         ```);%
 
-        上記のエラー内容は「\codem{x}という値はバインドされていない」ことを示しています。
-        つまり、トップレベルのスコープにはなく、\codem{x + x}のスコープでのみ変数名\codem{x}が参照可能であることが確認できました。
+        上記のエラーは「\codem{x}という値はバインドされていない」ことを示しています。
+        よってトップレベルのスコープにはなく、x + xのスコープでのみ変数名xが参照可能であることが確認できました。
       }>
-      +subsection{不変}<+p{
-        OCamlの変数は他のプログラミング言語と異なり\dfn{不変}です。
-        つまり、変数を定義した後に別の値で上書きできないのです。
-
-        これを確かめるために、局所変数で利用した構文を応用し以下のようにしてみます。
-
-        \d-code(```
-          let <variable0> = let <variable1> = <expr1> in <expr2>
-        ```);%
-
-        改行を入れても同じ意味になります。
-
-        \d-code(```
-          let <variable0> =
-            let <variable1> = <expr1> in
-            <expr2>
-        ```);%
-
-
-        これは、式1（\codem{\<expr1\>}）は変数1（\codem{\<variable1\>}）に束縛され、
-        スコープは式（2\codem{\<expr2\>}）に限定されており、
-        式2（\codem{\<expr2\>}）の結果が変数0（\codem{\<variable0\>}）に束縛されることを示しています。
-        もう少し直感的に表現すると「変数0（\codem{\<variable0\>}）は内部で局所変数1（\codem{\<variable1\>}）を持ち、式2（\codem{\<expr2\>}）の結果を変数0（\codem{\<variable0\>}）に束縛する」ことを示しています。
-
-        さらに、以下のように内部で複数の局所変数も定義可能です。
-
-        \d-code(```
-          let <variable0> =
-            let <variable1> = <expr1> in
-            let <variable2> = <expr2> in
-            <expr3>
-        ```);%
-
-        これは、変数0（\codem{\<variable0\>}）の内部で、
-        局所変数1（\codem{\<variable1\>}）に加えて局所変数2（\codem{\<variable2\>}）を定義し、
-        \codem{\<expr3\>}で利用することを示します。
-        このことを利用すると、
-        \codem{\<variable0\>}の内部で任意の局所変数を持つことが可能であることを分かります。
-
-        \d-code(```
-          let <variable0> =
-            let <variable1> = <expr1> in
-            let <variable2> = <expr2> in
-            ...
-            let <variable_n> = <expr_n> in
-            <expr3>
-        ```);%
-      }
-      +p{
-        さて、ここまで準備できた所で、局所変数の上書きを試みてみます。
-
-        \d-code(```
-          utop # let a = 
-            let pi = 3.14 in
-            let b = pi *. 2. in
-            let pi = 0. in
-            b ;;
-          Line 4, characters 5-7:
-          Warning 26 [unused-var]: unused variable pi.
-          val a : float = 6.28
-        ```);%
-
-        上記の例は、変数\codem{pi}を\codem{3.14}に束縛した後で、変数\codem{pi}を\codem{0}で上書きしているため、
-        計算過程は\codem{0.0 \*. 2.0}となるため、結果が\codem{0.0}であるかのように思われるかも知れません。
-        しかし結果は\codem{6.28}となっており、その計算過程は\codem{3.14 \*. 2.0}であることが分かります。
-        つまり、最初に定義した変数\codem{pi}を後述の\codem{let pi = 0.}で上書きしているわけではなく、
-        変数\codem{pi}という新しい変数が定義されます。
-        また、\codem{let pi = 0.}で定義する前に変数\codem{b}にて利用（\codem{let b = pi \*. 2.}）する際は、
-        利用する以前の定義（つまり\codem{let pi = 3.14}）を参照します。
-        最後に、警告\codem{Warning 26 [unused-var]: unused variable pi.}では「変数\codem{pi}が未使用である」ことが示されており、
-        このことからも最初に定義した変数\codem{pi}と最後に定義した\codem{pi}は異なる変数であることが分かります。
-      }>
+      +subsection{不変}<
+        +p{
+          % プログラミングの基礎 - 第3章 ほかの言語の変数との違い
+          % https://dev.realworldocaml.org/variables-and-functions.html
+          OCamlの変数は他のプログラミング言語と異なり\dfn{不変}です。
+          つまり、変数を定義した後に別の値で上書きできないのです。
+  
+          これを確かめるために、局所変数で利用した構文を応用してみます。
+          例えば、OCamlでは以下のような式を書くこともできます\footnote{
+            OCamlのEBNFにおいて、\<expr\>は値だけでなくletバインディング自体も含まれるため、このような書き方が可能です。
+          }。
+  
+          \d-code(```
+            let <variable_0> = let <variable_1> = <expr_1> in <expr_2>
+          ```);%
+  
+          改行を入れても同じ意味になります。
+          読みやすさ（\dfn{可読性}）のため、本書は下記の表現を用いることにします。
+  
+          \d-code(```
+            let <variable_0> =
+              let <variable_1> = <expr_1> in
+              <expr_2>
+          ```);%
+  
+          上記の変数1（\codem{\<variable_1\>}）は式1（\codem{\<expr_1\>}）の値で束縛され、且つ変数1（\<variable_1\>）のスコープは式2（\codem{\<expr_2\>}）に限定されます。
+          そして、式2（\codem{\<expr_2\>}）の評価結果で変数0（\codem{\<variable_0\>}）を束縛するを示しています。
+          より直感的に表現すると「変数0（\<variable_0\>）は、式2（\<expr_2\>）のスコープでのみ有効な局所変数1（\<variable_1\>）を持ち、式2（\<expr_2\>）の結果を返す」ことを示しています。
+        }
+        +p{
+          OCamlのEBNFでは、\<expr\>は値だけでなくletバインディング自体も含まれます\footnote{
+            本書で示すEBNFはOCamlのEBNFを正確に表現していません。読者に分かりやすいようにシンボルや一部表記を変更しています。
+          }。
+  
+          \d-code(```
+          <let-binding> ::= ...
+                          | <variable> = <expr>
+                          | ...
+  
+          <expr>        ::= <expr>
+                          | let <let-binding> in <expr>
+                          | ...
+          ```);%
+        }
+        +p{
+          そのため、以下のように内部で複数の局所変数も定義可能です。
+  
+          \d-code(```
+            let <variable_0> =
+              let <variable_1> = <expr_1> in
+              let <variable_2> = <expr_2> in
+              <expr_3>
+          ```);%
+  
+          これは以下のことを示しています。
+  
+          \listing{
+            * 変数0（\<variable_0\>）は、局所変数1（\<variable_1\>）及び局所変数2（\<variable_2\>）を持ちます
+            * 局所変数1（\<variable_1\>）は、in以降の（局所変数1にとっての）\<expr\>である\codem{let \<variable_2\> = \<expr_2\> in \<expr_3\>}までのスコープで有効です
+            * 局所変数2（\<variable_2\>）は、in以降の（局所変数2にとっての）\<expr\>である\codem{\<expr_3\>}のスコープで有効です
+            * 変数0（\<variable_0\>）は、\<expr_3\>を評価した結果得られる値を返します
+          }%
+  
+          このことを利用すると、
+          \codem{\<variable_0\>}の内部で任意の局所変数を持つことが可能であることを分かります。
+  
+          \d-code(```
+            let <variable_0> =
+              let <variable_1> = <expr_1> in
+              let <variable_2> = <expr_2> in
+              ...
+              let <variable_n> = <expr_n> in
+              <expr_n+1>
+          ```);%
+        }
+        +p{
+          % https://dev.realworldocaml.org/variables-and-functions.html
+          ここまで準備できたところで、局所変数の上書きを試みます。
+  
+          \d-code(```
+            utop # let a = 
+              let pi = 3.14 in
+              let b = pi *. 2. in
+              let pi = 0. in
+              b ;;
+            Line 4, characters 5-7:
+            Warning 26 [unused-var]: unused variable pi.
+            val a : float = 6.28
+          ```);%
+  
+          上記の例は、次の意図を示しています。
+  
+          \listing{
+            * 変数\codem{pi}を\codem{3.14}に束縛します
+            * 変数\codem{b}を\codem{pi \*. 2.}の値に束縛します
+            * 変数\codem{pi}を\codem{0.}で上書きします（※上書きを意図していますが、実際の動作ではありません）
+          }%
+  
+          上記の意図どおりであれば、結果が0.0であるかのように思われるかも知れません。
+          しかし結果は\codem{6.28}となっており、その計算過程は3.14 \*. 2.0であることが分かります。
+          つまり、最初に定義した変数piをlet pi = 0.で上書きしているわけではなく、
+          （変数名は同じであっても）piという新しい変数を定義しているのです。
+          また、let pi = 0.で変数piを新しく定義する前の変数bでは、以前の定義である3.14を参照します。
+        }
+        +p{
+          なお、出力結果に警告\codem{Warning 26 [unused-var]: unused variable pi.}が表示されていますが、
+          これは「変数piが未使用である」ことを意味します。
+          このことからも最初に定義した変数pi（let pi = 3.14）と最後に定義したpi（let pi = 0.）は異なる変数であることが分かります。
+        }
+      >
     >
     +section?:(`Function`){関数}<
       +p{
-        \dfn{関数}とは、任意の\dfn{引数}を受け取り、式を評価するための識別子です。
-        引数とは、関数に渡すパラメータのことで、数学の関数\codem{f(x)}で言えば、\codem{x}に該当します。
+        % プログラミングの基礎 - 第4章 関数の定義
+        % https://dev.realworldocaml.org/variables-and-functions.html
+        % https://www.fos.kuis.kyoto-u.ac.jp/~igarashi/class/isle4-07w/mltext/ocaml003.html - 関数宣言
+        % https://cs3110.github.io/textbook/chapters/hop/higher_order.html
+
+        \dfn{関数}とは、任意の\dfn{引数}を受け取ることが可能な式に対する識別子です。
+        引数とは、関数に渡すパラメータのことで、数学の関数\codem{f(x)}で言えば、xに該当します\footnote{
+          一方、関数は\codem{f(...)}に相当します。
+        }。
         関数を定義するには以下の構文を利用します。
 
         \d-code(```
@@ -168,12 +322,52 @@ let variables-and-functions = '<
 
         上記の構文を見てお気付きかと思いますが、OCamlでは関数も変数と同じようにキーワード\codem{let}で定義できます。
         \codem{\<function\>}は関数名を表し、\codem{\<arguments...\>}は引数を表します。
-        3つのドット（\codem{...}）は「後ろに2番目の引数、3番目の引数...のように0個以上の引数を取って良い」ことを示します。
-        \codem{\<expr\>}は、（変数で利用した構文同様に）式を表します。
+        \<arguments...\>にある3つのドット（\codem{...}）は、「後ろに2番目の引数、3番目の引数...のように0個以上の引数を取って良い」ことを示します。
+        \codem{\<expr\>}は、（変数定義で利用した構文と同じく）式を表します。
+      }
+      +p{
+        % プログラミングの基礎 - 第4章 関数の定義
+        OCamlの関数名は変数名と同様に、小文字またはアンダースコア（_）で始まる必要があります。
+        2文字目以降は、大文字、小文字、数字、アンダースコア（_）、シングルクォート（'）を利用できます\footnote{
+          変数同様に、予約語は除きます。
+        }。
 
-        また、OCamlの関数名は変数名と同様に、小文字またはアンダースコア（\codem{_}）で始まる必要があります。
-        2文字目以降は、大文字、小文字、数字、アンダースコア（\codem{_}）などを自由に利用できます。
+        これは、\ref-section(`Variables`);で示したEBNFとまったく同じ記号列で構成されるからです\footnote{
+          実際のEBNFでは、変数名と関数名は同じシンボルで表現されています。
+        }。
 
+        \d-code(```
+        <function> ::= (a..z | _) { a..zA..Z | 0..9 | _ | ' }
+        ```);%
+
+        また、引数名も変数名や関数名と同じ命名規則で表現されます\footnote{
+          実際の引数のシンボル定義には、ラベル付き引数（後述）やオプショナル引数（後述）も含まれるため、これよりも少し複雑です。
+        }。
+        \d-code(```
+        <argument>     ::= (a..z | _) { a..zA..Z | 0..9 | _ | ' }
+        <arguments...> ::= { <argument> }
+        ```);%
+        \<arguments...\>の...は0個以上の引数を取ることを意味するため、EBNFで定義する場合は\{...\}を用いて表現できます。
+
+        % https://v2.ocaml.org/manual/expr.html#let-binding
+        % 参考までに、OCamlで定義されているletバインディングのEBNFの一部を抜粋します\footnote{
+        %   実際のletバインディングのEBNFには、変数定義や型を明示するためのシンボルも含まれるため、これよりも少し複雑です。
+        % }。
+
+        % \d-code(```
+        % <let-binding> ::= <value-name> { parameter } = <expr>
+
+        % <parameter> ::= <value-name>
+        % ```);%
+
+        % 上記の構文は次のルールを持ちます。
+        % \listing{
+        %   * \codem{\<value-name\>}：これまで説明した変数名\<variable\>や関数名\<function\>に該当します
+        %   * \codem{\{...\}}：カッコ（\{及び\}）内は0回以上繰り返します
+        %   * \codem{parameter}：関数の引数は、変数名\<variable\>や関数名\<function\>のルールと同じです。つまり先頭の文字は小文字またはアンダースコア（_）で始まり、2文字目以降は、大文字、小文字、数字、アンダースコア（_）、シングルクォート（'）を利用できます
+        % }%
+      }
+      +p{
         次に、関数定義の最もシンプルな例を示します。
 
         \d-code(```
@@ -185,26 +379,38 @@ let variables-and-functions = '<
         ```);%
 
         上記の例では、インタプリタが\codem{add_one}という名前の関数を新たに定義しています。
-        関数\codem{add_one}は引数\codem{x}を受け取り、xに+1した結果を返します。
+        関数add_oneは引数\codem{x}を受け取り、xに+1した結果を返します。
 
-        関数定義後のインタプリタの出力は
-        「\codem{add_one}という\codem{int -\> int}型の関数を定義し、その値は関数である」ことを示しています。
-        関数の型は\codem{A -\> B}のように表現し、「型Aの引数を受け取ったら型Bの値を返す、関数の型」を表します。
+        % プログラミングの基礎 - 第4章 関数の定義
+        % https://www.fos.kuis.kyoto-u.ac.jp/~igarashi/class/isle4-07w/mltext/ocaml003.html - 関数宣言
+        関数を定義した際のインタプリタの出力は
+        「add_oneという\codem{int -\> int}型の関数を定義し、その値は関数である」ことを示しています\footnote{
+          int -\> intは丁度、引数の型-\>結果の型という形になっています。
+        }\footnote{
+          -\>のように型から型を構成する記号を、\dfn{型構成子}と言います。
+        }。
+        関数の型は\codem{A -\> B}のように表現し、「型Aの引数を受け取り型Bの値を返す、という関数の型」を表します。
 
-        試しに\codem{add_one 10}を入力すると、その結果は\codem{11}となり、与えた引数に\codem{+1}されていることが分かります。
-
-        ここで、\codem{関数の型}と\codem{関数が返す型}を混同しないように注意して下さい。
-        上記の例で言えば、\codem{add_one 10}が\codem{11}を返しているため、
-        ついつい関数\codem{add_one}の型はint型だと考えてしまうかもしれませんが、
-        \codem{11}というのは関数が返した結果の値の型なのです。
-        関数\codem{add_one}自体は、int型の引数を1つだけ取りその結果としてint型を返す、すなわち\codem{int -\> int}型となります。
+        試しに\codem{add_one 10}を入力すると、その結果は\codem{11}となり、与えた引数に+1されていることが分かります。
+        % https://str.i.kyushu-u.ac.jp/~bannai/ocaml-intro/basics.html
+        なお、add_one 10のように関数名の後に引数を並べることを\dfn{関数適用}と言います。
+      }
+      +p{
+        % プログラミングの基礎 - 第4章 関数の定義
+        ここで「関数の型」と「関数が返す型」を混同しないように注意して下さい。
+        上記の例で言えば、add_one 10が11を返しているため、
+        ついつい関数add_oneの型はint型だと考えてしまうかもしれませんが、
+        11というのは関数が返した結果の値の型なのです。
+        関数add_one自体は、int型の引数を1つだけ取りその結果としてint型を返す関数の型、すなわちint -\> int型となります。
       }
       +frame<
         +subsection{コラム； 型推論と型チェック}<
           +p{
-            先程の関数\codem{add_one}を定義した際に、引数\codem{x}の型を指定しませんでした。
-            にも関わらず、\codem{x}の型はintであるという結果が得られました。
-            これは、関数の式にて\codem{x + 1}とある通り、整数の演算に用いられる\codem{+}が存在するため、\codem{x}の型はint型でなければいけません。
+            % プログラミングの基礎 - 第4章 関数の定義 - 型推論と型チェック
+            % https://www.fos.kuis.kyoto-u.ac.jp/~igarashi/class/isle4-07w/mltext/ocaml003.html - 関数宣言
+            先程の関数add_oneを定義した際に、引数xの型を指定しませんでした。
+            にも関わらず、xの型はintであるという結果が得られました。
+            これは、関数の式にてx + 1とあるとおり、整数の演算に用いられる+が存在するため、xの型はint型でなければいけません。
 
             試しにxに整数以外（例えば実装）を渡すとエラーになります。
 
@@ -214,190 +420,770 @@ let variables-and-functions = '<
               Error: This expression has type float but an expression was expected of type
             ```);%
 
-            インタプリタは\codem{let add_one x = x + 1}という関数定義からその関数が必要とする引数の型と関数が返す型\codem{val add_one : int -\> int = \<fun\>}を推論してくれました。
-            このように型を明示せずとも、関数の内容といった周辺情報及び文脈から引数の型や関数などが返す型を自動的（暗黙的）に推測してくれる機能のことを\dfn{型推論}といいます。
-            型推論のメリットは、私達が明示的に型を指定する必要がないことです。
+            インタプリタはlet add_one x = x + 1という関数定義から、
+            その関数が必要とする引数の型と関数が返す型val add_one : int -\> int = \<fun\>を推論しました。
+            このように型を明示せずとも、
+            関数の内容といった周辺情報及び文脈から引数の型や関数などが返す型を自動的（暗黙的）に推測する機能のことを\dfn{型推論}といいます。
+            型推論のメリットは、プログラマが明示的に型を指定する必要がないことです。
             
-            また、上記の例のように、引数として与えられた値が、関数の型と一致しているか（上記の例で言えば、\codem{add_one}の引数がint型であるか）をチェックすることを\dfn{型チェック}といいます。
-            型チェックのメリットは、誤った型が渡され実行されるのを未然に防げることです。
-            プログラムを書き終わって動かしている最中に間違いに気づくよりも、より早い段階で気づけた方が間違いを修正するためのコストが低く、ソフトウェア全体の信頼性向上につながります。
+            また上記の例のように、引数として与えられた値が関数の引数の型と一致しているか（add_oneの引数がint型であるか）をチェックすることを\dfn{型チェック}といいます。
+            型チェックのメリットは、誤った型が渡され実行されるのを未然に防ぐことです。
+            プログラムを書き終わって動かしている最中に間違いに気づくよりも、
+            より早い段階で気づけた方が間違いを修正するためのコストが低く、ソフトウェア全体の信頼性向上につながります。
           }
         >
       >
-      +subsection?:(`Multiargument functions`){複数の引数を持つ関数}<+p{
-        \ref-section(`Function`);で示した通り、関数は1つ以上の引数を取ることができます。
-        例えば、以下のような\dfn{第一引数}\footnote{
-          引数を与える順番に応じて、第一引数、第二引数、...、第N引数という呼び方をします。
-        }
-        と第二引数の差を返す関数を考えます。
+      +frame<
+        +subsection{コラム； 型推論も完全ではない}<
+          +p{
+            % https://www.fos.kuis.kyoto-u.ac.jp/~igarashi/class/isle4-07w/mltext/ocaml003.html - 関数宣言
+            OCamlの型推論も完全ではありません。
+            複雑なプログラムや何らかの理由で型推論がうまく機能しない場合もあります。
 
-        \d-code(```
+            このような場合には、明示的に型を宣言し型情報を補うことが可能です。
+            例えば、関数が返す型を明示する場合は以下のように記述できます。
+
+            \d-code(```
+            utop # let add_one x : int = x + 1 ;;
+            val add_one : int -> int = <fun>
+            ```);%
+
+            関数が返す型はイコール\codem{=}の前にコロン（:）付きで示します。
+            同様に引数の型も明示できます。
+
+            \d-code(```
+            utop # let add_one (x : int) = x + 1 ;;
+            val add_one : int -> int = <fun>
+            ```);%
+
+            なお、引数の型を明示する場合、引数から型までをカッコで囲む必要があります。
+            このカッコを省略してしまうと\codem{let add_one x : int = x + 1}となり、関数が返す型がintという意味になってしまいます。
+            そのため、引数の型を明示する際のカッコは省略できません。
+          }
+          +p{
+            また、引数の型と関数が返す型の両方をまとめて明示することもできます。
+
+            \d-code(```
+            utop # let add_one (x : int) : int = x + 1 ;;
+            val add_one : int -> int = <fun>
+            ```);%
+
+            この場合も引数の型を明示する際のカッコは省略できません。
+            省略すると構文エラーになってしまいます。
+
+            \d-code(```
+            utop # let add_one x : int : int = x + 1 ;;
+            Error: Syntax error
+            ```);%
+          }
+          +p{
+            関数だけでなく変数の場合でも型を明示できます。
+
+            \d-code(```
+            utop # let a : int = 123 ;;
+            val a : int = 123
+            ```);%
+
+            % https://v2.ocaml.org/manual/expr.html#let-binding
+            % ここでlet-bindingの完全なBNFを出すかどうか...
+          }
+        >
+      >
+      +subsection?:(`Multiargument functions`){複数の引数を持つ関数}<
+        +p{
+          % プログラミングの基礎 - 第4章 4.3関数の型
+          % https://dev.realworldocaml.org/variables-and-functions.html - Multiargument Functions
+          \ref-section(`Function`);で示したとおり、関数は1つ以上の引数を取ることができます。
+          例えば、以下のような第一引数と第二引数の差を返す関数を考えます\footnote{
+            引数を与える順番に応じて、第一引数、第二引数、...、第N引数という呼び方をします。
+          }。
+  
+          \d-code(```
+            utop # let diff x y = x - y ;;
+            val diff : int -> int -> int = <fun>
+          ```);%
+  
+          インタプリタの出力にある\codem{int -\> int -\> int}がこの関数の型になります。
+          OCamlの関数の型は右結合で解釈するため、\codem{(int -\> int) -\> int}ではなく、\codem{int -\> (int -\> int)}です。
+          この意味は「第一引数としてint型を受け取り、第二引数としてint型を受け取り、結果としてint型を返す関数の型」となります。
+  
+          これを、もう少し自然に解釈しようとすると「2つのint型な引数をとり、int型の結果を返す関数」になります。
+  
+          インタプリタの出力の\codem{\<fun\>}は、定義されたものが関数であることを表します。
+          整数や実数等の何らかの値に束縛された変数を定義した際は、その具体的な値が示されましたが、関数の場合はその内部まで示されることはありません。
+
+          % 部分適用については、カリー化で合わせて説明する。
+        }
+      >
+      +subsection?:(`Anonymous functions`){匿名関数（無名関数）}<
+        +p{
+          \dfn{匿名関数（無名関数）}とは、関数名を持たない関数です。
+  
+          % プログラミングの基礎 - 第14章 14.4名前のない関数
+          つまり、変数や前述の関数と違って、後から変数名や関数名を指定して再利用することができないということです。
+          しかしながら、関数名をつけるまでもない関数が定義できると便利な場合があります。
+          例えば、1度しか実行されない処理に対して関数名を付ける必要はないため、このようなケースで無名関数は有用です。
+          匿名関数を作るには、\codem{fun}キーワードを用いて、以下の構文を利用します。
+  
+          \d-code(```
+            fun <arguments...> -> <expr>
+          ```);%
+  
+          上記の構文は、1つ以上の引数\<arguments...\>を受け取って、式\<expr\>を実行しその結果を返す、という関数を表します。
+          匿名関数を利用した例を以下に示します。
+  
+          \d-code(```
+            utop # fun x -> x + 1 ;;
+            - : int -> int = <fun>
+  
+            utop # (fun x -> x + 1) 10 ;;
+            - : int = 11
+          ```);%
+          
+          % 値は関数であるという表現は、プログラミングの基礎 - 第4章 4.3関数の定義を参照
+          匿名関数定義後のインタプリタの出力は「直前(-)に入力した結果の型はint -\> int型で、その値は関数である」ことを示しています。
+          匿名関数は特定の関数名にバインドされないため、匿名関数の後ろに\dfn{実引数}（上記の例では10）を渡して関数適用します\footnote{
+            実引数とは、関数を利用する際に実際に渡される引数のことです。
+            一方で、関数定義の際に記述する引数（例えばfun x -\> x + 1のxに当たる部分）は\dfn{仮引数}と呼びます。
+          }。
+          上記の例から分かるとおり、
+          匿名関数に10を渡し（(fun x -\> x + 1) 10）、確かに+1された値（11）が返ってきていることから、
+          関数適用が行われたことがわかります。
+        }
+        +p{
+          次の例は少し発展的ですが、関数の引数に関数を渡すことも可能です。
+  
+          \d-code(```
+            utop # let add_note_header x = "Note: " ^ x ;;
+            val add_note_header : string -> string = <fun>
+  
+            utop # (fun g -> g "Hello world.") add_note_header ;;
+            - : string = "Note: Hello world."
+          ```);%
+  
+          上記の例では、まず\codem{add_note_header}という関数を定義しています。
+          この関数は引数に文字列を取り、その文字列の先頭に\codem{`Note: `#}という文字列を結合して返します。
+  
+          次に無名関数\codem{(fun g -\> g "Hello world.")}にadd_note_headerを適用しています。
+          無名関数(fun g -\> g "Hello world.")は以下のように動作します。
+          \listing{
+            * (fun g -\> g "Hello world.")は関数\codem{g}を引数として取ります
+            * 関数\codem{g}に実引数として"Hello world."を適用した結果を得ます
+            * 上記の結果を無名関数の値として返します
+          }%
+  
+          関数適用の結果、\codem{Note: Hello world.}という文字列が返されました。
+  
+          % https://dev.realworldocaml.org/variables-and-functions.html - Anonymous Functions
+          OCamlの重要なポイントの1つとして、関数も通常の値として扱われることがあげられます。
+          このように、他の値として扱うことのできる関数を\dfn{第一級関数}と言います。
+          つまりOCamlにおける関数は通常の値と同様に、ある関数に別の関数を引数として渡したり、ある関数から異なる関数を返すなどが可能です。
+  
+          また、letバインディングを用いて、匿名関数に関数名をつけることもできます。
+  
+          \d-code(```
+            utop # let add_one = (fun x -> x + 1) ;;
+            val add_one : int -> int = <fun>
+          ```);%
+  
+          上記の例は、匿名関数\codem{(fun x -\> x + 1)}に対して\codem{add_one}という関数名を与えています\footnote{
+            匿名関数をカッコで囲んでいますが、分かりやすさのために付与したものであり、実際は不要です。
+          }。
+        }
+        +p{
+          % https://dev.realworldocaml.org/variables-and-functions.html - Anonymous Functions
+          % https://v2.ocaml.org/manual/locallyabstract.html
+          ここでletバインディングによる関数定義とfunによる関数宣言の関係をみてみます。
+  
+          \d-code(```
+            utop # let add_one x = x + 1 ;;
+            val add_one : int -> int = <fun>
+  
+            utop # let add_one = fun x -> x + 1 ;;
+            val add_one : int -> int = <fun>
+          ```);%
+  
+          上記の例から、処理及び関数の型が全く同じであるため、関数add_oneと変数add_oneは同等であることが分かります。
+          % オリジナル
+          変数add_oneが関数であるという主張はおかしく思えるかもしれませんが、変数の値はfun x -\> x + 1という関数であるため、結果として関数となります。
+  
+          つまり、名前付き関数を定義する以下の構文と、
+  
+          \d-code(```
+            let <function> <arguments...> = <expr>
+          ```);%
+  
+          無名関数を用いて変数（関数）を定義する以下の構文は、
+  
+          \d-code(```
+            let <variable> = fun <arguments...> -> <expr>
+          ```);%
+  
+          同等であり、名前付き関数を定義する構文は後者の\dfn{糖衣構文}となります\footnote{
+            読みやすさ・書きやすさのための導入される書き方を糖衣構文と言います。
+            複雑で分かりにくい構文、シンプルで分かりやすい書き方で書けるようにしたもののことです。
+          }。
+          そのため、関数定義と変数定義は内部的には全く同じです。
+        }
+        +p{
+          % カリー化で、複数の引数を持つ関数を定義するためここで説明しておく
+          \ref-subsection(`Multiargument functions`);にて複数の引数を持つ関数を説明しました。
+          匿名関数でも複数の引数を持つ関数を作ることができます。
+
+          \d-code(```
+          utop # fun x y -> x - y ;;
+          - : int -> int -> int = <fun>
+
+          utop # (fun x y -> x - y) 3 1 ;;
+          - : int = 2
+          ```);%
+
+          % https://dev.realworldocaml.org/variables-and-functions.html - Multiargument Functions
+          上記の定義は、\ref-subsection(`Multiargument functions`);で定義した関数diffと同じであることが分かります。
+
+          面白いことに、上記の無名関数を次のように書いても同じです。
+
+          \d-code(```
+          utop # fun x -> (fun y -> x - y) ;;
+          - : int -> int -> int = <fun>
+
+          utop # (fun x -> (fun y -> x - y)) 3 1 ;;
+          - : int = 2
+          ```);%
+
+          これが同等である理由はOCamlの関数が右結合であるためです。
+          \ref-subsection(`Multiargument functions`);で定義した関数diffの型はint -\> (int -\> int)でした。
+          これは、上記の例の関数diffの前半int -\> ...がfun x -\> (fun y -\> x - y)の\codem{fun x -\> ...}に対応し、
+          後半の... -\> (int -\> int)がfun x -\> (fun y -\> x - y)の\codem{... -\> (fun y -\> x - y)}に対応します。
+          そのため、\ref-subsection(`Multiargument functions`);で定義した関数diffと上記の2つは同等であると言えます。
+        }
+      >
+      +subsection?:(`Currying`){カリー化}<
+        +p{
+          ここで、\ref-subsection(`Multiargument functions`);で紹介した関数\codem{diff}を思い出しましょう。
+          関数diffは以下のように定義していました。
+  
+          \d-code(```
+            utop # let diff x y = x - y ;;
+            val diff : int -> int -> int = <fun>
+          ```);%
+
+          \ref-subsection(`Multiargument functions`);でも説明したとおり、関数diffの型はint -\> (int -\> int)です\footnote{
+            インタプリタの出力にはカッコは付いていませんが、分かりやすさのために付けています。
+          }。
+
+          % https://dev.realworldocaml.org/variables-and-functions.html - Multiargument Functions
+          これは\ref-subsection(`Anonymous functions`);で説明したとおり、匿名関数を利用して次のように書き直せます。
+
+          \d-code(```
+            utop # let diff =  (fun x -> (fun y -> x - y)) ;;
+            val diff : int -> int -> int = <fun>
+          ```);%
+
+          \codem{let diff = (fun x -\> (fun y -\> x - y))}は、以下のように読み取れます。
+          \listing{
+            * 関数diffは、int型の引数xを1つ受け取る関数(fun x -\> (...))であり、次の関数を返します
+            * 次の関数とは(fun y -\> x - y)のことであり、int型の引数yを受け取り、x - yの結果を返します
+          }%
+
+          なお、(fun x -\> (fun y -\> x - y))に内包された（fun y -\> x - y）のxは、
+          外部の関数fun x -\> (...)によってバインドされたのものです。
+  
+          このように、あるものの中にそれと同じ形や種類のものが入っている構造や状態を\dfn{ネスト}またはネストしていると言い、
+          ネストされた関数の式であるx - yは「外側の関数でバインドされた値x」と「同関数内でバインドされたy」を参照し評価されます。
+
+          % カリー化の説明例
+          % http://www.nct9.ne.jp/m_hiroi/func/ocaml03.html
+          % https://ocaml.jp/?OCaml%E5%85%A5%E9%96%80%282%29
+          % https://www.fos.kuis.kyoto-u.ac.jp/~igarashi/class/isle4-02w/mltext/ocaml005.html
+          % https://en.wikipedia.org/wiki/Currying
+          複数の引数を取る関数(fun x y z ... -\> ...)を、たった1つの引数を取る連続した関数(fun x -\> (fun y -\> (fun z -\> ...)))への変換を\dfn{カリー化}と言います。
+          つまり複数の引数を取る関数は、引数を1つ取る関数によって表現できます\footnote{
+            この表現を\dfn{カリー化表現}と言います。
+          }。
+        }
+        +p{
+          カリー化は「関数を返す関数」によって、複数の引数を取る関数を表現したものです。
+          複数の引数を取る関数に対して、引数を1つずつ与えることでこれを観察できます。
+
+          \d-code(```
           utop # let diff x y = x - y ;;
           val diff : int -> int -> int = <fun>
-        ```);%
 
-        インタプリタの出力にある\codem{int -\> int -\> int}がこの関数の型になります。
-        この関数の型は右結合で解釈するため、\codem{(int -\> int) -\> int}ではなく、\codem{int -\> (int -\> int)}です。
-        この意味は「第一引数としてint型を受け取り、第二引数としてint型を受け取り結果としてint型を返す関数の型」となります。
-
-        これを、もう少し自然に解釈しようとすると「2つのint型な引数をとり、int型の結果を返す関数」になります。
-
-        最後に、\codem{\<fun\>}について説明します。
-        \codem{\<fun\>}は定義されたものが関数であることを示します。
-        整数や実数を定義した際は、その具体的な値が示されましたが、関数の場合はその内部まで示されることはありません。
-      }>
-      +subsection{匿名関数（無名関数）}<+p{
-        \dfn{匿名関数（無名関数）}とは、関数名を持たない関数です。
-        つまり、変数や前述の関数と違って、後から変数名や関数名を指定して再利用することができない、ということです。
-        しかしながら、関数名をつけるまでもない（例えば1度しか利用しない）関数の方が便利な場合もあるため、本節で説明します。
-        匿名関数を作るには以下の構文を利用します。
-
-        \d-code(```
-          fun <arguments...> -> <expr>
-        ```);%
-
-        これで、1つ以上の引数\codem{\<arguments...\>}を受け取って、式\codem{\<expr\>}を実行しその結果を返す、という関数を表します。
-        匿名関数を利用した例を以下に示します。
-
-        \d-code(```
-          utop # fun x -> x + 1 ;;
+          utop # diff 3 ;;
           - : int -> int = <fun>
 
-          utop # (fun x -> x + 1) 10 ;;
-          - : int = 11
-        ```);%
-        
-        匿名関数定義後のインタプリタの出力は「直前(\codem{-})に入力した結果の型は\codem{int -\> int}型で、その値は関数である」ことを示しています。
-        匿名関数は特定の関数名にバインドされないため、匿名関数の後ろに\dfn{実引数}\footnote{
-          実引数とは、関数を利用する際に実際に渡される引数のことです。
-          一方で、関数定義の際に記述する引数（例えば\codem{fun x -\> x + 1}の\codem{x}に当たる部分）は\dfn{仮引数}と呼びます。
-        }を渡して利用します。
-        上記の例にもある通り、匿名関数に10を渡した場合\codem{(fun x -\> x + 1) 10}の結果、確かに\codem{+1}されて値が返ってきたことが分かります。
-      }
-      +p{
-        次の例は少し発展的ですが、関数の引数に関数を渡すことも可能です。
+          utop # (diff 3) 1 ;;
+          - : int = 2
+          ```);%
 
-        \d-code(```
-          utop # let add_note_header x = "Note: " ^ x ;;
-          val add_note_header : string -> string = <fun>
-
-          utop # (fun g -> g "Hello world.") add_note_header ;;
-          - : string = "Note: Hello world."
-        ```);%
-
-        上記の例では、まず\codem{add_note_header}という関数を定義しています。
-        この関数は引数に文字列を取り、その文字列の先頭に\codem{`Note: `#}という文字列を結合して返します。
-        次に\codem{(fun g -\> g "Hello world.")}について説明します。
-        \codem{(fun g -\> g "Hello world.")}は関数\codem{g}を引数として取り、その関数\codem{g}を"Hello world."に適用した結果を返す関数になります。
-        その結果、\codem{Note: Hello world.}という文字列を返しています。
-
-        OCamlの重要なポイントの1つとして、関数も通常の値として扱われることがあげられます。
-        つまり通常の値と同様に、ある関数に別の関数を引数として渡したり、ある関数から異なる関数を返すなど、が可能です。
-        また、\dfn{letバインディング}\footnote{
-          \codem{let}を用いたバインディングを指します。
-          なお、変数におけるバインディングもletバインディングですが、変数の場合は特に変数バインディングと呼びました。
+          関数diffに第一引数だけを与えた場合（\codem{diff 3}）、\codem{int -\> int}という関数の型を得ました。
+          このように、複数の引数を取る関数に対して第一引数だけを与えると、「残りの引数を取り結果を返す関数」が得られます。
+          (diff 3)によって返された関数に引数を1つ与えることで、関数diffに引数を2つ渡した時と同じ結果を得ることができます。
         }
-        を用いて、匿名関数に関数名をつけることもできます。
+        +p{
+          % 部分適用の説明
 
-        \d-code(```
-          utop # let add_one = (fun x -> x + 1) ;;
-          val add_one : int -> int = <fun>
-        ```);%
+          % https://dev.realworldocaml.org/variables-and-functions.html - Multiargument Functions
+          前述の応用として、カリー化を利用すると関数diffから次のような関数を生成できます。
+  
+          \d-code(```
+            utop # let diff_from_ten y = diff 10 y ;;
+            val diff_from_ten : int -> int = <fun>
+  
+            utop # diff_from_ten 5 ;;
+            - : int = 5
+          ```);%
 
-        上記の例にて、匿名関数\codem{(fun x -\> x + 1)}に対して変数名\codem{add_one}をつけることができました。
-        \codem{add_one}という変数の値を匿名関数\codem{(fun x -\> x + 1)}で定義したことになります。
-      }
-      +p{
-        また\codem{add_one}は関数定義の構文に従って、以下のように定義するのと同等です。
+          上記の例では、関数\codem{diff_from_ten}を定義し、この関数は10と与えられた引数\codem{y}との差を返します。
+          % https://ocaml.org/docs/functional-programming 
+          このように、カリー化された関数に引数の一部を適用して新しい関数を取得することを\dfn{部分適用}と言います。
 
-        \d-code(```
-          utop # let add_one x = x + 1 ;;
-          val add_one : int -> int = <fun>
-        ```);%
+          また、匿名関数で利用したfunキーワードが複数の引数を取れるのは、カリー化のための独自の構文をサポートしているためです。
+          そのため、カリー化の点から見ても下記の関数はやはり同様です。
 
-        つまり、名前付き関数を定義する以下の構文
+          \d-code(```
+            utop # let diff = (fun x y -> x - y) ;;
+            val diff : int -> int -> int = <fun>
 
-        \d-code(```
-          let <function> <arguments...> = <expr>
-        ```);%
-
-        と、無名関数を用いて変数を定義する構文
-
-        \d-code(```
-          let <variable> <arguments...> = <expr>
-        ```);%
-
-        は、同等であり、名前付き関数を定義する構文は後者の\dfn{糖衣構文}\footnote{
-          読みやすさ・書きやすさのための導入される書き方をいいます。
-          複雑で分かりにくい構文を全く同じ意味となるように、シンプルで分かりやすい書き方で書けるようにしたもののことです。
-        }となります。
-      }>
-      +subsection?:(`Currying`){カリー化}<+p{
-        \ref-subsection(`Multiargument functions`);で紹介した関数\codem{diff}を思い出しましょう。
-        関数\codem{diff}は以下のように定義していました。
-
-        \d-code(```
-          utop # let diff x y = x - y ;;
-          val diff : int -> int -> int = <fun>
-        ```);%
-
-        これを匿名関数を利用して次のように書き直してみます。
-
-        \d-code(```
-          utop # let diff =  (fun x -> (fun y -> x - y)) ;;
-          val diff : int -> int -> int = <fun>
-        ```);%
-
-        \ref-subsection(`Multiargument functions`);でも説明した通り、関数\codem{diff}の型は\codem{int -\> (int -\> int)}でした。
-        ここで、匿名関数を利用し書き直した定義を見てみます。
-        \codem{let diff =  (fun x -\> (fun y -\> x - y))}は、int型の引数を1つ受け取る関数\codem{(fun x -\> (...))}であり、
-        その関数は別の関数\codem{(fun y -\> x - y)}を返す関数であることが分かります。
-        このことから、両者の意味するところが似ている（同じ）であることが読み取れます。
-
-        この関数\codem{diff}は内部的にネストしており、\codem{x - y}は「1つ外側の関数でバインドされた値\codem{x}」と「同関数内でバインドされた\codem{y}」を参照しています。
-
-        このように、複数の引数を取る関数を、「元の関数（この例では\codem{diff}）の最初の引数（この例では\codem{x}）だけを取り」且つ「元の関数の残りの引数（この例では\codem{y}）を取り結果を返す関数」となるような関数への変換あるいはその関数を\dfn{カリー化}と言います。
-      }
-      +p{
-        カリー化を利用すると関数\codem{diff}から次のような関数を生成できます。
-
-        \d-code(```
-          utop # let diff_from_ten y = diff 10 y ;;
-          val diff_from_ten : int -> int = <fun>
-
-          utop # diff_from_ten 5 ;;
-          - : int = 5
-        ```);%
-
-        上記の例では、関数\codem{diff_from_ten}を定義し、この関数は10と与えられた引数\codem{y}との差を返します。
-        このように、カリー化された関数（この例では\codem{diff}）に引数の一部を適用して新しい関数（この例では\codem{diff_from_ten}）を取得することができ、これを\dfn{部分適用}と言います。
-
-        また、匿名関数で利用した\codem{fun}キーワードはカリー化のための独自の構文をサポートしており、複数の引数を取ることができます。
-        その結果、前述の関数\codem{diff}は次のように書き直すこともできます。
-
-        \d-code(```
-          utop # let diff = (fun x y -> x - y) ;;
-          val diff : int -> int -> int = <fun>
-        ```);%
-      }
+            utop # let diff = (fun x -> fun y -> x - y) ;;
+            val diff : int -> int -> int = <fun>
+          ```);%
+        }
       >
-      +subsection?:(`Recursive functions`){再帰関数}<+p{
-        \dfn{再帰関数}とは、関数内で自分自身の呼び出しが含まれている関数です。
-        自分自身の呼び出しを\dfn{再帰呼び出し}といいます。
-        再帰関数を定義するには以下の構文を利用します。
+      +subsection{ラベル付き引数}<
+        +p{
+          % https://dev.realworldocaml.org/variables-and-functions.html - Labled Arguments
+          % https://v2.ocaml.org/manual/lablexamples.html
+          これまで定義してきた関数は、引数の位置（順番）によって意味を持たせていました。
+          しかし様々な関数を利用するプログラムでは、引数の順番や引数の型情報からどのような値を入力すればよいか記憶・推測することは困難です。
+          引数の順番に依存せず関数を利用でき且つ引数がどのような種類の値を取るかを何らかの名称によって示されていると便利です。
+          OCamlは\dfn{ラベル付き引数}という機構を利用して引数に名前を付け、引数の位置に依存しない関数定義が可能です\footnote{
+            % https://v2.ocaml.org/manual/expr.html#parameter
+            ラベル付き引数名も通常の引数名と同様の命名規則で表現します。
+          }。
+        }
+        +p{
+          ラベル付き引数であることを示すには、仮引数名の先頭にチルダ（\codem{~}）を付けます。
 
-        \d-code(```
-          let rec <function> <arguments...> = <expr>
-        ```);%
+          ラベル付き引数をEBNFで表すと以下のようになります\footnote{
+            実際の引数のシンボルは\codem{parameter}というシンボルで定義され、
+            通常の引数、ラベル付き引数以外にオプショナル引数（後述）等も含まれるため、これよりも少し複雑です。
+          }。
+          % https://v2.ocaml.org/manual/expr.html#parameter
+          \d-code(```
+          <labeled-argument> ::= ~<label-name>
+                               | ~(<label-name> [:type])
+                               | ...
+          <label-name>       ::= (a..z | _) { a..zA..Z | 0..9 | _ | ' }
+          ```);%
 
-        上記の構文は名前付きの関数とほとんど同じで、
-        唯一違う点は\codem{let}キーワードの後に\codem{rec}キーワードが追加されていることです。
-        この\codem{rec}キーワードを付与することで、この関数が再帰関数であることを示します。
+          上記の\codem{~(\<label-name\> [:type])}は、ラベル付き引数は通常の引数と同じように引数の型を省略できることを示しています\footnote{
+            [:type]は型を省略可能であることを示しています。
+          }。
+          また\<label-name\>の定義から、通常の引数と同様の命名規則を持つことも分かります。
+          ラベル付き引数を用いて関数を定義する例を以下に示します。
 
-        再帰関数を利用する場合、単純に自分自身を呼び出してしまうと無限ループに陥ってしまうため、
-        後述する\dfn{条件分岐}や\dfn{パターンマッチ}を用いる必要があります。
-        そのため、本節では構文の紹介に留め、条件分岐やパターンマッチの節で改めて解説します。
-      }>
+          \d-code(```
+            utop # let my_mod ~divisor ~dividend = dividend /. divisor ;;
+            val my_mod : divisor:float -> dividend:float -> float = <fun>
+
+            utop # my_mod 10. 1. ;;
+            - : float = 0.1
+          ```);%
+
+          上記の例は、除算の商を出力する関数\codem{my_mod}を定義しています。
+          関数my_modは、割る数\codem{~divisor}と割られる数\codem{~dividend}という\dfn{ラベル}がついた引数を持ちます。
+          インタプリタの出力は「my_modはdivisor:float -\> dividend:float -\> float型の関数であり、その値は関数である」ことを示しています。
+
+          % https://ocaml.jp/?Chapter%204%20%E3%83%A9%E3%83%99%E3%83%AB%E3%81%A8%E3%83%90%E3%83%AA%E3%82%A2%E3%83%B3%E3%83%88
+          % https://v2.ocaml.org/manual/lablexamples.html
+          インタプリタの出力におけるコロン（\codem{:}）が付いた文字列（上記の例では、divisor:及びdividend:）がラベルに当たります。
+        }
+        +p{
+          ラベル付き引数を利用するには、ラベル付き引数と実引数をコロン（:）で繋いで渡します。
+          ラベル付き引数は位置に依存しないため、引数の順序を入れ替えても同様の結果を得ることができます。
+
+          \d-code(```
+            utop # my_mod ~divisor:10. ~dividend:1. ;;
+            - : float = 0.1
+
+            utop # my_mod ~dividend:1. ~divisor:10. ;;
+            - : float = 0.1
+          ```);%
+
+          % https://ocaml.jp/?Chapter%204%20%E3%83%A9%E3%83%99%E3%83%AB%E3%81%A8%E3%83%90%E3%83%AA%E3%82%A2%E3%83%B3%E3%83%88
+          なお、全ての引数を適用する場合に限り、下記のようにラベルを省略する（引数の位置に応じて意味を持たせる）こともできます\footnote{
+            全ての引数を適用することを、\dfn{関数適用が完全である}または\dfn{完全適用}と言います。
+          }。
+
+          \d-code(```
+            utop # my_mod 10. 1. ;;
+            - : float = 0.1
+          ```);%
+
+          ただし、引数の一部だけを適用する場合、ラベルを省略することはできません。
+
+          \d-code(```
+          utop # my_mod 10. ;;
+          Error: The function applied to this argument has type
+                   divisor:float -> dividend:float -> float
+          This argument cannot be applied without label
+          ```);%
+
+          ラベル付き引数を利用する場合のみ、一部の引数を省略できます。
+          このとき（一部のラベル付き引数が省略されたとき）、通常の関数と同様に、省略されたラベル付き引数を取る関数を返します。
+
+          \d-code(```
+          utop # my_mod ~divisor:10. ;;
+          - : dividend:float -> float = <fun>
+          ```);%
+
+          もちろん、ラベル付き引数とラベルのない引数を併用できます。
+
+          \d-code(```
+          utop # let f ~x y ~z = x + y + z ;;
+          val f : x:int -> int -> z:int -> int = <fun>
+
+          utop # f ~x:1 2 ~z:3 ;;
+          - : int = 4
+
+          utop # f 2 ;;
+          - : x:int -> z:int -> int = <fun>
+
+          utop # f ~x:1 ;;
+          - : int -> z:int -> int = <fun>
+
+          utop # f ~x:1 ~z:3 ;;
+          - : int -> int = <fun>
+          ```);%
+
+          上記の例で、関数適用\codem{f 2}の実引数2が仮引数\codem{y}として適用されていることに注意して下さい。
+        }
+        +p{
+          % https://dev.realworldocaml.org/variables-and-functions.html - Labled Arguments
+          OCamlでは\dfn{ラベルパニング}と呼ばれる機構をサポートしており、これはラベルとその値として渡される変数の名前が一致している場合、
+          引数にラベルを記述するだけでそのラベル名と名称が一致する変数を参照してくれるものです。
+          この例を下記に示します。
+
+          \d-code(```
+            utop # let divisor = 10. in
+              let dividend = 1. in
+              my_mod ~divisor ~dividend ;;
+            - : float = 0.1
+          ```);%
+
+          ラベル付き引数は、次のケースで特に有用です。
+
+          % https://v2.ocaml.org/manual/lablexamples.html
+          % コードをドキュメント化し、チェックを可能にし、アプリケーションの柔軟性を高めることが目的
+          % https://dev.realworldocaml.org/variables-and-functions.html - WHERE ARE LABELS USEFUL?
+
+          \listing{
+            * 引数の位置（順序）に依存させたくない場合
+            * 引数の型からその意味が推測できない場合
+            * 同じ型の引数が複数あり、どの引数にどの意味が紐づくか混乱する場合
+            * 引数の数が多すぎる場合
+          }%
+        }
+        +p{
+          % https://dev.realworldocaml.org/variables-and-functions.html - HIGHER-ORDER FUNCTIONS AND LABELS
+          % https://ocaml.jp/?Chapter%204%20%E3%83%A9%E3%83%99%E3%83%AB%E3%81%A8%E3%83%90%E3%83%AA%E3%82%A2%E3%83%B3%E3%83%88
+          しかし、ラベル付き引数には注意するべき点もあります。
+
+          それは、引数として「ラベル付き引数を持つ関数」を受け取る関数を評価する場合です\footnote{
+            % https://www.fos.kuis.kyoto-u.ac.jp/~igarashi/class/isle4-02w/mltext/ocaml005.html
+            % http://www.cs.tsukuba.ac.jp/~kam/lecture/fp2017/7.pdf
+            関数を引数に受け取る関数または関数を戻り値とする関数を\dfn{高階関数}と言います。
+          }。
+
+          例えば、本節で例にあげた除算の商を出力する関数my_modを引数に取る関数\codem{apply_mod}を以下のように定義します\footnote{
+            明示的に型を宣言していますが不要です。明示的に型を宣言しない場合、まだ説明していない多相型（後述）が出現してしまうため、
+            敢えて明示的に宣言しています。
+          }。
+
+          \d-code(```
+          utop # let apply_mod (f : divisor:float -> dividend:float -> float)
+                               (divisor : float)
+                               (dividend : float) = f ~divisor ~dividend
+          val apply_mod :
+            (divisor:float -> dividend:float -> float) -> float -> float -> float = <fun>
+          ```);%
+
+          上記の例は、apply_modという関数を定義しており、これは以下の3つの引数を取ります。
+
+          \listing{
+            * \codem{(f : divisor:float -\> dividend:float -\> float)}：ラベル付き引数~divisor（割る数）と~dividend（割られる数）を受け取り、float型を返す関数f
+            * \codem{(divisor : float)}：割る数divisor
+            * \codem{(dividend : float)}：割られる数dividend
+          }%
+
+          関数apply_modは関数fにdivisorとdividendを適用する際、ラベルパニングによってラベル名と一致する変数を参照します。
+          インタプリタの出力は「apply_modという(divisor:float -\> dividend:float -\> float) -\> float -\> float -\> float型の関数を定義し、その値は関数である」ことを示しています。
+          apply_modは以下のように適用できます。
+
+          \d-code(```
+          utop # let my_mod ~divisor ~dividend = dividend /. divisor ;;
+          val my_mod : divisor:float -> dividend:float -> float = <fun>
+
+          utop # my_mod ~divisor:10. ~dividend:1. ;;
+          - : float = 0.1
+
+          utop # apply_mod my_mod 10. 1. ;;
+          - : float = 0.1
+          ```);%
+
+          上記の例から、関数apply_modの第二引数（10.）と第三引数（1.）が、関数my_modのラベル付き引数~divisor、~dividendへ渡され、正しく評価されたことが分かります。
+        }
+        +p{
+          ここで、apply_modの引数fについて、ラベル付き引数の順番を変えてみます。
+
+          \d-code(```
+          utop # let fail_mod (f : dividend:float -> divisor:float -> float)
+                              (divisor : float)
+                              (dividend : float) = f ~divisor ~dividend ;;
+          val fail_mod :
+            (dividend:float -> divisor:float -> float) -> float -> float -> float = <fun>
+          ```);%
+
+          ラベル付き引数の性質から、fのラベル付き引数の順番を入れ替えても正しく動作するように思われますが、これは失敗します。
+
+          \d-code(```
+          utop # fail_mod my_mod 10. 1. ;;
+          Error: This expression has type divisor:float -> dividend:float -> float
+                 but an expression was expected of type
+                  dividend:float -> divisor:float -> float
+          ```);%
+
+          % 説明が下手
+          これは、fail_modの第一引数は\codem{(f : dividend:float -\> divisor:float -\> float)}という関数の型を期待するにも関わらず、
+          関数my_modは\codem{(divisor:float -\> dividend:float -\> float)}という関数の型であるためです。
+          つまり、ラベル付き引数を持つ関数を引数に取る関数（高階関数）において、
+          高階関数から渡すラベル付き引数の順番が引数で受け取った関数のラベル付き引数の順番と一致している必要があります。
+        }
+      >
+      +subsection{オプション型とオプショナル引数}<
+        +p{
+          % https://dev.realworldocaml.org/variables-and-functions.html - Optional Arguments
+          これまで説明した関数では、全ての引数に値を設定することで結果を得ることができました。
+          しかし、いくつかの引数において値を省略したい場合があります。
+          例えば、入力する値がほとんど同じであれば、これを毎回入力することは手間であるため、
+          あらかじめいつも入力する値が入っていてほしいと考えます。
+          値の入力を省略した場合にあらかじめ入力される値を\dfn{既定値}または\dfn{デフォルト値}と言いますが、
+          本節で説明する\dfn{オプショナル引数}を利用することで、引数の省略とデフォルト値の設定が可能です\footnote{
+            オプショナル引数は\dfn{オプション引数}とも呼ばれます。本書ではオプショナル引数で統一します。
+          }。
+        }
+        +p{
+          % https://ocaml.jp/?Chapter%204%20%E3%83%A9%E3%83%99%E3%83%AB%E3%81%A8%E3%83%90%E3%83%AA%E3%82%A2%E3%83%B3%E3%83%88
+          % http://www.nct9.ne.jp/m_hiroi/func/ocaml22.html
+          オプショナル引数であることを示すには、仮引数名の先頭にクエスチョンマーク（\codem{?}）を付けます。
+          デフォルト値をEBNFで表すと以下のようになります\footnote{
+            説明のため簡略化したEBNFを記載しています。
+          }。
+
+          % https://v2.ocaml.org/manual/expr.html#parameter
+          \d-code(```
+          <optional-argument> ::= ?<label-name>
+                                | ?(<label-name> [:type] [=expr])
+
+          <label-name>        ::= (a..z | _) { a..zA..Z | 0..9 | _ | ' }
+          ```);%
+
+          上記のEBNFから、オプショナル引数の命名規則はラベル付き引数や通常の引数と同じであることが分かります。
+          また、\codem{?(\<label-name\> [:type] [=expr])}から、
+          ラベル付き引数や通常の引数と同様に引数の型を省略でき且つ[=expr]はデフォルト値を設定できることを示しています。
+
+          デフォルト値を持つオプショナル引数を取る関数の例を以下に示します。
+
+          % https://v2.ocaml.org/manual/lablexamples.html#s:optional-arguments
+          \d-code(```
+          utop # let up ?(step = 1) x = x + step ;;
+          val up : ?step:int -> int -> int = <fun>
+
+          utop # up 1 ;;
+          - : int = 2
+          utop # up 2 ;;
+          - : int = 3
+          utop # up 3 ;;
+          - : int = 4
+          ```);%
+
+          上記の例は、第二引数を第一引数の数だけプラスした値を出力する関数\codem{up}を定義しています。
+          関数upは、第一引数（オプショナル引数）にプラスする数\codem{?step}を取ります。\codem{?(step = 1)}はデフォルト値が1であることを示しています。
+          インタプリタの出力は、「upは?step:int -\> int -\> int型の関数であり、その値は関数である」ことを示しています。
+
+          % https://v2.ocaml.org/manual/lablexamples.html
+          インタプリタの出力におけるクエスチョンマーク（?）及びコロン（:）が付いた文字列（上記の例では、?step:）をラベルと言います\footnote{
+            ラベル付き引数のコロン（:）が付いた文字列もラベルと言いました。
+          }。
+        }
+        +p{
+          オプショナル引数の値を変更するには、ラベル付き引数に値を渡すときと同じように記述します。
+
+          \d-code(```
+          utop # up ~step:2 1 ;;
+          - : int = 3
+          utop # up ~step:3 2 ;;
+          - : int = 5
+          utop # up ~step:4 3 ;;
+          - : int = 7
+          ```);%
+
+          なお、オプショナル引数もラベル付き引数と同様に引数の順番を入れ替えることが可能です。
+
+          \d-code(```
+          utop # let up ?(step = 1) ?(step2 = 2) x = x + step + step2 ;;
+          val up : ?step:int -> ?step2:int -> int -> int = <fun>
+
+          utop # up ~step:1 ~step2:2 3 ;;
+          - : int = 6
+          top # up ~step2:2 ~step:1 3 ;;
+          - : int = 6
+          utop # up 3 ;;
+          - : int = 6
+          ```);%
+
+          ただし、オプショナル引数には注意するべき点がいくつかあります。
+          % https://ocaml.jp/?Chapter%204%20%E3%83%A9%E3%83%99%E3%83%AB%E3%81%A8%E3%83%90%E3%83%AA%E3%82%A2%E3%83%B3%E3%83%88
+          % https://v2.ocaml.org/manual/lablexamples.html#s:optional-arguments
+          まず、オプショナル引数以外にラベル付けされていない引数が存在しない場合、オプショナル引数を省略できないという制約があります。
+          つまり、オプショナル引数が省略可能であるためには、ラベル付けされていない引数が少なくとも1つ必要です。
+
+          \d-code(```
+          utop # let up ?(step = 1) ~from = from + step ;;
+          Line 1, characters 9-17:
+          Warning 16 [unerasable-optional-argument]: this optional argument cannot be erased.
+          val up : ?step:int -> from:int -> int = <fun>
+          ```);%
+
+          加えて、オプショナル引数よりも後ろにラベル付けされていない引数がない場合も省略できません。
+
+          \d-code(```
+          utop # let up padding ?(step = 1) ~from = padding + from + step ;;
+          Line 1, characters 17-25:
+          Warning 16 [unerasable-optional-argument]: this optional argument cannot be erased.
+          val up : int -> ?step:int -> from:int -> int = <fun>
+
+          utop # let up ?(step = 1) padding ~from = padding + from + step ;;
+          val up : ?step:int -> int -> from:int -> int = <fun>
+
+          utop # let up ?(step = 1) ~from padding = padding + from + step ;;
+          val up : ?step:int -> from:int -> int -> int = <fun>
+          ```);%
+
+          これは、オプショナル引数よりも後ろにあるラベルなし引数が適用されたかどうかを基準に、オプショナル引数が省略されているかどうかを判断するためです。
+        }
+        +p{
+          オプショナル引数はデフォルト値を省略することも可能です。
+          省略した場合、オプショナル引数の型は\dfn{オプション型}になります。
+
+          % https://dev.realworldocaml.org/variables-and-functions.html - Optional Arguments
+          % まだでない
+
+          % プログラミングの基礎 - 第18章 オプション型
+          OCamlにおけるオプション型は次のように定義されています。
+
+          \d-code(```
+            type 'a option = None
+                           | Some of 'a
+          ```);%
+
+          \codem{None}は値がないことを示す\dfn{コンストラクタ（構成子）}であり、\codem{Some}は'a型の値が存在することを示すコンストラクタです\footnote{
+            % http://www.nct9.ne.jp/m_hiroi/func/ocaml06.html
+            % https://cs3110.github.io/textbook/chapters/data/variants.html
+            % https://cs3110.github.io/textbook/chapters/data/options.html
+            % ここでのコンストラクタは値コンストラクタまたはデータコンストラクタ
+            OCamlにおけるコンストラクタとは、データを表す名前です。
+            このようにデータを表すコンストラクタを、データコンストラクタまたは値コンストラクタと言います。
+            なお、他のプログラミング言語で用いられるコンストラクタとは意味が異なるため注意が必要です。
+          }。
+          つまり\codem{'a option}型は「値を持たないか、または'a型の値を持つ」ことを表します。
+        }
+        +p{
+          % プログラミングの基礎 第13章 13.3 多相型と多相関数
+          % https://v2.ocaml.org/manual/types.html - Type variables
+          % https://www.fos.kuis.kyoto-u.ac.jp/~igarashi/class/isle4-02w/mltext/ocaml005.html#toc12
+          ここで'aという新しい型が登場しました。
+          このように、先頭にシングルクォート（'）を持つ型を\dfn{型変数}と言います。
+          つまり'aは「aという名前の型変数」であることを表します。
+          また、型変数は「どのような型に属しても良い」という性質があります。
+          型変数はあらゆる型として扱って良い変数であるため「型の一般化」と考えることができます。
+
+          % プログラミングの基礎 第13章 13.3 多相型と多相関数
+          なお、型変数が複数ある場合'a、'b、...のようにシングルクォート（'）を付けた小文字のラテン文字で表現されます。
+
+          型変数は式を評価する際に具体的な型に置き換わるため、例えばint型を入れた場合はint型として処理されます。
+          このように、どのような型に属しても良い性質を\dfn{多相性}と言い、
+          型変数を含むような型を\dfn{多相型}と言います\footnote{
+            多相型を持つ関数を\dfn{多相関数}または多相的関数と言います。
+            一方、多相でない関数は\dfn{単相関数}と言います。
+          }。
+          
+          多相型を持つ関数とその例を以下に示します。
+    
+          \d-code(```
+          utop # min ;;
+          - : 'a -> 'a -> 'a = <fun>
+
+          utop # min 100 10 ;;
+          - : int = 10
+    
+          utop # min 100.0 10.0 ;;
+          - : float = 10.
+
+          utop # min "abc" "def" ;;
+          - : string = "abc"
+
+          utop # min true false ;;
+          - : bool = false
+          ```);%
+
+          上記は、任意の同一の型を持つ値を2つ受け取って、値として小さい方を返す関数\codem{min}を利用した例です。
+          \ref-chapter(`Basic data and types`);で説明したとおり、int型、float型、string型、bool型は大小の比較が可能であるため、min関数に適用できます。
+
+          % https://www.fos.kuis.kyoto-u.ac.jp/~igarashi/class/isle4-02w/mltext/ocaml005.html#toc12
+          ただし、関数minが任意の型を取ることができるからといって、
+          第一引数の型と第二引数に異なる型の値を適用することはできません。
+          なぜなら、値の大小比較は同一の型同士でのみ可能だからです。
+        }
+        +p{
+          コメント用文字列を生成する関数\codem{add_comment}を用いて、オプショナル引数がどのようなものか見ていきましょう。
+
+          \d-code(```
+            utop # let add_comment ?comment_header x =
+              let comment_header = match comment_header with
+                | None -> "#"
+                | Some x -> x
+              in
+              comment_header ^ " " ^ x ;;
+            val add_comment : ?comment_header:string -> string -> string = <fun>
+          ```);%
+
+          上記関数は、オプショナル引数を表すクエスチョンマーク（\codem{?}）を用いて、第一引数の\codem{comment_header}がオプショナル引数であることを示しています。
+          関数呼び出しの際に、チルダ（\codem{~}）とコロン（\codem{:}）及びそれに続けて変数の値を記述することでオプショナル引数に値を渡すことができます。
+          関数呼び出しの例を下記に示します。
+
+          \d-code(```
+            utop # add_comment ~comment_header:"%" "comment body" ;;
+            - : string = "% comment body"
+          ```);%
+
+          上記の例を見ると、オプショナル引数の呼び出し方はラベル付き引数の呼び出し方と全く同じことが分かりますね。
+          また、オプショナル引数を省略した場合、関数定義の\codem{match comment_header with}の\codem{None -\> "\#"}が適用されます。
+
+          \d-code(```
+            utop # add_comment "comment body" ;;
+            - : string = "# comment body"
+          ```);%
+
+          オプショナル引数のメリットとして、呼び出し側が意識する必要のないまたはその必要性が薄い引数を無視できることがあげられます。
+          一方デメリットとして、オプショナル引数を明示的に指定しない場合、オプショナル引数の値は関数内部で暗黙的に補完され処理されるため、
+          意図しない動作を選択してしまう可能性があげられます。
+
+          そのため、ユーザから見える関数でのみオプショナル引数を利用し、ユーザから見えないような裏側で利用する関数はオプショナル引数の利用を避けたほうが良いでしょう。
+        }
+      >
     >
     +section?:(`Practice of function`){実践}<
       +p{
@@ -411,7 +1197,7 @@ let variables-and-functions = '<
 
         \d-code(```
           utop # 2 + 3 ;;
-          - : int = 5        
+          - : int = 5
         ```);%
 
         OCamlでは、中置演算子をカッコ\codem{(...)}で囲むことで関数として扱うことができます\footnote{
@@ -459,7 +1245,7 @@ let variables-and-functions = '<
         ```);%
 
         演算子を定義するには関数名を\codem{(...)}で囲む必要があります。
-        この演算子は\codem{(3 \* 2) + (4 \* 2) = 14}となっており、確かに想定通りに動作しています。
+        この演算子は\codem{(3 \* 2) + (4 \* 2) = 14}となっており、確かに想定とおりに動作しています。
       }
       +p{
         ただし、アスタリスク（\codem{\*}）だけは注意して下さい。
@@ -490,7 +1276,7 @@ let variables-and-functions = '<
         上記の定義を見ると、丁度再帰関数のような定義に見えますが、再帰を表す\codem{rec}がないため、
         インタプリタは\codem{rec}を付けるように指示しているわけです。
         これを回避するためには、カッコ（\codem{(}及び\codem{)}）とアスタリスク（\codem{\*}）の間にスペースを挿入する必要があります。
-        以下のように定義すると意図した通りに\codem{\*\*\*}を定義できます。
+        以下のように定義すると意図したとおりに\codem{\*\*\*}を定義できます。
 
         \d-code(```
           utop # let ( *** ) x y = (x ** y) ** y;;
@@ -542,118 +1328,5 @@ let variables-and-functions = '<
         のように書くことができます。
 
       }>
-      +subsection{ラベル付き引数}<
-        +p{
-          これまで定義してきた関数は、引数の位置（順番）によって意味を持たせていました。
-          OCamlは、\dfn{ラベル付き引数}という機構を利用して引数に名前を付け、位置に依存しない関数定義が可能です。
-          例えば、除算の商を出力する関数\codem{my_mod}を自作するとします。
-
-          \d-code(```
-            utop # let my_mod ~divisor ~dividend = dividend /. divisor ;;
-            val my_mod : divisor:float -> dividend:float -> float = <fun>
-
-            utop # my_mod 10. 1. ;;
-            - : float = 0.1
-          ```);%
-
-          上記の関数は、割る数\codem{~divisor}と割られる数\codem{~dividend}というラベルがついた引数を持ちます。
-          ラベル付き引数は仮引数名の先頭にチルダ\codem{~}を付けることで、それがラベル付き引数であることを示します。
-
-          ラベル付き引数を利用するには、ラベルと実引数をコロン（\codem{:}）で繋いで渡します。
-          ラベル付き引数は位置に依存しないため、引数の順序を入れ替えても同様の結果を得ることができます。
-
-          \d-code(```
-            utop # my_mod ~divisor:10. ~dividend:1. ;;
-            - : float = 0.1
-
-            utop # my_mod ~dividend:1. ~divisor:10. ;;
-            - : float = 0.1
-          ```);%
-
-          下記のようにこれまで通り引数の位置に応じて意味を持たせることもできます。
-
-          \d-code(```
-            utop # my_mod 10. 1. ;;
-            - : float = 0.1
-          ```);%
-
-          OCamlでは\dfn{ラベルパニング}と呼ばれる機構をサポートしており、これはラベルとその値として渡される変数の名前が一致している場合、
-          引数にラベルを記述するだけでそのラベル名と名称が一致する変数を参照してくれるものです。
-          この例を下記に示します。
-
-          \d-code(```
-            utop # let divisor = 10. in
-              let dividend = 1. in
-              my_mod ~divisor ~dividend ;;
-            - : float = 0.1
-          ```);%
-
-          ラベル付き引数は、次のケースで特に有用です。
-
-          \listing{
-            * 引数の位置（順序）に依存させたくない場合
-            * 引数の型からその意味が推測できない場合
-            * 同じ型の引数が複数あり、どの引数にどの意味が紐づくか混乱する場合
-            * 引数の数が多すぎる場合
-          }
-        }
-      >
-      +subsection{オプション型とオプショナル引数}<
-        +p{
-          これまでは関数の引数は1つも欠かすことができませんでした。
-          関数定義で定義した仮引数の数と、関数呼び出しで利用する実引数の数が一致している必要がありました。
-          一方、本節で説明する\dfn{オプショナル引数}を利用することで、これを省略することができます。
-        }
-        +p{        
-          オプショナル引数を説明する前に\dfn{オプション型}を説明します。
-          なぜならオプショナル引数を利用するにはオプション型が必要だからです。
-
-          OCamlにおけるオプション型は次のように定義されています。
-
-          \d-code(```
-            type 'a option = None
-                           | Some of 'a
-          ```);%
-
-          \codem{None}は値がないことを示すコンストラクタであり、\codem{Some}は多相型\codem{'a}の値が存在することを示すコンストラクタです。
-          つまり\codem{'a option}型は「値を持たないか、または'a型の値を持つ」ことを示します。
-        }
-        +p{
-          コメント用文字列を生成する関数\codem{add_comment}を用いて、オプショナル引数がどのようなものか見ていきましょう。
-
-          \d-code(```
-            utop # let add_comment ?comment_header x =
-              let comment_header = match comment_header with
-                | None -> "#"
-                | Some x -> x
-              in
-              comment_header ^ " " ^ x ;;
-            val add_comment : ?comment_header:string -> string -> string = <fun>
-          ```);%
-
-          上記関数は、オプショナル引数を表すクエスチョンマーク（\codem{?}）を用いて、第一引数の\codem{comment_header}がオプショナル引数であることを示しています。
-          関数呼び出しの際に、チルダ（\codem{~}）とコロン（\codem{:}）及びそれに続けて変数の値を記述することでオプショナル引数に値を渡すことができます。
-          関数呼び出しの例を下記に示します。
-
-          \d-code(```
-            utop # add_comment ~comment_header:"%" "comment body" ;;
-            - : string = "% comment body"
-          ```);%
-
-          上記の例を見ると、オプショナル引数の呼び出し方はラベル付き引数の呼び出し方と全く同じことが分かりますね。
-          また、オプショナル引数を省略した場合、関数定義の\codem{match comment_header with}の\codem{None -\> "\#"}が適用されます。
-
-          \d-code(```
-            utop # add_comment "comment body" ;;
-            - : string = "# comment body"
-          ```);%
-
-          オプショナル引数のメリットとして、呼び出し側が意識する必要のないまたはその必要性が薄い引数を無視できることがあげられます。
-          一方デメリットとして、オプショナル引数を明示的に指定しない場合、オプショナル引数の値は関数内部で暗黙的に補完され処理されるため、
-          意図しない動作を選択してしまう可能性があげられます。
-
-          そのため、ユーザから見える関数でのみオプショナル引数を利用し、ユーザから見えないような裏側で利用する関数はオプショナル引数の利用を避けたほうが良いでしょう。
-        }
-      >
     >
 >

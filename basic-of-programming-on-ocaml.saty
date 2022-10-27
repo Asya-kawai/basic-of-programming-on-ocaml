@@ -8,10 +8,12 @@
 @import: basic-data-and-types
 @import: variables-and-functions
 @import: conditional-branch
+@import: recursive-functions
 @import: tuple-and-pattern-matching
 @import: list-and-record
 @import: variants
 @import: error-handling
+@import: multiple-files-and-modules
 
 % Main.
 document (|
@@ -32,8 +34,10 @@ document (|
   +chapter?:(`Basic data and types`){基本的なデータと型}<#basic-data-and-types;>
   +chapter?:(`Variables and functions`){変数と関数}<#variables-and-functions;>
   +chapter?:(`Conditional branch`){条件分岐}<#conditional-branch;>
+  +chapter?:(`Recursive functions`){再帰関数}<#recursive-functions;>
   +chapter?:(`Tuple and pattern matching`){タプルとパターンマッチ}<#tuple-and-pattern-matching;>
   +chapter?:(`List and record`){リストとレコード}<#list-and-record;>
   +chapter?:(`Variants`){バリアント}<#variants;>
   +chapter?:(`Error handling`){エラーハンドリング}<#error-handling;>
+  +chapter?:(`Multiple files and modules`){ファイル分割とモジュール}<#multiple-files-and-modules;>
 >

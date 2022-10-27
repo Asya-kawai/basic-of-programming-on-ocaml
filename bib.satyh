@@ -1,30 +1,63 @@
 @import: settings
 
 let bibliography = [
+  % 大いに参照した書籍
   (`Asai-OCaml`, Book(|
     author = {| 浅井 健一 |};
     title = {プログラミングの基礎};
     publisher = {サイエンス社};
     year = 2007;
   |));
+  % 大いに参照したサイト
   (`Real-World-OCaml`, WebSite(|
     author = {| Yaron Minsky | Anil Madhavapeddy |};
     title = {Real World OCaml};
     url = `https://dev.realworldocaml.org/`;
-    year = 2020;
+    year = 2022;
   |));
+  % 文法の説明やキーワード（予約語）を参照。
+  (`OCaml-org-v2`, WebSite(|
+    author = {| Xavier Leroy | Damien Doligez | Alain Frisch | Jacques Garrigue | Didier Rémy and Jérôme Vouillon |};
+    title = {The OCaml system release 4.14};
+    url = `https://v2.ocaml.org/manual/index.html`;
+    year = 2022;
+  |));
+  % 文法の説明やキーワード（予約語）を参照。
+  (`OCaml-org`, WebSite(|
+    author = {| Ashish Agarwal | Amir Chaudhry | Louis Gesbert | Fabrice Le Fessant | Anil Madhavapeddy | David Sheets | Christophe Troestler  | Philippe Wang |};
+    title = {OCaml.org};
+    url = `https://ocaml.org/docs`;
+    year = 2022;
+  |));
+  % 文法と論理式の関連付けのために参照。
+  (`OCaml-Programming-Crrect-Efficient+Buautiful`, WebSite(|
+    author = {| Michael R. Clarkson et al|};
+    title = {OCaml Programming: Correct + Efficient + Beautiful};
+    url = `https://cs3110.github.io/textbook/cover.html`;
+    year = 2022;
+  |));
+  % 参考程度に見た。カリー化の説明などで参照。
   (`Objective-Caml-Introduction`, WebSite(|
     author = {| 五十嵐 淳 |};
-    title = {Objective-Caml-Introduction};
+    title = {Objective Caml 入門};
     url = `https://www.fos.kuis.kyoto-u.ac.jp/~igarashi/class/isle4-07w/mltext/index.html`;
     year = 2007;
   |));
-  (`Functional-Programming-in-OCaml`, WebSite(|
-    author = {| Michael R. Clarkson |};
-    title = {Functional Programming in OCaml};
-    url = `https://www.cs.cornell.edu/courses/cs3110/2020fa/textbook/`;
+  % 参考程度に見た。カリー化の説明などで参照。
+  (`OCaml-jp`, WebSite(|
+    author = {| ocaml.jp |};
+    title = {OCaml.jp};
+    url = `https://ocaml.jp/?FrontPage`;
+    year = 2017;
+  |));
+  % 参考程度に見た。コンストラクタの説明などで参照。
+  (`OCaml-jp`, WebSite(|
+    author = {| Makoto Hiroi |};
+    title = {お気楽 OCaml プログラミング入門};
+    url = `http://www.nct9.ne.jp/m_hiroi/func/ocaml.html`;
     year = 2020;
   |));
+  % 参考程度に見た。本文中での参照はなし。
   (`TaPL-ja`, Book(|
     author = {| Benjamin C. Pierce
       （住井 英二郎 監訳，遠藤 侑介 訳，酒井 政裕 訳，今井 敬吾 訳，黒木 裕介 訳，今井 宜洋 訳，才川 隆文 訳，今井 健男 訳）
@@ -33,12 +66,14 @@ let bibliography = [
     publisher = {オーム社};
     year = 2013;
   |));
-  (`OCaml-org`, WebSite(|
-    author = {| Ashish Agarwal | Amir Chaudhry | Louis Gesbert | Fabrice Le Fessant | Anil Madhavapeddy | David Sheets | Christophe Troestler  | Philippe Wang |};
-    title = {OCaml.org};
-    url = `https://ocaml.org/learn/`;
-    year = 2020;
+  % 参考程度に見た。本文中での参照はなし。
+  (`Unix-system-programming-in-OCaml`, WebSite(|
+    author = {| Xavier Leroy | Didier Remy |};
+    title = {Unix system programming in OCaml};
+    url = `https://ocaml.github.io/ocamlunix/ocamlunix.html`;
+    year = 2014;
   |));
+  % 参考程度に見た。本文中での参照はなし。
   (`The-Caml-Light-system`, WebSite(|
     author = {| Xavier Leroy |};
     title = {The Caml Light system, documentation and user's guide};
