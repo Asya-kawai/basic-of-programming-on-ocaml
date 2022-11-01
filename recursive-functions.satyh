@@ -3,14 +3,29 @@
 % if式やパターンマッチ、リスト、タプルなどのデータと型を説明した後でないとツライのでここに持ってきた
 
 % https://dev.realworldocaml.org/variables-and-functions.html - Recursive Functions
+% プログラミングの基礎 - 第9章 9.4 再帰関数
 % プログラミングの基礎 - 第10章 再帰関数を使ったプログラミング
+% https://cs3110.github.io/textbook/chapters/basics/functions.html
+
+% https://dev.realworldocaml.org/lists-and-patterns.html
 
 let recursive-functions = '<
   +p{
-    序文
-  }    
+    これまでは、データに対して関数を一度だけ適用してきました。
+    しかし、あるデータに対して何度も同じ関数を適用する場合、いちいち書いてしまっては手間です。
+    本章では、データに対して何度も関数を適用する方法を紹介します。
+    その方法の1つが\dfn{再帰}です。
+    % https://ja.wikipedia.org/wiki/%E5%86%8D%E5%B8%B0
+    再帰とは、ある記述において、その記述の中に自身への参照を含むことを言います。
+    例えば、関数を定義する時、その関数の中で自身を呼び出すことが再帰に当たります。
+    再帰は、停止するための条件を書かなければ永遠に止まらない\dfn{無限ループ}に陥ってしまいます。
+    そこで条件分岐やパターンマッチを用いて関数が処理を終了するための条件を書く必要があります。
+    本章では、再帰関数とその書き方及び注意点について説明します。
+  }
   +section?:(`Recursive functions`){再帰関数}<
     +p{
+      % プログラミングの基礎 - 第9章 9.4 再帰関数
+      % http://www.nct9.ne.jp/m_hiroi/func/ocaml02.html
       \dfn{再帰関数}とは、関数内で自分自身の呼び出しが含まれている関数です。
       自分自身の呼び出しを\dfn{再帰呼び出し}といいます。
       再帰関数を定義するには以下の構文を利用します。
@@ -21,11 +36,142 @@ let recursive-functions = '<
 
       上記の構文は名前付きの関数とほとんど同じで、
       唯一違う点は\codem{let}キーワードの後に\codem{rec}キーワードが追加されていることです。
-      この\codem{rec}キーワードを付与することで、この関数が再帰関数であることを示します。
+      recキーワードを付与することで、この関数が再帰関数であることを示します。
 
       再帰関数を利用する場合、単純に自分自身を呼び出してしまうと無限ループに陥ってしまうため、
-      後述する\dfn{条件分岐}や\dfn{パターンマッチ}を用いる必要があります。
-      そのため、本節では構文の紹介に留め、条件分岐やパターンマッチの節で改めて解説します。
+      条件分岐やパターンマッチを用いる必要があります。
+
+      % https://cs3110.github.io/textbook/chapters/basics/functions.html
+      例えば、階乗を求める関数を例に示します。
+      \d-code(```
+      utop # let rec fact n =
+        if n = 0 then 1
+        else n * (fact (n - 1)) ;;
+      val fact : int -> int = <fun>
+      ```);%
+
+      上記の関数\codem{fact}は、再帰する度に\codem{n \* (fact (n - 1))}を繰り返し、
+      引数nが0になった時に再帰を止めます。
+      関数factでは、\codem{if n = 0 then 1}が無限ループを防ぐ条件になっています。
+
+      例として、3の階乗を求める場合の関数factにおける計算の流れを以下に示します。
+
+      \d-code(```
+      (fact 3)
+      --------
+        |
+        v
+      3 * (fact (3 - 1))
+          --------------
+                |
+                v
+           (fact 2) = 2 * (fact (2 - 1))
+                          --------------
+                                |
+                                v
+                           (fact 1) = 1 * (fact (1 - 1))
+                                          --------------
+                                                |
+                                                v
+                                           (fact 0) = 1
+      ```);%
+
+      上記から、\codem{(3 \* (2 \* (1 \* (1)))) = 6}という結果が得られることが分かります。
+
+      \d-code(```
+      utop # fact 3 ;;
+      - : int = 6
+      ```);%
+
+      % 利用しなかったのでコメントアウト
+      % 例えば、再帰を用いた例としてフィボナッチ数列があります。
+      % % https://ja.wikipedia.org/wiki/%E3%83%95%E3%82%A3%E3%83%9C%E3%83%8A%E3%83%83%E3%83%81%E6%95%B0
+      % \align[
+      %   ${| f_0 |= 0 |};
+      %   ${| f_1 |= 1 |};
+      %   ${| f_{n+2} |= f_n + f_{n+1} | \paren{x \leq 0} |};
+      % ];%
+      % これをプログラムで記述すると以下のようになります。
+      % \d-code(```
+      % utop # let rec fib n =
+      %   if n = 0 then 1
+      %   else n * (fact (n - 1)) ;;
+      % val fib : int -> int = <fun>
+      % ```);%      
     }
+    +p{
+      再帰関数は、リストの要素に対して関数を再帰的に適用する場合にも有効です。
+      例えば、リストの全ての要素を合計した値を出力する再帰関数の例を以下に示します。
+
+      % https://dev.realworldocaml.org/lists-and-patterns.html - Using Patterns to Extract Data from a List
+
+      \d-code(```
+      utop # let rec sum l = match l with
+        | [] -> 0
+        | x :: xs -> x + (sum xs) ;;
+      val sum : int list -> int = <fun>
+
+      utop # sum [1; 2; 3] ;;
+      - : int = 6
+
+      utop # sum [] ;;
+      - : int = 0
+      ```);%
+
+      上記の関数\codem{sum}は、リストが空になるまで全ての要素を足し合わせる関数です。
+      \codem{x :: xs}はリスト[1\; 2\; 3]を1 :: [2\; 3]に分け、1でパターン変数xを束縛し[2\; 3]でパターン変数xsを束縛します。
+      \codem{[] -\> 0}が再帰関数を止める（無限ループを防ぐ）条件を表しています。
+      関数sumにリスト[1\; 2\; 3]を渡した際の処理の流れを以下に示します。
+
+      \d-code(```
+      (sum [3; 2; 1])
+      ---------------
+        |
+        v
+      3 + (sum [2; 1])
+          ------------
+               |
+               v
+          (sum [2; 1]) = 2 + (sum [1])
+                              ---------
+                                  |
+                                  v
+                             (sum [1]) = 1 + (sum [])
+                                             --------
+                                                 |
+                                                 v
+                                            (sum []) = 0
+      ```);%
+
+      また、関数sumは\ref-subsection(`Declaring functions with function`);で紹介したfunction式を用いて同等の定義が可能です。
+
+      \d-code(```
+      utop # let rec sum = function
+        | [] -> 0
+        | x :: xs -> x + (sum xs) ;;
+      val sum : int list -> int = <fun>
+
+      utop # sum [1; 2; 3] ;;
+      - : int = 6
+
+      utop # sum [] ;;
+      ```);%
+    }
+    % 不要かな。逆に混乱しそう
+    % +p{
+    %   % https://dev.realworldocaml.org/lists-and-patterns.html - Using Patterns to Extract Data from a List
+    %   なお、再帰関数とパターンマッチを利用してリストを操作する際、仮引数とパターン変数は別ものであることに注意して下さい。
+    %   特定の値と一致する要素を除外したリストを返す関数を考えます。
+    %   \d-code(```
+    %   utop # let rec drop_value l to_drop =
+    %     match l with
+    %       | [] -> []
+    %       | to_drop :: tl -> drop_value tl to_drop
+    %       | hd :: tl -> hd :: drop_value tl to_drop;;
+    %   Line 5, characters 4-12:
+    %   Warning 11 [redundant-case]: this match case is unused.
+    %   val drop_value : 'a list -> 'a -> 'a list = <fun>
+    %   ```);%
+    % }
   >
 >

@@ -1,119 +1,187 @@
 @import: settings
 
+% これも参考になるかも
+% https://v2.ocaml.org/manual/expr.html#sss:expr-boolean-operators
+
 let conditional-branch = '<
+  +p{
+    \ref-chapter(`Variables and functions`);では、基本的な変数及び関数の定義を見てきました。
+    入力された値を用いて簡単な計算をするだけであれば事足りるでしょう。
+    しかし、変数や関数に与えたデータ（ユーザが入力した値）に応じて、プログラムの処理を切り替えたい場合があります。
+    本章では、単純な条件分岐を用いたプログラムについて説明します。
+  }
+  +section?:(`If expressions`){if式}<
     +p{
-      \ref-chapter(`Variables and functions`);では、基本的な変数及び関数の定義を見てきましたが、
-      ユーザが与えたデータ（実際にはユーザが入力した値など）に応じて、プログラムの処理を切り替えたい場合があります。
-      本章では、単純な分岐を用いたプログラムについて説明します。
+      % プログラミングの基礎 第5章 条件分岐
+      \dfn{条件分岐}とは、与えられた条件に応じて処理を切り替えることを言います。
+      OCamlでは、\dfn{if式}を用いて条件に応じた場合分けが可能です\footnote{
+        % https://v2.ocaml.org/learn/tutorials/if_statements_loops_and_recursion.ja.html          
+        OCamlではifは式で表現されます。他のプログラミング言語ではifは文（ステートメント）として表現される場合があり、
+        OCamlのいつくかのドキュメントでも他のプログラミング言語との親和性のためにif文やifステートメントと表現されることがあります。
+      }。
+
+      if式の構文を以下に示します。
+
+      \d-code(```
+        if <boolean-condition-expr> then <expr>
+        または
+        if <boolean-condition-expr> then <expr_1> else <expr_2>
+      ```);%
+
+      上記の構文は次のルールを示しています。
+      \listing{
+        * 条件式（\codem{\<boolean-condition-expr\>}）が真（true）を返す場合、\codem{then}節の式（\<expr\>または\<expr_1\>）を評価した結果を返します
+        * 条件式（\<boolean-condition-expr\>）が偽（false）を返す場合、\codem{else}節があればその式（\<expr_2\>）を評価した結果を返します
+      }%
+
+      条件式（\<boolean-condition-expr\>）は、必ずbool型の値を返す式である必要があります。
+      また、上記の構文からも分かるとおり、if式はelse節を省略することができ、これは前者（if \<boolean-condition\> then \<expr\>）の構文に当たります。
+      なお、then節及びelse節が存在する場合、then節の式（\<expr\>または\<expr_1\>）及びelse節の式（\<expr_2\>）は同じ型を返す必要があります。  
+
+      以下にif式を利用した例を示します。
+
+      \d-code(```
+        utop # if true then "ok" else "ng" ;;
+        - : string = "ok"
+
+        utop # if false then "ok" else "ng" ;;
+        - : string = "ng"
+      ```);%
+
+      上記の例では直接bool型を書きましたが、真偽値は比較演算子を利用することでも得られることを思い出してください。
+      比較演算子を利用し、次のように書くこともできます。
+
+      \d-code(```
+        utop # if 1 < 2 then "ok" else "ng" ;;
+        - : string = "ok"
+
+        utop # if 1 > 2 then "ok" else "ng" ;;
+        - : string = "ng"
+      ```);%
+
+      なお、条件式がbool型を返さない場合やthen節及びelse節の式が同じ型を返さない場合はエラーとなります。
+
+      \d-code(```
+        utop # if 1 then "ok" else "ng" ;;
+        Line 1, characters 3-4:
+        Error: This expression has type int but an expression was expected of type 
+               bool because it is in the condition of an if-statement
+
+        utop # if 1 > 2 then "ok" else -1 ;;
+        Line 1, characters 24-26:
+        Error: This expression has type int but an expression was expected of type
+                 string
+      ```);%
+
+      上記の例の1つ目のエラーは「int型が与えられたが、ifステートメント条件にはbool型を期待していた」ことが示されており、
+      2つ目のエラーは「else節の式にてint型が与えられたが、（then節がstring型を返すため、else節の式も）string型を返すことを期待していた」ことが示されています。
     }
-    +section?:(`If expressions`){if式}<
-      +p{
-        条件分岐とは与えられた条件に応じて、処理を切り替えたい場合に用いられます。
-        OCamlでは、\dfn{if式}\footnote{
-          OCamlではifは式になります。他のプログラミング言語ではifは文（ステートメント）として表現される場合があり、
-          OCamlのいつくかのドキュメントでも他言語との親和性のためにif文やifステートメントと表現されることがあります。
-        }を用いることで条件に応じた場合分けが可能です。
-  
-        \d-code(```
-          if <boolean-condition> then <expr>
-          または
-          if <boolean-condition> then <expr> else <expr>
-        ```);%
-  
-        上記の構文の\codem{boolean-condition}は条件を示しており、条件は必ずbool型でなければなりません。
-        なお、if式はelse節を省略することができ、
-        これを表現したのが前者（\codem{if \<boolean-condition\> then \<expr\>}）になります。
-        また、if式中の\codem{then}直後の\codem{\<expr\>}及び\codem{else}直後の\codem{\<expr\>}は同じ型を返す必要があります。
-  
-        if式は条件\codem{boolean-condition}が\codem{true}の場合、\codem{then}節の\codem{\<expr\>}を実行します。
-        条件が\codem{false}の場合、もし\codem{else}節があれば\codem{else}節の\codem{\<expr\>}を実行します。
-  
-        以下にif式を利用した例を示します。
-  
-        \d-code(```
-          utop # if true then "ok" else "ng" ;;
-          - : string = "ok"
-  
-          utop # if false then "ok" else "ng" ;;
-          - : string = "ng"
-        ```);%
-  
-        上記の例では直接bool型を書きましたが、真偽値は比較演算子を利用することでも得られることを思い出して下さい。
-        比較演算子を利用し、次のように書くこともできます。
-  
-        \d-code(```
-          utop # if 1 < 2 then "ok" else "ng" ;;
-          - : string = "ok"
-  
-          utop # if 1 > 2 then "ok" else "ng" ;;
-          - : string = "ng"
-        ```);%
-  
-        なお、条件がbool型でない場合や\codem{then}節及び\codem{else}節の式が同じ型を返さない場合はエラーとなります。
-  
-        \d-code(```
-          utop # if 1 then "ok" else "ng" ;;
-          Line 1, characters 3-4:
-          Error: This expression has type int but an expression was expected of type 
-                 bool because it is in the condition of an if-statement
-  
-          utop # if 1 > 2 then "ok" else -1 ;;
-          Line 1, characters 24-26:
-          Error: This expression has type int but an expression was expected of type
-                   string
-        ```);%
-  
-        上記の例において、1つ目のエラーは「int型が与えられたが、ifステートメント条件にはbool型を期待していた」ことが示されており、2つ目のエラーは「\codem{else}節の式にてint型が与えられたが、string型を期待していた」ことが示されています。
-      }
-      +p{
-        しかしながら、これもあまり実用的な例ではないため、以下により実践的な例を示します。
-  
-        \d-code(```
-          utop # let min x y =
-            if x < y then x else y ;;
-          val min : 'a -> 'a -> 'a = <fun>
-  
-          utop # min 10 100 ;;
-          - : int = 10
-  
-          utop # min 1000 100 ;;
-          - : int = 100
-        ```);%
-  
-        上記の例では、インタプリタが\codem{min}という名前の関数を新たに定義しています。
-        関数\codem{min}は2つの引数を取り、それら2つの引数の大小を比較し、小さい方の値を返します。
-  
-        関数定義後のインタプリタの出力は、
-        「\codem{min}という\codem{'a -\> 'a -\> 'a}型の関数を定義し、その値は関数である」ことを示しています。
-      }
-      +p{
-        最後に、ifが式であることを利用して、簡潔にプログラムを表現できる例を紹介します。
-        まずは、これまで書いてきたようにifを利用する例を示します。
-  
-        \d-code(```
-          utop # let calc_with_tax price year =
-            if year < 2019 then price *. 1.08
-            else price *. 1.1 ;;
-          val calc_with_tax : float -> int -> float = <fun>
-        ```);%
-  
-        上記の例は、税込み価格を計算する関数\codem{calc_with_tax}を定義したもので、
-        第一引数にはモノの金額を取り、第二引数には購入年を取ることにします。
-        2019年より前に購入したものであれば、8\%の税率で、それ以外は10\%の税率で計算します。
-        （単純化のため、税率が変更された年月日と完全には一致していない且つ8\%以前の税率は考慮しないものとします）。
-        もちろん、これでも期待通りに動作しますが、\codem{then}及び\codem{else}節の\codem{price \*.}が重複しており、
-        少し冗長な気もします。
-  
-        この場合、ifを式と見なすことで次のようにコードを修正できます。
-  
-        \d-code(```
-          utop # let calc_with_tax price year =
-            price *. (if year < 2019 then 1.08 else 1.1) ;;
-          val calc_with_tax : float -> int -> float = <fun>
-        ```);%
-  
-        上記の変更は、if式が税率を返すことで\codem{price \*.}の重複を排除し、よりすっきりしたコードになりました。
-        このようにifは式として組み込めるため、場合によってはすっきりしたコードを書けるケースがあります。
-      }
-    >
+    +p{
+      次に、より実践的な例を示します。
+
+      \d-code(```
+      utop # let my_max x y = 
+        if x > y then x else y ;;
+      val my_max : 'a -> 'a -> 'a = <fun>
+
+      utop # my_max 10 100 ;;
+      - : int = 10
+
+      utop # my_max 1000. 100. ;;
+      - : float = 1000.
+      ```);%
+
+      上記は、関数\codem{my_min}を定義しており、
+      これは2つの引数を取り、それら2つの引数の大小を比較し、小さい方の値を返します。
+
+      関数定義後のインタプリタの出力は、
+      「my_minという\codem{'a -\> 'a -\> 'a}型の関数を定義し、その値は関数である」ことを示しています。
+    }
+    +p{
+      % プログラミングの基礎 第13章 13.3 多相型と多相関数
+      % https://v2.ocaml.org/manual/types.html - Type variables
+      % https://www.fos.kuis.kyoto-u.ac.jp/~igarashi/class/isle4-02w/mltext/ocaml005.html#toc12
+      ここで'aという新しい型が登場しました。
+      このように、先頭にシングルクォート（'）を持つものを\dfn{型変数}と言います。
+      つまり'aは「aという名前の型変数」であることを表します。
+      また、型変数は「どのような型に属しても良い」という性質があります。
+      型変数はあらゆる型として扱って良い変数であるため「型の一般化」と考えることができます。
+
+      % プログラミングの基礎 第13章 13.3 多相型と多相関数
+      なお、型変数が複数ある場合'a、'b、...のようにシングルクォート（'）を付けた小文字のラテン文字で表現されます。
+
+      型変数は式を評価する際に具体的な型に置き換わるため、例えばint型を入れた場合はint型として処理されます。
+      このように、どのような型に属しても良い性質を\dfn{多相性}と言い、
+      型変数を含むような型を\dfn{多相型}と言います\footnote{
+        多相型を持つ関数を\dfn{多相関数}または多相的関数と言います。
+        一方、多相でない関数は\dfn{単相関数}と言います。
+      }。
+      
+      多相型を持つ関数とその例を以下に示します。
+
+      \d-code(```
+      utop # min ;;
+      - : 'a -> 'a -> 'a = <fun>
+
+      utop # min 100 10 ;;
+      - : int = 10
+
+      utop # min 100.0 10.0 ;;
+      - : float = 10.
+
+      utop # min "abc" "def" ;;
+      - : string = "abc"
+
+      utop # min true false ;;
+      - : bool = false
+      ```);%
+
+      上記は、任意の同一の型を持つ値を2つ受け取って、値として小さい方を返す関数\codem{min}を利用した例です。
+      \ref-chapter(`Basic data and types`);で説明したとおり、int型、float型、string型、bool型は大小の比較が可能であるため、min関数に適用できます\footnote{
+        % https://www.fos.kuis.kyoto-u.ac.jp/~igarashi/class/isle4-02w/mltext/ocaml005.html#toc12 - パラメータ多相
+        % https://cs3110.github.io/textbook/chapters/data/algebraic_data_types.html - parametric polymorphis
+        % https://www.fos.kuis.kyoto-u.ac.jp/~igarashi/class/isle4-05w/mltext/ocaml003.html - 関数宣言
+        関数minの型は\codem{'a -\> 'a -\> 'a}と表現されています。
+        引数に異なる値（int型であれば1,2,3,...等、多相型であれば任意の値）を利用できるようにパラメータ（ここでは'a）で置き換えることを\dfn{パラメータ化}と言い、
+        パラメータ化による多相性を\dfn{パラメトリック多相}と言います。
+      }。
+
+      % https://www.fos.kuis.kyoto-u.ac.jp/~igarashi/class/isle4-02w/mltext/ocaml005.html#toc12
+      ただし、関数minが任意の型を取ることができるからといって、
+      第一引数の型と第二引数に異なる型の値を適用することはできません。
+      なぜなら、値の大小比較は同一の型同士でのみ可能だからです。
+      % OCamlではアドホック多相をサポートしないので説明しない
+      % 部分型多相（サブタイピング多相）はオブジェクト指向を扱う部分でのみ利用するため説明しない
+      % let多相、値多相はどこかで説明しても良いかも知れない         
+    }
+    +p{
+      % プログラミングの基礎 第5章 条件分岐
+      ifが式であることを利用して、簡潔にプログラムを表現する例を紹介します。
+
+      \d-code(```
+        utop # let calc_with_tax price year =
+          if year < 2019 then price *. 1.08
+          else price *. 1.1 ;;
+        val calc_with_tax : float -> int -> float = <fun>
+      ```);%
+
+      上記は、税込み価格を計算する関数\codem{calc_with_tax}を定義したもので、
+      第一引数にはモノの金額を取り、第二引数には購入年を取ります。
+      2019年より前に購入したものであれば8\%の税率、それ以外は10\%の税率で計算します\footnote{
+        単純化のため、税率が変更された年月日と完全には一致させていません。
+        また8\%以前の税率は考慮していません。
+      }。
+      calc_with_taxは期待通りに動作しますが、then節及びelse節の\codem{price \*.}が重複していて冗長です。
+      この場合、ifが式であることを利用し、コードを以下のように修正できます。
+
+      \d-code(```
+        utop # let calc_with_tax price year =
+          price *. (if year < 2019 then 1.08 else 1.1) ;;
+        val calc_with_tax : float -> int -> float = <fun>
+      ```);%
+
+      if式が税率を返すことでprice \*.の重複を排除し、より簡潔なコードを記述できました。
+      このようにifが式であることを利用し、状況に応じてすっきりしたコードを書くこともできます。
+    }
+  >
 >

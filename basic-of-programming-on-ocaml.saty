@@ -8,10 +8,10 @@
 @import: basic-data-and-types
 @import: variables-and-functions
 @import: conditional-branch
+@import: tuples-and-lists-and-pattern-matching
 @import: recursive-functions
-@import: tuple-and-pattern-matching
-@import: list-and-record
-@import: variants
+@import: function-arguments
+@import: records-and-variants
 @import: error-handling
 @import: multiple-files-and-modules
 
@@ -24,7 +24,7 @@ document (|
   copyright-page = (|
     title = {OCamlで学ぶプログラミングの基礎（Web公開版 第1版）};
     author = {Toshiki KAWAI\hskip(5cm);};
-    date = {2021/07/07};
+    date = {2022/11/09};
     contact = {\url{kawai-toshiki\@aintek.xyz}};
     printed-by = None;
   |);
@@ -34,10 +34,10 @@ document (|
   +chapter?:(`Basic data and types`){基本的なデータと型}<#basic-data-and-types;>
   +chapter?:(`Variables and functions`){変数と関数}<#variables-and-functions;>
   +chapter?:(`Conditional branch`){条件分岐}<#conditional-branch;>
-  +chapter?:(`Recursive functions`){再帰関数}<#recursive-functions;>
-  +chapter?:(`Tuple and pattern matching`){タプルとパターンマッチ}<#tuple-and-pattern-matching;>
-  +chapter?:(`List and record`){リストとレコード}<#list-and-record;>
-  +chapter?:(`Variants`){バリアント}<#variants;>
+  +chapter?:(`Tuples and lists and pattern matching`){データと型とパターンマッチ}<#tuples-and-lists-and-pattern-matching;>
+  +chapter?:(`Recursive functions`){再帰}<#recursive-functions;>
+  +chapter?:(`Function arguments`){関数の引数}<#function-arguments;>
+  +chapter?:(`Records and variants`){その他のデータと型}<#records-and-variants;>
   +chapter?:(`Error handling`){エラーハンドリング}<#error-handling;>
-  +chapter?:(`Multiple files and modules`){ファイル分割とモジュール}<#multiple-files-and-modules;>
+  %+chapter?:(`Multiple files and modules`){ファイル分割とモジュール}<#multiple-files-and-modules;>
 >

@@ -1,0 +1,753 @@
+@import: settings
+
+% http://www.nct9.ne.jp/m_hiroi/func/ocaml01.html#chap02 - 組
+% プログラミングの基礎 第7章 組とパターンマッチ
+% https://dev.realworldocaml.org/lists-and-patterns.html - Using Patterns to Extract Data from a List
+% https://cs3110.github.io/textbook/chapters/data/records_tuples.html - Tuples
+% https://cs3110.github.io/textbook/chapters/data/pattern_matching_advanced.html
+
+let tuples-and-lists-and-pattern-matching = '<
+  +p{
+    \ref-chapter(`Basic data and types`);では基本的なデータと型を扱い、      
+    \ref-chapter(`Conditional branch`);にて、if式を用いた条件分岐を扱いました。
+    これまでの知識を用いれば、基本的なデータ型とif式で簡単な計算をできるようになりました。
+    ここで、さらに表現力のあるデータ型とそれに応じた条件分岐を用いることで、より複雑な処理を行うことが可能です。
+    本章では、より複雑なデータと型、そしてそれらをうまく扱うための方法や条件分岐について説明します。
+  }
+  +section?:(`Tuple`){タプル}<
+    +p{
+      % プログラミングの基礎 第7章 組とパターンマッチ
+      \dfn{タプル}（Tuple）は1つ以上のデータ（これを要素とも言います）を並べてひとまとめのデータにしたものです。
+      % https://cs3110.github.io/textbook/chapters/data/records_tuples.html - Tuples
+      % https://ocaml.org/docs/first-hour - Other Built-in Types
+      別の言い方をすれば、タプルはそれぞれ異なる型の値を順序付けて並べたコレクション（複合体）です。
+
+      OCamlにおいてタプルを表現するには、値をカンマ（\codem{,}）区切りで並べ、それらをカッコ（\codem{(...)}）を囲みます。
+
+      \d-code(```
+        utop # (1, "one") ;;
+        - : int * string = (1, "one")
+      ```);%
+
+      タプルの型は、各要素の型をアスタリスク（\codem{\*}）でつないで表現されます\footnote{
+        % http://www.nct9.ne.jp/m_hiroi/func/ocaml01.html#chap02 - 組
+        このような型を\dfn{積型}とも言います。
+      }。
+      上記の例では、インタプリタがint型とstring型を要素として持つタプルを定義しています。
+      その際のインタプリタの出力は
+      「直前（-）に入力した結果の型は\codem{int \* string}型で、その値は\codem{(1, "one")}というタプルである」ことを示しています。
+      タプルは値であるため、整数や実数と同様に変数を束縛できます。
+
+      \d-code(```
+        utop # let tuple = (1, "one") ;;
+        val tuple : int * string = (1, "one")
+      ```);%
+
+      % プログラミングの基礎 第7章 7.1 組の構文
+      % http://www.nct9.ne.jp/m_hiroi/func/ocaml01.html#chap02 - 組
+      また、タプルは要素にタプルをとることができます。
+
+      \d-code(```
+        utop # ((1, "one"), 2) ;;
+        - : (int * string) * int = ((1, "one"), 2)
+      ```);%
+
+      上記の例は、次の2つの要素を持つタプルを表しています。
+      \listing{
+        * 1つ目の要素：int型とstring型のタプル(int \* string)である(1, "one")
+        * 2つ目の要素：int型である2
+      }%
+    }
+  >
+  +section?:(`Pattern matching`){パターンマッチ}<
+    +p{
+      タプルのような複雑なデータを用いる場合、その構造を判別し必要に応じてデータを取り出したいケースがあります。
+      % https://v2.ocaml.org/manual/patterns.html#pattern
+      OCamlでは\dfn{パターン}を用いて、特定のデータ構造（タプル型で言えば要素の並び）を確かめ、
+      構造が一致していれば変数等の識別子を構造の要素に束縛できます。
+      このように特定のデータ構造を選択するための操作を\dfn{パターンマッチ（パターンマッチング）}と言います。
+      
+      パターンはそれ単体で成り立つものではなく、後述する構文や一部の機能として利用されます。
+      以降でパターンの具体的な利用方法について説明します。
+    }
+    +p{
+      % https://v2.ocaml.org/manual/patterns.html#s:patterns
+      パターン（\codem{\<pattern\>}）をEBNFで表すと以下のようになります\footnote{
+        分かりやすさのため、一部の記号列を省略しています。
+      }。
+      \d-code(```
+      <pattern>    ::= <value-name>
+                     | _
+                     | ( <pattern> )
+                     | ( <pattern> : <typexpr> )
+                     | <pattern> | <pattern>
+                     | <pattern> {, <pattern> }+
+                     | ...
+
+      <value-name> ::= (a..z | _) { a..zA..Z | 0..9 | _ | ' }
+      ```);%
+
+      上記の構文は次のルールを示しています。
+      \listing{
+        * \<pattern\>は\<value-name\>の命名規則に従う記号列を取ります
+        * または、アンダースコア（_）を取ります\footnote{
+            % https://v2.ocaml.org/manual/patterns.html#sss:pat-variable
+            アンダースコア（_）は任意の値に一致しますが、アンダースコア（_）を指定して値を参照できません。
+          }
+        * または、\<pattern\>をカッコで囲んだ形式（\codem{( \<pattern\> )}）を取ります
+        * または、型を指定した形（\codem{( \<pattern\> : \<typexpr\> )}）を取ります\footnote{\<typexpr\> はintやstringといった型名を取ります。}
+        * または、\codem{\<pattern\> \| \<pattern\>}のように複数のパターンをパイプ（\|）でつないで並べます
+        * または、\codem{\<pattern\> \{, \<pattern\>\}+}のように複数のパターンをカンマ（,）でつないで並べます
+      }%
+
+      パターン及びパターンマッチでは上記の構文を用いて様々な処理を行います。
+      以降ではその具体的な例を見ていきます。
+    }
+    +subsection?:(`Let binding pattern support`){letバインディングにおけるパターン}<+p{
+      % https://dev.realworldocaml.org/variables-and-functions.html - Pattern Matching and Let
+      letバインティングは、パターンの利用をサポートしています。
+      letバインディングにおけるパターンは、以下の構文で表現されます。
+
+      \d-code(```
+        (<variable>, ...) = <expr>
+      ```);%
+
+      \codem{\<variable\>}は変数名を表し、それに続く3つのドット（\codem{...}）は
+      「後ろに2番目の変数、3番目の変数...のように0個以上の変数を取って良い」ことを示します。
+      パターンで用いるこの変数を\dfn{パターン変数}と言います。
+
+      上記の構文は、\codem{\<expr\>}が返すタプル型の要素をパターン\codem{(\<variable\>, ...)}にマッピングすることを示しています。
+      ここで、\<expr\>が返すタプル型の要素数とパターンである(\<variable\>, ...)の変数の数が一致しなければならないことに注意してください。
+
+      以下にletバインディングにおけるパターンの利用例を示します。
+
+      \d-code(```
+        utop # let (x, y) = (1, "one") ;;
+        val x : int = 1
+        val y : string = "one"
+
+        utop # x ;;
+        - : int = 1
+
+        utop # y ;;
+        - : string = "one"
+      ```);%
+
+      上記の例では、タプル\codem{(1, "one")}の各要素を、変数\codem{x}及び\codem{y}に束縛しています。
+      変数xにはタプルの1番目の要素である1がバインドされ、
+      変数yにはタプルの2番目の要素である"one"がバインドされていることが分かります。
+      このように、パターンを用いることで一度に複数の変数を定義することもできます。
+
+      % ソースどこだっけ...
+      もしパターン変数の数とタプルの要素数が一致しない場合はエラーとなることに注意してください。
+
+      \d-code(```
+        utop # let (x, y) = (1, "one", 3.14) ;;
+        Line 1, characters 13-29:
+        Error: This expression has type 'a * 'b * 'c
+               but an expression was expected of type 'd * 'e
+      ```);%
+
+      インタプリタの出力には
+      「（式(1, "one", 3.14)は3つの要素を持つ）タプル型'a \* 'b \* 'cを返すが、
+      （パターンは2つの変数しかないため）2つの要素を持つタプル型'd \* 'eが期待された」という旨のエラーが示されています\footnote{
+        'a, 'b, 'c, 'd, 'eのように先頭にシングルクォート（'）がついたものを型変数と言い、
+        これは「どのような型に属しても良い」つまり「任意の型を当てはめて良い」という性質を持つものでした。
+      }。
+    }>
+    +subsection?:(`Match expression`){match式}<+p{
+      % プログラミングの基礎 第7章 7.2パターンマッチ
+      if式は条件部分にbool型を取ることで条件分岐を行い、then節及びelse節のどちらか一方を実行するものでしたが、
+      より複雑なパターンに対処するには\dfn{match式}を利用します。
+
+      match式を用いたパターンマッチは以下の構文を利用します。
+
+      \d-code(```
+        match <expr> with
+        | <pattern_1> -> <expr_1>
+        | ...
+        | <pattern_n> -> <expr_n>
+      ```);%
+
+      % https://v2.ocaml.org/manual/expr.html#sss:expr-case
+      この構文は、まず\<expr\>を評価し、その結果をパターン\<pattern_1\>からパターン\<pattern_n\>と照合します。
+      パターンは上から順に評価され、もし一致するパターンがあれば、その右辺にある式\<expr\>を評価し、その値がmatch式全体の値として返されます。
+      構文中に出現するパイプ（\codem{\|}）は「または」を表す記号です。
+
+      % http://www.nct9.ne.jp/m_hiroi/func/ocaml04.html
+      また、各パターンの右辺にある式（\<expr_1\>〜\<expr_n\>）は、全て同じ型を返す必要があります\footnote{
+        if式のthen及びelse節の\<expr\>が同じ型を返さなければいけないことと同じ理由です。
+        これは、if式同様match式も分岐先の結果の型がmatch式全体の結果となるため、
+        分岐先の全ての式（\<expr_1\>〜\<expr_n\>）の結果の型が同じでなければならないことに由来します。
+      }。
+    }
+    +p{
+      パターンマッチを利用した例を以下に示します。
+
+      \d-code(```
+        utop # match (1, 2) with
+          | (x, y) -> x + y ;;
+        - : int = 3
+      ```);%
+
+      上記の例は、タプル型(1,2)に対してパターンマッチを適用し、
+      タプルの1番目の要素である1をパターン中のxに、タプルの2番目の要素である2をパターン中のyにバインドし、
+      最後に式（x + y）を実行した結果を返します\footnote{
+        x, yがパターン変数に当たります。
+      }。
+
+      また、パターンマッチを関数に組み込んで利用することもできます。
+
+      \d-code(```
+        utop # let add tuple = match tuple with
+          | (x, y) -> x + y ;;
+        val add : int * int -> int = <fun>
+
+        utop # add (3, 4) ;;
+        - : int = 7
+      ```);%
+
+      上記の例では、インタプリタがaddという名前の関数を定義しています。
+      関数addは引数としてint \* int型のタプルを取ります。
+      そして、タプルの要素をパターン変数であるx及びyにバインドし、式（x + y）の結果を返します。
+
+      インタプリタの出力は、「addはint \* int -\> int型の関数であり、その値は関数」であることを示しています。
+    }
+    +p{
+      % ソースなし
+      なお、インタプリタが出力した関数の型からも分かるとおり、
+      関数の型int \* int -\> intから引数の型がint \* intである値のみを取ることができます。
+      それ以外の値は受け取れません。
+
+      \d-code(```
+      utop # add (1, 2, 3) ;;
+      Error: This expression has type 'a * 'b * 'c
+             but an expression was expected of type int * in
+      ```);%
+    }
+    +p{
+      % プログラミングの基礎 第7章 7.2パターンマッチ
+      また、OCamlでは引数にパターンを書くこともでき、次のような定義も可能です。
+
+      \d-code(```
+        utop # let add (x, y) = x + y ;;
+        val add : int * int -> int = <fun>
+
+        utop # add (3, 4) ;;
+        - : int = 7
+      ```);%
+
+     
+      % プログラミングの基礎 第7章 7.2パターンマッチ
+      これは前述の関数addの定義と処理的には全く同じです\footnote{
+        唯一の違いは関数内でtupleという変数を参照できるかどうかです。
+      }。
+
+      \d-code(```
+        utop # let add tuple = match tuple with
+          | (x, y) -> x + y ;;
+        val add : int * int -> int = <fun>
+
+        utop # add (3, 4) ;;
+        - : int = 7
+      ```);%
+
+      % https://cs3110.github.io/textbook/chapters/data/records_tuples.html
+      % こっちを参考
+      % https://cs3110.github.io/textbook/chapters/data/pattern_matching_advanced.html#pattern-matching-with-functions
+
+      引数にパターンを利用すると、以下のような関数も定義できます。
+
+      \d-code(```
+      top # let get_first (x, _) = x ;;
+      val get_first : 'a * 'b -> 'a = <fun>
+
+      utop # get_first (1, 2) ;;
+      - : int = 1
+
+      utop # get_last (1, 2) ;;
+      - : int = 2
+      ```);%
+
+      関数\codem{get_first}はパターン\codem{(x, _)}を取り、1番目の要素であるxを返します。
+      一方、関数\codem{get_last}はパターン\codem{(_, y)}を取り、2番目の要素であるyを返します。
+      両方のパターンは2つの要素を持つタプルで表現されるため、関数get_firstとget_lastは「引数に要素を2つ持つタプル型を取る関数」と解釈できます。
+      % http://www.nct9.ne.jp/m_hiroi/func/ocaml04.html
+      % http://www.fos.kuis.kyoto-u.ac.jp/~igarashi/class/pl/03-ocaml.html
+      また上記のように、関数内部で利用しないパターン変数にアンダースコア（\codem{_}）を用いることで、
+      「パターン変数にバインドしないが、どんな値にもマッチ」させることができます。
+      これを\dfn{ワイルドカードパターン}と言います。
+
+      ワイルドカードパターンは、letバインディングやmatch式でも同様に利用できます。
+      \d-code(```
+      utop # let get_first tuple = match tuple with
+        | (x, _) -> x ;;
+      val get_first : 'a * 'b -> 'a = <fun>
+
+      utop # let (x, _) = (1, 2) ;;
+      val x : int = 1
+
+      utop # x ;;
+      - : int = 1
+      ```);%
+
+      なお、アンダースコア（_）は変数にバインドしないため、以下のようにアンダースコアを通して値にアクセスすることはできません。
+      \d-code(```
+      utop # let (x, _) = (1, 2) ;;
+      val x : int = 1
+
+      utop # _ ;;
+      Error: Syntax error: wildcard "_" not expected
+      ```);%
+    }
+    +p{
+      % プログラミングの基礎 第7章 7.2パターンマッチ
+      % https://v2.ocaml.org/manual/patterns.html#sss:pat-variable
+      パターンの注意点として、1つのパターン内で同一の変数名を利用することはできません。
+      例えば、同じ値のペアを取得したいからといって、以下のようにパターンを書くことはできません。
+
+      \d-code(```
+        utop # let are_same tuple = match tuple with
+          | (x, x) -> x + x ;;
+        Line 2, characters 8-9:
+        Error: Variable x is bound several times in this matching
+      ```);%
+
+      インタプリタの出力には「パターン変数xが複数回バインドされている」旨のエラーが示されています。
+      これはmatch式に限らずletバインディングにおけるパターンの利用であっても同じです。
+    }
+    +p{
+      % https://cs3110.github.io/textbook/chapters/data/pattern_matching_advanced.html
+      % https://v2.ocaml.org/manual/patterns.html#sss:pat-or
+      % http://www.nct9.ne.jp/m_hiroi/func/ocaml06.html
+      パイプ（\|）を利用し、いずれかのパターンが一致した際に特定の式を評価するといった書き方も可能です。
+      これを\dfn{Orパターン}と言います。
+
+      \d-code(```
+        match <expr> with
+        | <pattern_1>
+        | <pattern_2>
+        | <pattern_3> -> <expr_1>
+        | ...
+        | <pattern_n> -> <expr_n>
+      ```);%
+
+      上記は、パターン1〜3（\<pattern_1\> \| \<pattern_2\> \| \<pattern_3\>）のいずれかに一致した場合、式\<expr_1\>を実行することを示しています。
+      これを利用した例を以下に示します。
+      \d-code(```
+      utop # let is_alphabet x = match x with
+        | 'a'..'z'
+        | 'A'..'Z' -> true
+        | _ -> false ;;
+      val is_alphabet : char -> bool = <fun>
+
+      utop # is_alphabet 'a' ;;
+      - : bool = true
+      utop # is_alphabet 'Z' ;;
+      - : bool = true
+      utop # is_alphabet '1' ;;
+      - : bool = false
+      ```);%
+
+      上記の関数\codem{is_alphabet}は、char型の値を引数に取り'a'〜'z'または'A'〜'Z'であればtrueを返し、それ以外であればfalseを返します。
+      なお、orパターンは読みやすさのため、横に並べて書くこともできます。
+      \d-code(```
+      utop # let is_alphabet x = match x with
+        | 'a'..'z' | 'A'..'Z' -> true
+        | _ -> false ;;
+      val is_alphabet : char -> bool = <fun>
+      ```);%
+    }
+    +p{
+      次に、match式がif式よりも複雑な条件分岐を行える例を紹介します。
+
+      ここでは、整数を文字列に変換する関数\codem{int_to_string}を考えてみます。
+      任意の整数を文字列に変換するためは（今まで紹介した知識では）膨大なプログラムを書く必要があるため、
+      ここでは1から3までの整数を変換することにします。
+      if式を利用して、以下のように関数を定義できます。
+
+      \d-code(```
+        utop # let int_to_string i =
+          if i = 1 then "one" else
+            if i = 2 then "two" else
+              if i = 3 then "three"
+              else "NaN" ;;
+        val int_to_string : int -> string = <fun>
+
+        utop # int_to_string 1 ;;
+        - : string = "one"
+        utop # int_to_string 2 ;;
+        - : string = "two"
+        utop # int_to_string 3 ;;
+        - : string = "three"
+        utop # int_to_string 4 ;;
+        - : string = "NaN"
+      ```);%
+
+      if式を用いた場合、上記のようにelse節でさらにif式をネストさせることで複雑な条件分岐に対応できます。
+      しかし式全体の構造に読みにくさを感じます。
+      そこでmatch式を利用して読みやすい形で定義し直します。
+
+      \d-code(```
+        utop # let int_to_string i = match i with
+          | 1 -> "one"
+          | 2 -> "two"
+          | 3 -> "three"
+          | _ -> "NaN" ;;
+        val int_to_string : int -> string = <fun>
+
+        utop # int_to_string 1 ;;
+        - : string = "one"
+        utop # int_to_string 2 ;;
+        - : string = "two"
+        utop # int_to_string 3 ;;
+        - : string = "three"
+        utop # int_to_string 4 ;;
+        - : string = "NaN"
+      ```);%
+
+      if式を用いた場合よりプログラムの視認性が向上しました。
+      さらに、ワイルドカードパターンを用いることで、1、2、3以外の整数が与えられた場合は"NaN"と表示する意図がはっきりしています。
+      このように、複雑な条件分岐を扱いたい場合はmatch式の利用を検討してください。
+    }>
+    +subsection?:(`Guards in pattern matchings`){ガード式}<
+      +p{
+        % https://cs3110.github.io/textbook/chapters/data/pattern_matching_advanced.html の冒頭も参考になるが...
+        % https://v2.ocaml.org/manual/expr.html#sss:guards-in-pattern-matchings こっちの方が詳細に書いてある
+        match式等のパターンには、\dfn{ガード式}を含めることができます。
+        ガード式は条件式であり、パターンにガード式を含めると「パターンに一致する且つガード式がtrueを返す」ものを選択します。
+        これはパターンの後に\codem{when}キーワード及び条件式を挿入することで実現できます。
+
+        以下にガード式を含めたmatch式の完全なEBNFを示します。
+        % https://v2.ocaml.org/manual/expr.html#pattern-matching
+        \d-code(```
+        <expr> ::= ...
+                 | match <expr> with <pattern-matching>
+
+        <pattern-matching> ::= [ | ] pattern [when expr] -> expr
+                               { | pattern [when expr] -> expr }
+        ```);%
+
+        上記の構文は少し複雑に見えますが、match式のwith以降の形式を\codem{\<pattern-matching\>}シンボルで一般化したことを示しています\footnote{
+          これまでは\<pattern_1\>、\<pattern_n\>のように表現していました。
+        }。
+        \<pattern-matching\>には\codem{\[when expr\]}が含まれているため、whenキーワードを用いてガード式を挿入できることが分かります。
+
+        以下にガード式を用いたmatch式の例を示します。
+        \d-code(```
+        utop # let are_over_ten x = match x with
+          | (a, b) when (a >= 10 && b >= 10) -> true
+          | _ -> false ;;
+        val are_over_ten : int * int -> bool = <fun>
+
+        utop # are_over_ten (1, 2) ;;
+        - : bool = false
+        utop # are_over_ten (1, 12) ;;
+        - : bool = false
+        utop # are_over_ten (10, 2) ;;
+        - : bool = false
+        utop # are_over_ten (10, 12) ;;
+        - : bool = true
+        ```);%
+
+        上記の例は、int型の要素を2つ持つタプルを引数に受け取り、両方の値が10以上であればtrueを返す（そうでなければfalseを返す）関数\codem{are_over_ten}を定義しています。
+        ガード式を使わず、関数内でif式を用いて同様の処理を行う関数を定義することもできます。
+
+        \d-code(```
+        utop # let are_over_ten x = match x with
+          | (a, b) -> if a >= 10 && b >= 10 then true else false ;;
+          | _ -> false ;;
+        val are_over_ten : int * int -> bool = <fun>
+        ```);%
+      }
+    >
+    +subsection?:(`Declaring functions with function`){function式}<
+      +p{
+        % https://dev.realworldocaml.org/variables-and-functions.html - Declaring Functions with function
+        \codem{function}キーワードを用いて、関数にパターンマッチを組み込むことも可能です。
+
+        functionを用いた構文をEBNFで表すと以下のようになります。
+        % https://v2.ocaml.org/manual/expr.html#pattern-matching
+        \d-code(```
+        <expr> ::= ...
+                 | function <pattern-matching>
+
+        <pattern-matching> ::= [ | ] pattern [when expr] -> expr
+                               { | pattern [when expr] -> expr }
+        ```);%
+
+        上記から、functionはmatch式のようにパイプ（\|）でパターンをつないでOrパターンを構成したり、whenキーワードを用いてガード式を挿入可能であることが分かります。
+
+        以下にfunctionを用いてパターンマッチを組み込んだ関数の例を示します。
+
+        \d-code(```
+        utop # let is_alphabet = function
+          | 'a'..'z' | 'A'..'Z' -> true
+          | _ -> false ;;
+        val is_alphabet : char -> bool = <fun>
+
+        utop # is_alphabet 'a' ;;
+        - : bool = true
+        utop # is_alphabet 'Z' ;;
+        - : bool = true
+        utop # is_alphabet '1' ;;
+        - : bool = false
+        ```);%
+
+        上記の例は、Orパターンで紹介した関数is_alphabetをfunctionキーワードで書き直したものです。
+        関数の型や関数適用した結果がmatch式を用いた場合と同じであることが分かります。
+
+        ただし、match式を用いた場合とは異なりパターンマッチの対象となる引数を宣言しないことにしてください。
+
+        % https://v2.ocaml.org/manual/expr.html#sss:expr-function-definition
+        % これを参考にしたいが・・・うまく表現を取り込めない。
+        これはfunction式がカリー化とパターンマッチの両方を行うことが可能だからです。
+        % https://qiita.com/zenwerk/items/603bd383fe5c6b8cace3#function-%E5%BC%8F
+        つまり、function式は「funまたはfunとmatch式を組み合わせたものと同等」であることを意味します。
+        \d-code(```
+        utop # (function x -> x) ;;
+        - : 'a -> 'a = <fun>
+
+        utop # (fun x -> x) ;;
+        - : 'a -> 'a = <fun>
+
+        utop # let is_alphabet = function
+          | 'a'..'z' | 'A'..'Z' -> true
+          | _ -> false ;;
+        val is_alphabet : char -> bool = <fun>
+
+        utop # let is_alphabet = (fun x -> match x with
+          | 'a'..'z' | 'A'..'Z' -> true
+          | _ -> false) ;;
+        val is_alphabet : char -> bool = <fun>
+        ```);%
+      }
+    >
+  >
+  +section?:(`List`){リスト}<
+    +p{
+      % https://dev.realworldocaml.org/lists-and-patterns.html
+      % https://cs3110.github.io/textbook/chapters/data/lists.html
+      % https://cs3110.github.io/textbook/chapters/data/pattern_matching_advanced.html
+      リストは、全ての要素が同じ型を持ちそれらが任意の個数並んだデータです。
+      タプルでは固定長の要素しか並べることができませんでしたが、リストは型が同じであれば要素を好きなだけ並べることができます。
+
+      リストを作成するには以下の構文を利用します。
+
+      \d-code(```
+        [ <expr>; ... ]
+      ```);%
+
+      式\<expr\>をセミコロン（\;）で区切り、カッコ（\[...\]）で囲むことでリストを生成できます。
+      間の3つのドット（...）は「後ろに2番目の要素、3番目の要素...のように0個以上の要素を取って良い」ことを示します。
+      
+      % https://v2.ocaml.org/manual/patterns.html#pattern
+      これをEBNFで表現すると以下のようになります。
+      \d-code(```
+      <list>       ::= [ <pattern> {; <pattern>} [;] ]
+
+      <pattern>    ::= <value-name>
+                     | _
+                     | ( <pattern> )
+                     | ( <pattern> : <typexpr> )
+                     | <pattern> | <pattern>
+                     | <pattern> {, <pattern> }+
+                     | ...
+
+      <value-name> ::= (a..z | _) { a..zA..Z | 0..9 | _ | ' }
+      ```);%
+
+      上記の構文は次のルールを示しています。
+      \listing{
+        * リストの要素は\<pattern\>シンボルを取ります
+        * リストは\<pattern\>シンボルをセミコロン（\;）で区切ります
+        * リスト末尾のセミコロン（\;）は省略可能です
+      }%
+
+      上記から、リストは以下のような表現が可能であることが分かります。
+
+      \d-code(```
+        utop # [1; 2; 3;] ;;
+        - : int list = [1; 2; 3]
+
+        utop # [1; 2; 3] ;;
+        - : int list = [1; 2; 3]
+
+        utop # [(1 : int); 2; 3] ;;
+        - : int list = [1; 2; 3]
+
+        utop # [(1, 2) ; (3, 4)] ;;
+        - : (int * int) list = [(1, 2); (3, 4)]
+      ```);%
+
+      % https://cs3110.github.io/textbook/chapters/data/lists.html - Syntax.
+      なお、リストの最初の要素を\dfn{head}と言い、残りの要素（たち）を\dfn{tail}と言います。
+      例えば\codem{\[1\; 2\; 3\]}の場合、headは1、tailは\[2\; 3\]となります。
+      \[1\]のように要素が1つだけの場合、headは1、tailは\[\]となります。
+    }
+    +p{
+      前述したとおり、リストの要素は全て同じ型でなければいけません。
+      要素の型が異なるとエラーになります。
+
+      \d-code(```
+        utop # [1; "two"; 3] ;;
+        Line 1, characters 4-9:
+        Error: This expression has type string but an expression was expected of type
+                 int
+      ```);%
+
+      インタプリタの出力には「リストの要素にstring型が含まれているが、期待したものはint型である」旨のエラーが示されています。
+    }
+    +p{
+      % https://dev.realworldocaml.org/lists-and-patterns.html
+      要素を1つも持たないリストも定義可能です。
+      このようなリストを\dfn{空リスト}と言います。
+      空リストは\codem{[]}で表現します\footnote{
+        % https://cs3110.github.io/textbook/chapters/data/lists.html
+        % https://v2.ocaml.org/manual/coreexamples.html
+        []は\dfn{nil}とも呼ばれます。
+      }。
+
+      \d-code(```
+        utop # [] ;;
+        - : 'a list = []
+      ```);%
+
+      % プログラミングの基礎 第9章 9.2 リストの構文と型
+      空リストは要素を持たないため、要素の型をこの時点で決定できず、要素の型は多相型'aとなります。
+      そのため\[\]の型は'a list型となっていることが分かります。
+    }
+    +p{
+      リストの先頭に要素を追加するため（正確には先頭に要素を追加したリストの値を得るため）には、コロン2つ（\codem{::}）を利用します。
+      % https://cs3110.github.io/textbook/chapters/data/lists.html
+      % https://v2.ocaml.org/manual/coreexamples.html
+      コロン2つ（::）はリストを構成するためのコンストラクタで、\dfn{コンス（cons）}と呼ばれます\footnote{
+        コンス（::）が関数ではないことに注意してください。
+        % https://cs3110.github.io/textbook/chapters/data/lists.html - Syntax.
+        またコンスは動詞としても利用でき、「リストに要素をコンスする」のように使うことも可能です。
+      }。
+
+      コンス（::）を利用して1つの整数値を空リストに追加する例を以下に示します。
+
+      \d-code(```
+        utop # 3 :: [] ;;
+        - : int list = [3]
+      ```);%
+
+      上記のインタプリタの出力は「直前（-）に入力した結果の型は\codem{int list}型で、その値は\codem{\[3\]}というリストである」ことを示しています。
+
+      空リストは'a list型であるため、多相型を要素として持つ\dfn{多相リスト}になります。
+      つまり、あらゆる型を取ることができるリストです。
+      % https://cs3110.github.io/textbook/chapters/data/lists.html - Static semantics.
+      そのため、\codem{3 :: \[\]}のようにint型をコンスする場合、型変数'aをint型と推論し、結果としてint list型となります。
+
+      % https://dev.realworldocaml.org/lists-and-patterns.html - List Basics
+      % https://v2.ocaml.org/manual/expr.html#ss:precedence-and-associativity
+      なお、コンス（::）は右結合です。
+      そのため、以下の2つは同じリストを生成します。
+
+      \d-code(```
+        utop # 5 :: 4 :: 3 :: [] ;;
+        - : int list = [5; 4; 3]
+
+        utop # 5 :: (4 :: (3 :: [])) ;;
+        - : int list = [5; 4; 3]
+      ```);%
+
+      上記からも明らかですが、コンス（::）はすでに要素を持つリストに対しても利用できます。
+
+      \d-code(```
+        utop # 5 :: [4; 3] ;;
+        - : int list = [5; 4; 3]
+      ```);%
+    }
+    +subsection{リストとパターンマッチ}<+p{
+      % プログラミングの基礎 第9章 9.3 リストとパターンマッチ
+      % https://dev.realworldocaml.org/lists-and-patterns.html - Using Patterns to Extract Data from a List
+      % 再帰を学習していないと例を出しにくい
+      パターンマッチを利用して、リストの要素を参照することもできます。
+      ただし、リストにパターンマッチを適用するには、必ず空リスト[]にマッチするパターンを書く必要があります。
+
+      \d-code(```
+        match <expr> with
+        | [] -> <expr_1>
+        | <pattern_2> -> <expr_2>
+        | ...
+        | <pattern_n> -> <expr_n>
+      ```);%
+      
+      パターンマッチを用いて、リストの最初の要素を取り出す例を以下に示します。
+
+      \d-code(```
+        utop # match [3; 4; 5] with
+          | [] -> 0
+          | first :: rest -> first ;;
+        - : int = 3
+      ```);%
+
+      上記の例では、match式に与えられたリストが空でないため、パターン\codem{first :: rest}に一致します。
+      [3\; 4\; 5]が3 :: [4\; 5]と等価であることから、
+      first :: restのfirstに3が一致し、restに[4\; 5]が一致することが分かります。
+
+      また、上記の例ではrestを使用しないため、
+      アンダースコア（_）を用いて、次のように書き換える方が実装としては望ましいでしょう。
+
+      \d-code(```
+        utop # match [3; 4; 5] with
+          | [] -> 0
+          | first :: _ -> first ;;
+        - : int = 3
+      ```);%
+    }
+    +p{
+      % プログラミングの基礎 第9章 9.3 リストとパターンマッチ
+      リストとパターンマッチにおいて、空リストのパターンを書かなかった場合はどうなるでしょうか。
+
+      \d-code(```
+        utop # match [3; 4; 5] with
+          | first :: rest -> first ;;
+        Lines 1-2, characters 0-26:
+        Warning 8 [partial-match]: this pattern-matching is not exhaustive.
+        Here is an example of a case that is not matched:
+        []
+        - : int = 3
+      ```);%
+
+      インタプリタの出力には「パターンマッチにおいて全てのパターンが網羅されおらず、[]のパターンにマッチしない」旨の警告が示されています。
+      この逆で、パターンマッチに空リストを渡し、空リストにのみマッチするパターンを書いた場合も警告が発生します。
+
+      \d-code(```
+        utop # match [] with
+          | [] -> 0 ;;
+        Lines 1-2, characters 0-11:
+        Warning 8 [partial-match]: this pattern-matching is not exhaustive.
+        Here is an example of a case that is not matched:
+        _::_
+        - : int = 0
+      ```);%
+
+      ただし先程の警告とは異なり、マッチしないパターンが\codem{_::_}となっています。
+      これはリストの長さが1以上のものにマッチするパターンがないことを表しています。
+
+      インタプリタはリストに要素がある場合とそうでない（空リストの）場合があることを知っており、
+      パターンマッチが網羅的でない場合にどのようなパターンの漏れがあるかを出力してくれます。
+    }
+    +p{
+      マッチするパターンを書かなかった場合はどうなるでしょうか。
+      空リストを渡すにも関わらず、空リストに対するパターンがない例を以下に示します。
+
+      \d-code(```
+        utop # match [] with
+          | first :: rest -> first ;;
+        Warning 8 [partial-match]: this pattern-matching is not exhaustive.
+        Here is an example of a case that is not matched:
+        []
+        Exception: Match_failure ("//toplevel//", 1, 0).
+      ```);%
+
+      インタプリタの出力には「例外（後述）が発生し、それは\codem{Match_failure}である」旨が示されています。
+      Match_failureは「パターンマッチを適用しようとしたが、該当するパターンが見つからなかった」ことを表しています。      
+    }
+    >
+  >
+>

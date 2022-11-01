@@ -1,0 +1,421 @@
+@import: settings
+
+let function-arguments = '<
+  +p{
+    これまでいくつかの関数を定義してきました。
+    簡単なプログラムや目の届く範囲であれば、全ての変数や関数を記憶できるかもしれません。
+    しかし、より複雑なプログラムや大規模な開発では、どのような入力を与えれば良いか、型情報から推測が困難な場合があります。
+    また、ほとんど同じ値を入力するような引数は、始めから決まった値を適用し且つ必要に応じて変更できる仕組みがあると便利です。
+    本章では、これらを実現するための関数の引数に関する便利な機構を説明します。
+  }
+  +section?:(`Labeled arguments`){ラベル付き引数}<
+    +p{
+      % https://dev.realworldocaml.org/variables-and-functions.html - Labled Arguments
+      % https://v2.ocaml.org/manual/lablexamples.html
+      これまで定義してきた関数は、引数の位置（順番）によって意味を持たせていました。
+      しかし様々な関数を利用するプログラムでは、引数の順番や引数の型情報からどのような値を入力すればよいか記憶・推測することは困難です。
+      引数の順番に依存せず関数を利用でき且つ引数がどのような種類の値を取るかを何らかの名称によって示されていると便利です。
+      OCamlは\dfn{ラベル付き引数}という機構を利用して引数に名前を付け、引数の位置に依存しない関数定義が可能です\footnote{
+        % https://v2.ocaml.org/manual/expr.html#parameter
+        ラベル付き引数名も通常の引数名と同様の命名規則で表現します。
+      }。
+    }
+    +p{
+      ラベル付き引数であることを示すには、仮引数名の先頭にチルダ（\codem{~}）を付けます。
+
+      ラベル付き引数をEBNFで表すと以下のようになります\footnote{
+        実際の引数のシンボルは\codem{parameter}というシンボルで定義され、
+        通常の引数、ラベル付き引数以外にオプショナル引数（後述）等も含まれるため、これよりも少し複雑です。
+      }。
+      % https://v2.ocaml.org/manual/expr.html#parameter
+      \d-code(```
+      <labeled-argument> ::= ~<label-name>
+                           | ~(<label-name> [:<typexpr>])
+                           | ...
+      <label-name>       ::= (a..z | _) { a..zA..Z | 0..9 | _ | ' }
+      ```);%
+
+      上記の\codem{~(\<label-name\> [:\<typexpr\>])}は、ラベル付き引数は通常の引数と同じように引数の型を省略できることを示しています\footnote{
+        [:\<typexpr\>]は型を省略可能であることを示しています。
+      }。
+      また\<label-name\>の定義から、通常の引数と同様の命名規則を持つことも分かります。
+      ラベル付き引数を用いて関数を定義する例を以下に示します。
+
+      \d-code(```
+        utop # let my_mod ~divisor ~dividend = dividend /. divisor ;;
+        val my_mod : divisor:float -> dividend:float -> float = <fun>
+
+        utop # my_mod 10. 1. ;;
+        - : float = 0.1
+      ```);%
+
+      上記の例は、除算の商を出力する関数\codem{my_mod}を定義しています。
+      関数my_modは、割る数\codem{~divisor}と割られる数\codem{~dividend}という\dfn{ラベル}がついた引数を持ちます。
+      インタプリタの出力は「my_modはdivisor:float -\> dividend:float -\> float型の関数であり、その値は関数である」ことを示しています。
+
+      % https://ocaml.jp/?Chapter%204%20%E3%83%A9%E3%83%99%E3%83%AB%E3%81%A8%E3%83%90%E3%83%AA%E3%82%A2%E3%83%B3%E3%83%88
+      % https://v2.ocaml.org/manual/lablexamples.html
+      インタプリタの出力におけるコロン（\codem{:}）が付いた文字列（上記の例では、divisor:及びdividend:）がラベルに当たります。
+    }
+    +p{
+      ラベル付き引数を利用するには、ラベル付き引数と実引数をコロン（:）でつないで渡します。
+      ラベル付き引数は位置に依存しないため、引数の順序を入れ替えても同様の結果を得ることができます。
+
+      \d-code(```
+        utop # my_mod ~divisor:10. ~dividend:1. ;;
+        - : float = 0.1
+
+        utop # my_mod ~dividend:1. ~divisor:10. ;;
+        - : float = 0.1
+      ```);%
+
+      % https://ocaml.jp/?Chapter%204%20%E3%83%A9%E3%83%99%E3%83%AB%E3%81%A8%E3%83%90%E3%83%AA%E3%82%A2%E3%83%B3%E3%83%88
+      なお、全ての引数を適用する場合に限り、下記のようにラベルを省略する（引数の位置に応じて意味を持たせる）こともできます\footnote{
+        全ての引数を適用することを、\dfn{関数適用が完全である}または\dfn{完全適用}と言います。
+      }。
+
+      \d-code(```
+        utop # my_mod 10. 1. ;;
+        - : float = 0.1
+      ```);%
+
+      ただし、引数の一部だけを適用する場合、ラベルを省略することはできません。
+
+      \d-code(```
+      utop # my_mod 10. ;;
+      Error: The function applied to this argument has type
+               divisor:float -> dividend:float -> float
+      This argument cannot be applied without label
+      ```);%
+
+      ラベル付き引数を利用する場合のみ、一部の引数を省略できます。
+      このとき（一部のラベル付き引数が省略されたとき）、通常の関数と同様に、省略されたラベル付き引数を取る関数を返します。
+
+      \d-code(```
+      utop # my_mod ~divisor:10. ;;
+      - : dividend:float -> float = <fun>
+      ```);%
+
+      もちろん、ラベル付き引数とラベルのない引数を併用できます。
+
+      \d-code(```
+      utop # let f ~x y ~z = x + y + z ;;
+      val f : x:int -> int -> z:int -> int = <fun>
+
+      utop # f ~x:1 2 ~z:3 ;;
+      - : int = 4
+
+      utop # f 2 ;;
+      - : x:int -> z:int -> int = <fun>
+
+      utop # f ~x:1 ;;
+      - : int -> z:int -> int = <fun>
+
+      utop # f ~x:1 ~z:3 ;;
+      - : int -> int = <fun>
+      ```);%
+
+      上記の例で、関数適用\codem{f 2}の実引数2が仮引数\codem{y}として適用されていることに注意してください。
+    }
+    +p{
+      % https://dev.realworldocaml.org/variables-and-functions.html - Labled Arguments
+      OCamlでは\dfn{ラベルパニング}と呼ばれる機構をサポートしており、これはラベルとその値として渡される変数の名前が一致している場合、
+      引数にラベルを記述するだけでそのラベル名と名称が一致する変数を参照してくれるものです。
+      この例を下記に示します。
+
+      \d-code(```
+        utop # let divisor = 10. in
+          let dividend = 1. in
+          my_mod ~divisor ~dividend ;;
+        - : float = 0.1
+      ```);%
+
+      ラベル付き引数は、次のケースで特に有用です。
+
+      % https://v2.ocaml.org/manual/lablexamples.html
+      % コードをドキュメント化し、チェックを可能にし、アプリケーションの柔軟性を高めることが目的
+      % https://dev.realworldocaml.org/variables-and-functions.html - WHERE ARE LABELS USEFUL?
+
+      \listing{
+        * 引数の位置（順序）に依存させたくない場合
+        * 引数の型からその意味が推測できない場合
+        * 同じ型の引数が複数あり、どの引数にどの意味が紐づくか混乱する場合
+        * 引数の数が多すぎる場合
+      }%
+    }
+    +p{
+      % https://dev.realworldocaml.org/variables-and-functions.html - HIGHER-ORDER FUNCTIONS AND LABELS
+      % https://ocaml.jp/?Chapter%204%20%E3%83%A9%E3%83%99%E3%83%AB%E3%81%A8%E3%83%90%E3%83%AA%E3%82%A2%E3%83%B3%E3%83%88
+      しかし、ラベル付き引数には注意するべき点もあります。
+
+      それは、引数として「ラベル付き引数を持つ関数」を受け取る関数を評価する場合です\footnote{
+        % https://www.fos.kuis.kyoto-u.ac.jp/~igarashi/class/isle4-02w/mltext/ocaml005.html
+        % http://www.cs.tsukuba.ac.jp/~kam/lecture/fp2017/7.pdf
+        関数を引数に受け取る関数または関数を戻り値とする関数を\dfn{高階関数}と言います。
+      }。
+
+      例えば、本節で例にあげた除算の商を出力する関数my_modを引数に取る関数\codem{apply_mod}を以下のように定義します。
+
+      \d-code(```
+      utop # let apply_mod f divisor dividend = f ~divisor ~dividend
+      val apply_mod : (divisor:'a -> dividend:'b -> 'c) -> 'a -> 'b -> 'c = <fun>
+      ```);%
+
+      上記の例は、apply_modという関数を定義しており、これは以下の3つの引数を取ります。
+
+      \listing{
+        * \codem{f}：ラベル付き引数~divisor（割る数）と~dividend（割られる数）を受け取り、多相型の値を返す関数f
+        * \codem{~divisor}：多相型の割る数divisor
+        * \codem{~dividend}：多相型の割られる数dividend
+      }%
+
+      関数apply_modは関数fにdivisorとdividendを適用する際、ラベルパニングによってラベル名と一致する変数を参照します。
+      インタプリタの出力は「apply_modという(divisor:'a -\> dividend:'b -\> 'c) -\> 'a -\> 'b -\> 'c型の関数を定義し、その値は関数である」ことを示しています。
+      apply_modは以下のように適用できます。
+
+      \d-code(```
+      utop # let my_mod ~divisor ~dividend = dividend /. divisor ;;
+      val my_mod : divisor:float -> dividend:float -> float = <fun>
+
+      utop # my_mod ~divisor:10. ~dividend:1. ;;
+      - : float = 0.1
+
+      utop # apply_mod my_mod 10. 1. ;;
+      - : float = 0.1
+      ```);%
+
+      上記の例から、関数apply_modの第二引数（10.）と第三引数（1.）が、関数my_modのラベル付き引数~divisor、~dividendへ渡され、正しく評価されたことが分かります。
+    }
+    +p{
+      ここで、apply_modの引数fについて、ラベル付き引数の順番を変えてみます。
+
+      \d-code(```
+      utop # let fail_mod f divisor dividend = f ~dividend ~divisor ;;
+      val fail_mod : (dividend:'a -> divisor:'b -> 'c) -> 'b -> 'a -> 'c = <fun>
+      ```);%
+
+      ラベル付き引数の性質から、fのラベル付き引数の順番を入れ替えても正しく動作するように思われますが、これは失敗します。
+
+      \d-code(```
+      utop # fail_mod my_mod 10. 1. ;;
+      Error: This expression has type divisor:float -> dividend:float -> float
+             but an expression was expected of type dividend:'a -> divisor:'b -> 'c
+      ```);%
+
+      % 説明が下手
+      これは、fail_modの第一引数は\codem{dividend:'a -\> divisor:'b -\> 'c}という関数の型を期待するにも関わらず、
+      関数my_modは\codem{divisor:'a -\> dividend:'b -\> 'c}という関数の型であるためです。
+      つまり、ラベル付き引数を持つ関数を引数に取る関数（高階関数）において、
+      高階関数から渡すラベル付き引数の順番が引数で受け取った関数のラベル付き引数の順番と一致している必要があります。
+    }
+  >
+  +section?:(`Optional arguments`){オプション型とオプショナル引数}<
+    +p{
+      % https://dev.realworldocaml.org/variables-and-functions.html - Optional Arguments
+      これまで説明した関数では、全ての引数に値を設定することで結果を得ることができました。
+      しかし、いくつかの引数において値を省略したい場合があります。
+      例えば、入力する値がほとんど同じであれば、これを毎回入力することは手間であるため、
+      あらかじめいつも入力する値が入っていてほしいと考えます。
+      値の入力を省略した場合にあらかじめ入力される値を\dfn{既定値}または\dfn{デフォルト値}と言いますが、
+      本節で説明する\dfn{オプショナル引数}を利用することで、引数の省略とデフォルト値の設定が可能です\footnote{
+        オプショナル引数は\dfn{オプション引数}とも呼ばれます。本書ではオプショナル引数で統一します。
+      }。
+    }
+    +p{
+      % https://ocaml.jp/?Chapter%204%20%E3%83%A9%E3%83%99%E3%83%AB%E3%81%A8%E3%83%90%E3%83%AA%E3%82%A2%E3%83%B3%E3%83%88
+      % http://www.nct9.ne.jp/m_hiroi/func/ocaml22.html
+      オプショナル引数であることを示すには、仮引数名の先頭にクエスチョンマーク（\codem{?}）を付けます。
+      デフォルト値をEBNFで表すと以下のようになります\footnote{
+        説明のため簡略化したEBNFを記載しています。
+        実際の引数のシンボルはparameterというシンボルで定義されます。
+      }。
+
+      % https://v2.ocaml.org/manual/expr.html#parameter
+      \d-code(```
+      <optional-argument> ::= ?<label-name>
+                            | ?(<label-name> [:<typexpr>] [=expr])
+
+      <label-name>        ::= (a..z | _) { a..zA..Z | 0..9 | _ | ' }
+      ```);%
+
+      上記のEBNFから、オプショナル引数の命名規則はラベル付き引数や通常の引数と同じであることが分かります。
+      また、\codem{?(\<label-name\> [:\<typexpr\>] [=expr])}から、
+      ラベル付き引数や通常の引数と同様に引数の型を省略でき且つ[=expr]はデフォルト値を設定できることを示しています。
+
+      デフォルト値を持つオプショナル引数を取る関数の例を以下に示します。
+
+      % https://v2.ocaml.org/manual/lablexamples.html#s:optional-arguments
+      \d-code(```
+      utop # let up ?(step = 1) x = x + step ;;
+      val up : ?step:int -> int -> int = <fun>
+
+      utop # up 1 ;;
+      - : int = 2
+      utop # up 2 ;;
+      - : int = 3
+      utop # up 3 ;;
+      - : int = 4
+      ```);%
+
+      上記の例は、第二引数を第一引数の数だけプラスした値を出力する関数\codem{up}を定義しています。
+      関数upは、第一引数（オプショナル引数）にプラスする数\codem{step}を取ります。\codem{?(step = 1)}はデフォルト値が1であることを示しています。
+      インタプリタの出力は、「upは?step:int -\> int -\> int型の関数であり、その値は関数である」ことを示しています。
+
+      % https://v2.ocaml.org/manual/lablexamples.html
+      インタプリタの出力におけるクエスチョンマーク（?）及びコロン（:）が付いた文字列（上記の例では、?step:）をラベルと言います\footnote{
+        ラベル付き引数のコロン（:）が付いた文字列もラベルと言いました。
+      }。
+    }
+    +p{
+      オプショナル引数の値を変更するには、ラベル付き引数に値を渡すときと同じように記述します。
+
+      \d-code(```
+      utop # up ~step:2 1 ;;
+      - : int = 3
+      utop # up ~step:3 2 ;;
+      - : int = 5
+      utop # up ~step:4 3 ;;
+      - : int = 7
+      ```);%
+
+      なお、オプショナル引数もラベル付き引数と同様に引数の順番を入れ替えることが可能です。
+
+      \d-code(```
+      utop # let up ?(step = 1) ?(step2 = 2) x = x + step + step2 ;;
+      val up : ?step:int -> ?step2:int -> int -> int = <fun>
+
+      utop # up ~step:1 ~step2:2 3 ;;
+      - : int = 6
+      top # up ~step2:2 ~step:1 3 ;;
+      - : int = 6
+      utop # up 3 ;;
+      - : int = 6
+      ```);%
+
+      ただし、オプショナル引数には注意するべき点がいくつかあります。
+      % https://ocaml.jp/?Chapter%204%20%E3%83%A9%E3%83%99%E3%83%AB%E3%81%A8%E3%83%90%E3%83%AA%E3%82%A2%E3%83%B3%E3%83%88
+      % https://v2.ocaml.org/manual/lablexamples.html#s:optional-arguments
+      まず、オプショナル引数以外にラベル付けされていない引数が存在しない場合、オプショナル引数を省略できないという制約があります。
+      つまり、オプショナル引数が省略可能であるためには、ラベル付けされていない引数が少なくとも1つ必要です。
+      以下にラベル付けされていない引数が存在しない関数の例を示します。
+
+      \d-code(```
+      utop # let up ?(step = 1) ~from = from + step ;;
+      Line 1, characters 9-17:
+      Warning 16 [unerasable-optional-argument]: this optional argument cannot be erased.
+      val up : ?step:int -> from:int -> int = <fun>
+      ```);%
+
+      上記のインタプリタの出力は「このオプショナル引数は（他にラベル付けされていない引数が存在しないため）省略できない」旨の警告を示しています。
+
+      加えて、オプショナル引数よりも後ろにラベル付けされていない引数がない場合も省略できません。
+
+      \d-code(```
+      utop # let up padding ?(step = 1) ~from = padding + from + step ;;
+      Line 1, characters 17-25:
+      Warning 16 [unerasable-optional-argument]: this optional argument cannot be erased.
+      val up : int -> ?step:int -> from:int -> int = <fun>
+
+      utop # let up ?(step = 1) padding ~from = padding + from + step ;;
+      val up : ?step:int -> int -> from:int -> int = <fun>
+
+      utop # let up ?(step = 1) ~from padding = padding + from + step ;;
+      val up : ?step:int -> from:int -> int -> int = <fun>
+      ```);%
+
+      これは、オプショナル引数よりも後ろにあるラベルなし引数が適用されたかどうかを基準に、オプショナル引数が省略されているかどうかを判断するためです。
+    }
+    +p{
+      オプショナル引数はデフォルト値を省略することも可能です。
+      省略した場合、オプショナル引数の型は\dfn{オプション型}になります。
+
+      % プログラミングの基礎 - 第18章 オプション型
+      OCamlにおけるオプション型は次のように定義されています。
+
+      \d-code(```
+        type 'a option = None
+                       | Some of 'a
+      ```);%
+
+      \codem{None}は値がないことを示す\dfn{コンストラクタ（構成子）}であり、\codem{Some}は'a型の値が存在することを示すコンストラクタです\footnote{
+        % http://www.nct9.ne.jp/m_hiroi/func/ocaml06.html
+        % https://cs3110.github.io/textbook/chapters/data/variants.html
+        % ここでのコンストラクタは値コンストラクタまたはデータコンストラクタ
+        OCamlにおけるコンストラクタとは、データを表す名前です。
+        このようにデータを表すコンストラクタを、\dfn{データコンストラクタ}または\dfn{値コンストラクタ}と言います。
+        なお、他のプログラミング言語で用いられるコンストラクタとは意味が異なるため注意が必要です。
+      }。
+      つまり\codem{'a option}型は「値を持たないか、または'a型の値を持つ」ことを表します。
+
+      % https://cs3110.github.io/textbook/chapters/data/options.html
+      % https://cs3110.github.io/textbook/chapters/data/lists.html も参考になるかも
+      なお、optionのように型を指定すると新しい型を返すものを\dfn{型コンストラクタ}と言います。
+
+      optionが型を生成する例を以下に示します。
+
+      \d-code(```
+      utop # Some 1 ;;
+      - : int option = Some 1
+
+      utop # Some "abc" ;;
+      - : string option = Some "abc"
+      ```);%
+
+      上記の例は、Some 1のようにint型を指定すると型\codem{int option}が生成され、
+      Some "abc"のようにstring型を指定すると型\codem{string option}が生成されたことを表しています。
+    }
+    +p{
+      % https://dev.realworldocaml.org/variables-and-functions.html - Optional Arguments
+      % これを参考にしたっけ？
+
+      ここで、コメント用文字列を生成する関数\codem{add_comment}を定義し、
+      デフォルト値を用いない場合のオプショナル引数の例を見ていきましょう。
+
+      \d-code(```
+        utop # let add_comment ?comment_header x =
+          let header = match comment_header with
+            | None -> "#"
+            | Some y -> y
+          in
+          header ^ " " ^ x ;;
+        val add_comment : ?comment_header:string -> string -> string = <fun>
+      ```);%
+
+      上記の関数は、第一引数（オプショナル引数）にコメント行であることを示す文字列を取り、
+      第二引数にコメント本体を取って、それらを結合した文字列を返す関数です。
+      インタプリタの出力から、関数add_commentの型は\codem{?comment_header:string -\> string -\> string}であり、
+      オプショナル引数comment_headerをstring option型と推論していることが分かります。
+
+      オプショナル引数を省略した場合は\codem{None}を取り、string型の値を指定した場合は\codem{Some y}を取ります。
+      オプショナル引数がどちらの値を取るかを判別している箇所を下記に示します。
+
+      \d-code(```
+        ...
+          let header = match comment_header with
+            | None -> "#"
+            | Some y -> y
+          in
+          ...
+      ```);%
+
+      上記は、オプショナル引数comment_headerがNoneまたはSome yのどちらの値を取るかをmatch式によって判別し、
+      Noneの場合はシャープ（\#）、Some yの場合はyを局所変数headerに束縛することを示しています。
+
+      以下に、オプショナル引数を省略した場合と値を明示的に指定した場合における関数適用の例を示します。
+
+      \d-code(```
+        utop # add_comment "comment body" ;;
+        - : string = "# comment body"
+
+        utop # add_comment ~comment_header:"%" "comment body" ;;
+        - : string = "% comment body"
+      ```);%
+
+      オプショナル引数のメリットとして、呼び出し側が意識する必要のないまたはその必要性が薄い引数を無視できることがあげられます。
+      一方デメリットとして、オプショナル引数を明示的に指定しない場合、オプショナル引数の値は関数内部で暗黙的に補完され処理されるため、
+      意図しない動作を選択してしまう可能性があげられます。
+
+      そのため、ユーザから見える関数でのみオプショナル引数を利用し、ユーザから見えないような裏側で利用する関数はオプショナル引数の利用を避けたほうが良いでしょう。
+    }
+  >
+>

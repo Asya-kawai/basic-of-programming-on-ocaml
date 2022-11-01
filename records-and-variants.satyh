@@ -1,30 +1,199 @@
 @import: settings
 
-let variants = '<
+% プログラミングの基礎 第8章 レコード
+% プログラミングの基礎 第17章 再帰的なデータ構造
+% https://dev.realworldocaml.org/records.html
+% https://dev.realworldocaml.org/variants.html
+% https://cs3110.github.io/textbook/chapters/data/records_tuples.html
+% https://cs3110.github.io/textbook/chapters/data/variants.html
+
+let records-and-variants = '<   
     +p{
-      \ref-chapter(`List and record`);にて、レコードを紹介しましたが、
-      レコードは全てのフィールドが揃っている必要がありました。
-      つまり、たった1つでもフィールドの記述が漏れているとエラーとなってしまうのでした。
-      現実のプログラミングでは、いつも全てのフィールドが揃っているとは限りません。
-      本章では、複数のデータを1つの型で表現する手法について説明します。
+      タプルのように構造を持つデータ型は他にもあります。
+      それが\dfn{レコード}と\dfn{バリアント}です。
+      本章では、構造内のデータに名前を付け識別する方法や複数のデータを1つの型で表現する手法について説明します。
     }
+    +section?:(`Records`){レコード}<
+      +p{
+        % プログラミングの基礎 第8章 レコード
+        タプルでは要素の順序を意識する必要がありました。
+        しかし、扱うデータによっては要素の順番を意識する必要がなかったり、
+        そもそも要素の順番が一定でないデータもあります。
+        またタプルには、各要素の値が何を表しているかを示すような、要素に対する名称をつけることができませんでした。
+        そのような場合は、\dfn{レコード}を利用することで、
+        要素の順番を気にせず且つ要素に対する名称を与えることができます。
+
+        % https://dev.realworldocaml.org/records.html - Records
+        レコードを利用するには、まずレコードの型を定義する必要があります。
+        レコードの新しい型を定義するには、以下の構文を利用します。
+
+        \d-code(```
+          type <record> = {
+            <field> : <type> ;
+            ...
+          }
+        ```);%
+
+        上記の構文において、\codem{\<record\>}は定義する型名を表しています。
+        \codem{\<field\>}がレコードの要素名を表し、\codem{\<value\>}がその要素の値を表します。
+        % プログラミングの基礎 第8章 8.2レコードの構文
+        なお、レコードではこの要素のことを\dfn{フィールド}といいます。
+        カッコ（\{...\}）中の3つのドット（\codem{...}）は「後ろに\<field\> : \<type\> \;の形式で0個以上の別名フィールドを書いて良い」ことを示します\footnote{
+          \<type\>はintやstringといった型名を取ります。
+        }。
+
+        % https://v2.ocaml.org/manual/patterns.html#pattern
+        レコードの構造をEBNFで表すと以下のようになります。
+        \d-code(```
+        <pattern> ::= ...
+                    | { <field> [:<typexpr>] [= <pattern>]
+                        {; field [:<typexpr>] [= <pattern>]} [; _] [;] }
+                    | ...
+
+        <field>   ::= (a..z | _) { a..zA..Z | 0..9 | _ | ' }
+        ```);%
+
+        上記の構文は次のルールを示しています。
+        \listing{
+          * レコードはカッコ（\{...\}）内に\<field\>シンボルを取ります
+          * レコードは1つ以上のフィールドを持ちます
+          * レコードはセミコロン（\;）で区切ります
+          * レコードの末尾のセミコロン（\;）は省略可能です
+        }%
+
+        上記から、レコードは以下のような表現が可能であることが分かります。
+
+        \d-code(```
+        utop # type profile = {
+          last_name: string;
+          first_name: string;
+          age: int
+        } ;;
+        type profile = { last_name : string; first_name : string; age : int; }
+
+        utop # { last_name = "KAWAI"; first_name = "Toshiki"; age = 28 } ;;
+        - : profile = {last_name = "KAWAI"; first_name = "Toshiki"; age = 28}
+        ```);%
+      
+        上記の例では、\codem{profile}というレコード型を定義し、
+        これは string型で表現される\codem{last_name}及び\codem{first_name}フィールドと、
+        int型で表現される\codem{age}フィールドから構成されます。
+
+        なお、フィールド名はその型定義の中で一意でなければなりません。
+        つまり重複するようなフィールド名を持つことはできません。
+        以下に、重複したフィールド名を定義しようとした際の例を示します。
+
+        \d-code(```
+          utop # type profile = {
+            name : string ;
+            name : string ;
+          } ;;
+          Line 3, characters 2-6:
+          Error: Two labels are named name
+        ```);%
+
+        上記の例では、インタプリタの出力は「\codem{name}という名称が2つ存在する」旨のエラーが示されています。
+      }
+      % ここにもっと書く
+      % https://dev.realworldocaml.org/records.html を参考に。
+    >
+    +section?:(`Original types`){独自の型定義}<
+      +p{
+        レコード型に限らず、独自の型を定義する場合には\codem{type}キーワードを利用します。
+        独自の型を定義するには以下の構文を用います。
+
+        \d-code(```
+          type <type> = <def>
+        ```);%
+
+        % https://v2.ocaml.org/manual/types.html#typexpr
+        \codem{\<type\>}は型名を表し、\codem{\<def\>}は型定義を表します。
+        EBNFで表すと以下のようになります\footnote{
+          分かりやすさのため、一部の記号列を省略しています。
+        }。
+
+        \d-code(```
+        <type-definition>  ::= type <typedef> { and typedef }
+        <typedef>          ::= ... <typeconstr-name> <type-information>
+        <type-information> ::= [type-equation] ...
+        <type-equation>    ::= = <typexpr>
+        ```);%
+
+        上記の構文は次のルールを表しています。
+        \listing{
+          * 型定義はtype \<typedef\>という構文で表現されます
+          * \<typedef\>は型名（\<typeconstr-name\>） = 型式（\<typexpr\>）で表現できます\footnote{
+              型定義はこれ以外の表現も可能です。分かりやすさのため、他の表現方法は省略しています。
+            }
+        }%
+
+        上記の構文から、次のように独自の型を定義可能です。
+
+        \d-code(```
+        utop # type my_int = int ;;
+        type my_int = int
+
+        utop # type my_string = string ;;
+        type my_string = string
+
+        utop # (1 : my_int) ;;
+        - : my_int = 1
+
+        utop # ("one" : my_string) ;;
+        - : my_string = "one"
+        ```);%
+
+        % https://cs3110.github.io/textbook/chapters/data/type_synonym.html
+        上記以外にも、複数の型を組み合わせて独自の型を定義できます。
+
+        \d-code(```
+        utop # type point = float * float ;;
+        type point = float * float
+
+        utop # type vector = float list ;;
+        type vector = float list
+
+        utop # type matrix = float list list ;;
+        type matrix = float list list
+
+        utop # (10., 20. : point) ;;
+        - : point = (10., 20.)
+
+        utop # ([1. ; 2.] : vector) ;;
+        - : vector = [1.; 2.]
+
+        utop # ([[1. ; 2.]; [3. ; 4.]] : matrix) ;;
+        - : matraix = [[1.; 2.]; [3.; 4.]]
+        ```);%
+
+        このように、既存の型に対して新しい型名を付けることを\dfn{型シノニム}と言います。
+        複雑なデータ型に分かりやすい名前を付けることでコードの可読性が向上します。
+      }
+    >
     +section?:(`Variants`){バリアント}<
       +p{
+        レコードは全てのフィールドが揃っている必要がありました。
+        つまり、たった1つでもフィールドの記述が漏れているとエラーとなってしまうのでした。
+        現実のプログラミングでは、いつも全てのフィールドが揃っているとは限りません。
+        そこで、複数のデータを1つのデータとして扱えると便利です。
+
         \dfn{バリアント}は複数のデータを1つの型として扱うためのデータです。
         この時のデータの型を\dfn{バリアント型}といいます。
 
         OCamlにおけるバリアントの型を定義するための構文は以下の通りです。
 
+        % https://dev.realworldocaml.org/variants.html
         \d-code(```
           type <variant> =
             | <Tag> [ of <type> [* <type>]... ]
             ...
         ```);%
 
-        上記の構文は、コンストラクタを表す\codem{\<Tag\>}が、「または」を表す\codem{\|}でつながっており、
-        \codem{\<variant\>}はコンストラクタのいづれかを値として取ります。
-        \codem{\<Tag\>}の先頭が大文字から始まっているのは、コンストラクタの先頭が大文字から始まる必要があるためです。
-        \codem{[...]}は0回以上の出現を表しており、\codem{\<Tag\> \| ...}のように定義（以下がその例です）できたり、
+        上記の構文は、コンストラクタを表す\codem{\<Tag\>}が、「または」を表すパイプ（\codem{\|}）でつながっており、
+        \codem{\<variant\>}はコンストラクタのいずれかを値として取ります。
+        \<Tag\>の先頭が大文字から始まっているのは、コンストラクタの先頭が大文字から始まる必要があるためです。
+        \codem{[...]}は0回以上の出現を表しており、\<Tag\> \| ...のように定義できます。
+        それの例を以下に示します。
 
         \d-code(```
           utop # type color =
@@ -36,8 +205,9 @@ let variants = '<
           type color = Black | Blue | Green | Red | White
         ```);%
 
-        \codem{\<Tag\> of \<type\> \| ...}、\codem{\<Tag\> of \<type\> \* \<type\> \| ...}のように書くことができます（以下がその例です）。
-        \codem{of}以降の\codem{\<type\> \* \<type\>}はタプルの構造と非常によく似ていますね。
+        また、
+        \<Tag\> of \<type\> \| ...のように書くことができます。
+        以下にその例を示します。
 
         \d-code(```
           utop # type my_custom_type =
@@ -70,7 +240,7 @@ let variants = '<
           type figure = Circle of int | Rectangle of int * int | Square of int | Unknown
         ```);%
 
-        上記で定義した\codem{figure}は、コンストラクタである\codem{Circle}、\codem{Rectangle}、\codem{Square}、\codem{Unknown}のいづれかを取ります。つまり、これらは\codem{figure}の値です。
+        上記で定義した\codem{figure}は、コンストラクタである\codem{Circle}、\codem{Rectangle}、\codem{Square}、\codem{Unknown}のいずれを取ります。つまり、これらは\codem{figure}の値です。
 
         上記を定義した後で、以下のようにインタプリタ上で\codem{Circle}、\codem{Rectangle}、\codem{Square}、\codem{Unknown}を入力すると、それが\codem{figure}型の値であることが分かります。
 
