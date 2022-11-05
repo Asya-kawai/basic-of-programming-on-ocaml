@@ -1,21 +1,432 @@
 @import: settings
 
+% https://v2.ocaml.org/manual/firstclassmodules.html
+% 第一級モジュールの説明をどこかに入れる。
+
 let multiple-files-and-modules = '<
   +p{
+    % https://cs3110.github.io/textbook/chapters/modules/intro.html
+    % https://dev.realworldocaml.org/files-modules-and-programs.html - Files, Modules, and Programs
     ここまでは、utopというトップレベルでコードを書いてきました。
     これはプログラムを単一ファイルに書くようなものです。
     小さなプログラムを書くだけであれば、1つのファイルに全てを詰め込んで良いかも知れません。
     しかし、大きく複雑なプログラムを書く場合、単一ファイルに全てを記述しそれを把握することが困難な場合があります。
     そのようなケースでは、プログラムの関心や責務に応じてコードを分割しますが、この分割した単位を\dfn{モジュール}といいます。
+    % https://dev.realworldocaml.org/files-modules-and-programs.html - Multifile Programs and Modules
     OCamlでは、1つのファイルは1つのモジュールに対応します。
     つまり、プログラムの関心や責務といった概念単位でファイル分割を行うと、自動的にモジュールに分割したことになります。
     このようにモジュールによって大規模ソフトウェアの複雑さに立ち向かう方法を、\dfn{モジュラープログラミング}といいます。
     本章ではモジュールを利用したプログラミングを説明します。
   }
+  +section?:(`Modules`){モジュール}<
+    +p{
+      % プログラミングの基礎 第19章 モジュール
+      モジュールとは、プログラムの関心や責務に応じてコードを分割またはまとめたものです。
+      モジュールを定義するには以下の構文を利用します。
+
+      \d-code(```
+      module <module> = struct
+        <body>
+      end
+      ```);%
+
+      \codem{\<module\>}はモジュール名を表し、\codem{\<body\>}はモジュール本体を表します。
+      モジュール本体にはモジュール固有の変数や関数を定義します。
+      モジュールの書き方をEBNFで表すと以下のようになります。
+
+      % https://v2.ocaml.org/manual/modules.html#s%3Amodule-expr
+      % https://v2.ocaml.org/manual/modules.html#sss:mexpr-module-defs
+      \d-code(```
+      <module-expr>  ::= ...
+                       | struct [ <module-items> ] end
+                       | ...
+
+      <module-items> ::= { ;; }
+                         ( <definition> | <expr> ) { { ;; }
+                           ( <definition> | <expr> ) }
+                         { ;; }
+
+      <definition>   ::= module <module-name> {
+                           ( <module-name> : <module-type> )
+                         } [:module-type] = <module-expr>
+                       | let [rec] <let-binding> { and <let-binding> }
+                       | ...
+
+      <module-name>  ::= (A..Z) { a..zA..Z | 0..9 | _ | ' }
+      ```);%
+
+      上記の構文は次のルールを表しています。
+      \listing{
+        * モジュール式（\<module-expr\>）はstruct〜endで表現されます
+        * モジュール内には、モジュール定義やletバインディングを記述できます
+        * モジュール式（\<module-expr\>）は、module \<module-name\> = \<module-expr\>で表現されます
+        * モジュール名（\<module-name\>）は先頭大文字で始める必要があります
+      }%
+
+      モジュール定義の例を以下に示します。
+
+      \d-code(```
+      utop # module Mymath = struct
+        let plus x y = x + y
+        let minus x y = x - y
+      end ;;
+      module Mymath :
+        sig val plus : int -> int -> int val minus : int -> int -> int end
+      ```);%
+
+      上記はモジュール\codem{Mymath}を定義しています。
+      Mymathモジュールは、2つの引数を取ってそれらを可算する関数\codem{plus}と、
+      2つの引数を取ってそれらを減算する関数\codem{minus}を持ちます。
+      インタプリタの出力は「Mymathというモジュールが定義され、sig〜end（plus、minus関数）の仕様を持つ」という旨を示しています。
+      このsig〜endはモジュールの仕様を示しており、これを\dfn{シグネチャ}と言います。
+    }
+    +p{
+      モジュールに定義された変数や関数を使用するには\codem{\<module-name\>.\<variable\>}の形式で呼び出します。
+      以下にその例を示します。
+      \d-code(```
+      utop # Mymath.plus ;;
+      - : int -> int -> int = <fun>
+
+      utop # Mymath.minus ;;
+      - : int -> int -> int = <fun>
+      ```);%
+    }
+  >
+  +section?:(`Signatures`){シグネチャ}<
+    +p{
+      % プログラミングの基礎 第19章 モジュールインターフェース：シグネチャ
+      % 抽象データ型をここで説明する
+      % https://dev.realworldocaml.org/files-modules-and-programs.html - Signatures and Abstract Types
+      シグネチャとは、モジュールがどのような変数や関数等を持つか、といったモジュールのインタフェースを示します。
+      モジュールを定義するとシグネチャも自動で生成されます。
+      しかし、モジュール内でしか利用しない変数や関数といった、モジュールの利用者に公開しなくても良い情報を含む場合があります。
+      このようにモジュールが提供するべき変数や関数等だけを公開し、それ以外を隠蔽するのがシグネチャです。
+
+      シグネチャを定義するには以下の構文を利用します。
+
+      \d-code(```
+      module type <signature> = sig
+        <body>
+      end
+      ```);%
+
+      \codem{\<signature\>}はシグネチャ名を表し、\codem{\<body\>}はシグネチャ本体を表します。
+      シグネチャ本体にはモジュールで利用する型、変数の型、関数の型等を定義します。
+      EBNFで表すと以下のようになります。
+
+      % https://v2.ocaml.org/manual/modtypes.html#hevea_manual.kwd150
+      % シグネチャ名の参考に。https://v2.ocaml.org/manual/names.html#modtype-path
+      \d-code(```
+      <module-type>   ::= ...
+                        | sig { <specification> [;;] } end
+                        | ...
+
+      <specification> ::= val <value-name> : <typexpr>
+                        | module <module-name> : <module-type>
+                        | exception <constr-decl>
+                        | ...
+
+      <module-type>   ::= ...
+                        | (a..zA..Z) { a..zA..Z | 0..9 | _ | ' }
+                        | ...
+      ```);%
+
+      上記の構文は次のルールを表しています。
+      \listing{
+        * モジュールの型（\<module-type\>）はsig〜endで表されます
+        * sig〜end内には、0個以上の定義（\<specification\>）を定義できます
+        * 定義は、変数、関数、例外等を含みます
+        * シグネチャ名は、先頭が大文字または小文字で始める必要があります
+      }%
+
+      シグネチャ定義の例を以下に示します。
+      \d-code(```
+      utop # module type Mymath_t = sig
+        type t
+        val from_int : int -> t
+        val plus : t -> t -> t
+        val minus : t -> t -> t
+        val to_int : t -> int
+      end ;;
+      module type Mymath_t =
+        sig
+          type t
+          val from_int : int -> t
+          val to_int : t -> int
+          val plus : t -> t -> t
+          val minus : t -> t -> t
+        end
+      ```);%
+
+      上記は\codem{Mymath_t}というシグネチャを定義しています。
+      Mymath_tシグネチャは、tという型を持ちます。
+      \ref-section(`Modules`);で定義したMymathモジュールはint型を受け取りましたが、
+      シグネチャでMymath専用の型tを定義しこれをMymathモジュールの中で利用することで、
+      プログラマに対して型tがint型であることを隠蔽します。
+      別の文脈で定義または利用したint型の値を、意図せずMymathモジュールの関数に適用することを防げるというメリットがあります\footnote{
+        % プログラミングの基礎 第19章 19.4 抽象データ型
+        % https://ja.wikipedia.org/wiki/%E6%8A%BD%E8%B1%A1%E3%83%87%E3%83%BC%E3%82%BF%E5%9E%8B
+        このようにモジュールで利用可能な型が具体的に何であるか（ここではint型）を隠蔽し、それを利用する関数によってのみ規定されるデータ型を\dfn{抽象データ型}と言います。ここではMymath.tが抽象データ型になります。
+
+        % https://dev.realworldocaml.org/files-modules-and-programs.html - Signatures and Abstract Types
+        % https://dev.realworldocaml.org/files-modules-and-programs.html - Concrete Types in Signatures
+        % 上記は初学者には難しいと感じたので割愛。
+        % 読んだ感じ、注腸データ型の具体例を述べているだけ？
+      }。
+
+      Mymath_tシグネチャは型tを利用するいくつかの関数も提供します。
+      int型の値を受け取ってt型に変換する関数\codem{from_int}、その逆でt型の値を取ってint型に変換する関数\codem{to_int}、
+      t型の値を2つ取ってその可算結果を返す関数plus、t型の値を2つ取ってその減算結果を返す関数minusを提供します。
+    }
+    +p{
+      % プログラミングの基礎 第19章 19.5 そのほかのシグネチャの宣言法
+      これをモジュールにアタッチするには次の構文を利用します。
+
+      \d-code(```
+      module <module> : <signature> = struct
+        <body>
+      end
+      ```);%
+
+      例えば、Mymath_tシグネチャを持つMymathモジュールを定義するには以下のように記述します。
+
+      \d-code(```
+      utop # module Mymath : Mymath_t = struct
+        type t = int
+        let from_int x = (x : t)
+        let to_int x = x
+        let plus x y = x + y
+        let minus x y = x - y
+      end ;;
+      module Mymath : Mymath_t
+      ```);%
+
+      これを用いて可算や減算を行うには以下のように実行します。
+
+      \d-code(```
+      utop # Mymath.from_int 1 ;;
+      - : Mymath.t = <abstr>
+
+      utop # Mymath.to_int (Mymath.from_int 2) ;;
+      - : int = 2
+
+      utop # let result =
+        let three = Mymath.from_int 3 in
+        let four = Mymath.from_int 4 in
+        Mymath.plus three four ;;
+      val result : Mymath.t = <abstr>
+
+      utop # Mymath.to_int result ;;
+      - : int = 7
+
+      utop # let result =
+        let three = Mymath.from_int 3 in
+        let four = Mymath.from_int 4 in
+        Mymath.minus three four ;;
+      val result : Mymath.t = <abstr>
+
+      utop # Mymath.to_int result ;;
+      - : int = -1
+      ```);%
+    }
+    +p{
+      % プログラミングの基礎 第19章 19.5 そのほかのシグネチャの宣言法
+      また、モジュールとシグネチャの定義をまとめて行うことも可能です。
+      その場合は、以下の構文を利用します。
+
+      \d-code(```
+      module <module> : sig
+        <signature-body>
+      end = struct
+        <module-body>
+      end
+      ```);%
+
+      \<signature-body\>にシグネチャの定義を書き、\<module-body\>に実際の定義を書きます。
+      Mymathを上記の構文で定義した例を以下に示します。
+
+      \d-code(```
+      utop # module Mymath : sig
+        type t
+        val from_int : int -> t
+        val plus : t -> t -> t
+        val minus : t -> t -> t
+        val to_int : t -> int
+      end = struct
+        type t = int
+        let from_int x = (x : t)
+        let to_int x = x
+        let plus x y = x + y
+        let minus x y = x - y
+      end ;;
+      module Mymath :
+        sig
+          type t
+          val from_int : int -> t
+          val plus : t -> t -> t
+          val minus : t -> t -> t
+          val to_int : t -> int
+        end
+      ```);%
+    }
+  >
+  +section?:(`Using dune`){Duneの利用}<
+    +p{
+      % http://ocamlverse.net/content/quickstart_ocaml_project_dune.html
+      OCamlで大規模なプログラムを管理するには\codem{dune}というビルドシステムを利用すると便利です。
+      OCamlのパッケージマネージャである\codem{opam}を用いてduneをインストールできます。
+      以下に、ubuntuでのopam及びduneのインストール例を示します\footnote{
+        先頭の\codem{\%}はプロンプトを表しています。
+      }。
+
+      \d-code(```
+      % sudo apt install -y opam
+
+      % opam init
+      % opam install dune
+      ```);%
+
+      % https://dune.readthedocs.io/en/stable/overview.html#introduction
+      duneは\dfn{プロジェクト}という単位で複数のプログラムを管理します。
+      duneでプロジェクトを作成するには以下のコマンドを実行します。
+
+      % http://ocamlverse.net/content/quickstart_ocaml_project_dune.html
+      \d-code(```
+      % dune init proj <project-name>
+      ```);%
+
+      例えば、Webアプリケーションのバックエンドとして動作する、HTTPサーバのプロジェクトを作成するとします。
+      \codem{my_web_server}というプロジェクト名を作成したい場合、以下のように入力します。
+
+      \d-code(```
+      % my-http-serverdune init proj my_web_app
+      Success: initialized project component named my_web_app
+
+      % cd my_web_app/
+      % ls
+      bin/  dune-project  lib/  my_web_app.opam  test/
+      ```);%
+
+      duneによって生成されたディレクトリやファイルは次のような意味を持ちます。
+      \listing{
+        * bin/：実行ファイルを格納するためのディレクトリ
+        * bin/dune：実行ファイルをビルドするための設定ファイル
+        * bin/mail.ml：実行ファイルの元となるソースコード
+        * lib/：プロジェクトのライブラリファイルを格納するためのディレクトリ
+        * lib/dune：\dfn{ライブラリ}をビルドするための設定ファイル\footnote{ライブラリとは機能単位にまとめたものを指します。例えば、数学で扱う機能をまとめたライブラリはMathライブラリとして提供されます。}
+        * test/：テストコードを格納するためのディレクトリ
+        * test/\<proejct_name\>.ml：テストファイル
+        * test/dune：テストをビルドするための設定ファイル
+        * dune-project：プロジェクトに関する設定を記述するための設定ファイル
+        * \<project_name\>.opam：opamで外部パッケージとして提供するための設定ファイル
+      }%
+
+      プロジェクトをビルドするには以下のコマンドを実行します。
+      下記コマンドはプロジェクト作成直後に実行しても問題ありません。
+
+      \d-code(```
+      % dune build
+      ```);%
+
+      また、プロジェクトを作成するとダミーのソースコードである\codem{./bin/main.ml}が作成されます。
+      main.mlは"Hello, World!"と表示するだけのプログラムが記述されます。
+      下記コマンドを実行して、./bin/main.mlを実行できます。
+
+      \d-code(```
+      % dune exec ./bin/main.exe
+      Hello, World!
+      ```);%
+    }
+    % https://dev.realworldocaml.org/files-modules-and-programs.html WHERE IS main?
+    +frame<
+      +subsection{コラム；プログラムのスタート地点はどこか}<
+        +p{
+          いくつかのプログラミング言語であれば、プログラムのスタート地点である関数等が存在します\footnote{
+            これをエントリーポイントとも言います。
+          }。
+          しかしOCamlでは他の言語と異なり、固有のmain関数が存在しません。
+          OCamlはソースコード内の変数、関数、式を定義された順（上から下）で評価します。
+          そのため最も最後に評価された式の結果がプログラムの結果となります。
+          OCamlではイディオムとして、\codem{let () = ...}というUnit型の値へのパターンマッチで記述し、スタート地点とする場合があります。
+          これは、プログラムの実行によって戻り値を返すのではなく、副作用によって動作することを示すためです。
+        }
+      >
+    >
+    +subsection{ライブラリの利用}<
+      +p{
+        % http://ocamlverse.net/content/quickstart_ocaml_project_dune.html Libraries
+        duneを利用して作成したプロジェクトでは、libディレクトリで様々なモジュールを管理できます。
+        ここでは試験的な利用を目的としたMathモジュールを作成する例を示します。
+        エディタ等で\codem{lib/math.ml}というファイルを新規作成し、以下の内容を入力し保存してください。
+  
+        \d-code(```
+        let plus x y = x + y
+        let minus x y = x - y
+        ```);%
+  
+        作成語のlib/及びファイルは以下のようになっています。
+        \d-code(```
+        % ls lib/
+        dune  math.ml
+  
+        % cat lib/math.ml
+        let plus x y = x + y
+        let minus x y = x - y
+        ```);%
+  
+        デフォルトでは、ライブラリ名はプロジェクト名（\<project_name\>）が割り当てられます。
+        \d-code(```
+        % cat lib/dune
+        (library
+         (name my_web_app))
+        ```);%
+  
+        このライブラリ名を指定する設定をbin/duneに記述することで、bin/以下のファイル群からライブラリを利用できます。
+        \d-code(```
+        % cat bin/dune
+        (executable
+         (public_name my_web_app)
+         (name main)
+         (libraries my_web_app))
+        ```);%
+  
+        % https://cs3110.github.io/textbook/chapters/modules/toplevel.html#dune
+        \codem{(libraries my_web_app)}が利用するライブラリを宣言している箇所です。
+        lib/duneのライブラリ名とbin/duneの利用するライブラリが一致しているため、
+        bin/以下のファイル群から利用できることが分かります。
+      }
+      +p{
+        bin/main.mlを以下の内容に書き換え、lib/math.mlの関数を利用してみます。
+
+        \d-code(```
+        let () =
+          let open My_web_app in
+          let result1 = Math.plus 2 3 in
+          let result2 = Math.minus 10 5 in
+          Printf.printf "Result: %d, %d\n" result1 result2
+        ```);%
+
+        lib/duneによって、lib/以下のモジュールは\codem{My_web_app}モジュールに集約されます。
+        また、OCamlはファイル単位でモジュールとなるためlib/math.mlは\codem{My_web_app.Math}となります。
+        しかし、本プロジェクトではMy_web_appを参照することは明らかであるため、\codem{let open My_web_app}によって、
+        当該スコープでMy_web_appを省略できます。
+        つまり、本来はMy_web_app.Mathと書く必要があったところをMath.plusやMath.minusで呼び出せるようになります。
+
+        下記コマンドを実行し、main.mlを実行します。
+        \d-code(```
+        % dune exec ./bin/main.exe
+        Result: 5, 5
+        ```);%
+      }
+    >
+  >
   +section?:(`Multiple files and Modules`){ファイル分割とモジュール}<
     +p{
-      % https://dev.realworldocaml.org/files-modules-and-programs.html
-      ファイル分割 本文。
+      % https://dev.realworldocaml.org/files-modules-and-programs.html - Multifile Programs and Modules
+      % これは改めて説明不要かな
+
+      % https://dev.realworldocaml.org/files-modules-and-programs.html - Signatures and Abstract Types
+      
     }
   >
 >

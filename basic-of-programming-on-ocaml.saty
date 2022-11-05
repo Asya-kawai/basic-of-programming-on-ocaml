@@ -39,5 +39,5 @@ document (|
   +chapter?:(`Function arguments`){関数の引数}<#function-arguments;>
   +chapter?:(`Records and variants`){その他のデータと型}<#records-and-variants;>
   +chapter?:(`Error handling`){エラーハンドリング}<#error-handling;>
-  %+chapter?:(`Multiple files and modules`){ファイル分割とモジュール}<#multiple-files-and-modules;>
+  +chapter?:(`Multiple files and modules`){ファイル分割とモジュール}<#multiple-files-and-modules;>
 >
