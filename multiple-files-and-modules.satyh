@@ -32,7 +32,7 @@ let multiple-files-and-modules = '<
 
       \codem{\<module\>}はモジュール名を表し、\codem{\<body\>}はモジュール本体を表します。
       モジュール本体にはモジュール固有の変数や関数を定義します。
-      モジュールの書き方をEBNFで表すと以下のようになります。
+      モジュール定義をEBNFで表すと以下のようになります。
 
       % https://v2.ocaml.org/manual/modules.html#s%3Amodule-expr
       % https://v2.ocaml.org/manual/modules.html#sss:mexpr-module-defs
@@ -97,7 +97,10 @@ let multiple-files-and-modules = '<
       % プログラミングの基礎 第19章 モジュールインターフェース：シグネチャ
       % 抽象データ型をここで説明する
       % https://dev.realworldocaml.org/files-modules-and-programs.html - Signatures and Abstract Types
-      シグネチャとは、モジュールがどのような変数や関数等を持つか、といったモジュールのインタフェースを示します。
+      シグネチャとは、モジュールがどのような変数や関数等を持つか、といったモジュールのインターフェースを示します\footnote{
+        % https://dev.realworldocaml.org/files-modules-and-programs.html - Signatures and Abstract Types
+        OCamlでは、インターフェース、シグネチャ、モジュールタイプは全て同じ意味で扱われます。
+      }。
       モジュールを定義するとシグネチャも自動で生成されます。
       しかし、モジュール内でしか利用しない変数や関数といった、モジュールの利用者に公開しなくても良い情報を含む場合があります。
       このようにモジュールが提供するべき変数や関数等だけを公開し、それ以外を隠蔽するのがシグネチャです。
@@ -112,7 +115,9 @@ let multiple-files-and-modules = '<
 
       \codem{\<signature\>}はシグネチャ名を表し、\codem{\<body\>}はシグネチャ本体を表します。
       シグネチャ本体にはモジュールで利用する型、変数の型、関数の型等を定義します。
-      EBNFで表すと以下のようになります。
+      EBNFで表すと以下のようになります\footnote{
+        分かりやすさのため簡略化したEBNFを記載しています。
+      }。
 
       % https://v2.ocaml.org/manual/modtypes.html#hevea_manual.kwd150
       % シグネチャ名の参考に。https://v2.ocaml.org/manual/names.html#modtype-path
@@ -143,7 +148,7 @@ let multiple-files-and-modules = '<
       \d-code(```
       utop # module type Mymath_t = sig
         type t
-        val from_int : int -> t
+        val of_int : int -> t
         val plus : t -> t -> t
         val minus : t -> t -> t
         val to_int : t -> int
@@ -151,10 +156,10 @@ let multiple-files-and-modules = '<
       module type Mymath_t =
         sig
           type t
-          val from_int : int -> t
-          val to_int : t -> int
+          val of_int : int -> t
           val plus : t -> t -> t
           val minus : t -> t -> t
+          val to_int : t -> int
         end
       ```);%
 
@@ -175,7 +180,7 @@ let multiple-files-and-modules = '<
       }。
 
       Mymath_tシグネチャは型tを利用するいくつかの関数も提供します。
-      int型の値を受け取ってt型に変換する関数\codem{from_int}、その逆でt型の値を取ってint型に変換する関数\codem{to_int}、
+      int型の値を受け取ってt型に変換する関数\codem{of_int}、その逆でt型の値を取ってint型に変換する関数\codem{to_int}、
       t型の値を2つ取ってその可算結果を返す関数plus、t型の値を2つ取ってその減算結果を返す関数minusを提供します。
     }
     +p{
@@ -193,10 +198,10 @@ let multiple-files-and-modules = '<
       \d-code(```
       utop # module Mymath : Mymath_t = struct
         type t = int
-        let from_int x = (x : t)
-        let to_int x = x
+        let of_int x = x
         let plus x y = x + y
         let minus x y = x - y
+        let to_int x = x
       end ;;
       module Mymath : Mymath_t
       ```);%
@@ -204,15 +209,15 @@ let multiple-files-and-modules = '<
       これを用いて可算や減算を行うには以下のように実行します。
 
       \d-code(```
-      utop # Mymath.from_int 1 ;;
+      utop # Mymath.of_int 1 ;;
       - : Mymath.t = <abstr>
 
-      utop # Mymath.to_int (Mymath.from_int 2) ;;
+      utop # Mymath.to_int (Mymath.of_int 2) ;;
       - : int = 2
 
       utop # let result =
-        let three = Mymath.from_int 3 in
-        let four = Mymath.from_int 4 in
+        let three = Mymath.of_int 3 in
+        let four = Mymath.of_int 4 in
         Mymath.plus three four ;;
       val result : Mymath.t = <abstr>
 
@@ -220,8 +225,8 @@ let multiple-files-and-modules = '<
       - : int = 7
 
       utop # let result =
-        let three = Mymath.from_int 3 in
-        let four = Mymath.from_int 4 in
+        let three = Mymath.of_int 3 in
+        let four = Mymath.of_int 4 in
         Mymath.minus three four ;;
       val result : Mymath.t = <abstr>
 
@@ -248,21 +253,21 @@ let multiple-files-and-modules = '<
       \d-code(```
       utop # module Mymath : sig
         type t
-        val from_int : int -> t
+        val of_int : int -> t
         val plus : t -> t -> t
         val minus : t -> t -> t
         val to_int : t -> int
       end = struct
         type t = int
-        let from_int x = (x : t)
-        let to_int x = x
+        let of_int x = x
         let plus x y = x + y
         let minus x y = x - y
+        let to_int x = x
       end ;;
       module Mymath :
         sig
           type t
-          val from_int : int -> t
+          val of_int : int -> t
           val plus : t -> t -> t
           val minus : t -> t -> t
           val to_int : t -> int
@@ -270,6 +275,337 @@ let multiple-files-and-modules = '<
       ```);%
     }
   >
+  +section?:(`Nested modules`){ネストしたモジュール}<
+    +p{
+      % https://dev.realworldocaml.org/files-modules-and-programs.html - Nested Modules
+      \ref-section(`Modules`);のEBNFから分かるように、モジュール内にモジュールを定義することもできます。
+      つまりモジュールはネストが可能です。
+
+      ネストしたモジュールの例を以下に示します。
+      % https://cs3110.github.io/textbook/chapters/modules/modules.html
+      \d-code(```
+      utop # module A = struct
+        let a = "a"
+        module B = struct
+          let one = 1
+        end
+      end ;;
+      module A : sig val a : string module B : sig val one : int end end
+
+      utop # A.a ;;
+      - : string = "a"
+
+      utop # A.B.one ;;
+      - : int = 1
+      ```);%
+
+      上記の例は、モジュールA内にモジュールBを定義しています。
+      モジュールB内の変数oneを利用するには、A.B.oneのようにドット（.）でつなぎます。
+    }
+    +p{
+      % https://dev.realworldocaml.org/files-modules-and-programs.html - Nested Modules
+      より実用的な例としてID管理をあげます。
+      システムでユーザデータやアイテムデータ等を扱う場合、IDを持つことがあります。
+      これらのIDをプログラムで構造的に管理するために、IDに関する操作をまとめたシグネチャ（IDシグネチャ）を定義したいと仮定します。
+      このIDシグネチャをユーザとアイテムに関する操作を定義したモジュール（ユーザモジュール、アイテムモジュール）に適用し、ユーザモジュールとアイテムモジュールがIDを管理できるようにする例を以下に示します。
+
+      \d-code(```
+      utop # module type ID_t = sig
+        type t
+        val of_string : string -> t
+        val to_string : t -> string
+      end ;;
+      module type ID_t =
+        sig type t val of_string : string -> t val to_string : t -> string end
+
+      utop # module User = struct
+        module Id : ID_t = struct
+          type t = string
+          let of_string x = x
+          let to_string x = x
+        end
+      end ;;
+      module User : sig module Id : ID_t end
+
+      utop # module Item = struct
+        module Id : ID_t = struct
+          type t = string
+          let of_string x = x
+          let to_string x = x
+        end
+      end ;;
+      module Item : sig module Id : ID_t end
+      ```);%
+
+      IDを管理するためのID_tシグネチャは、モジュールの型tを持ち、
+      文字列を受け取りt型として返す関数of_stringの型と、t型を受け取り文字列に変換して返す関数to_stringの型が定義されています。
+      次に、Userモジュール及びItemモジュールにネストされたIdモジュールに対してID_tシグネチャを適用しています。
+      ネストされたIdモジュールは、ID_tシグネチャによってt型の実際の型（ここではstring型）が隠蔽されるため、
+      User.Id.tとItem.Id.tがたとえ同じ文字列を持つIDであっても、型が異なるため一致することはありません。
+
+      \d-code(```
+      utop # let user_id = User.Id.of_string "abc" ;;
+      val user_id : User.Id.t = <abstr>
+
+      utop # let item_id = Item.Id.of_string "abc" ;;
+      val item_id : Item.Id.t = <abstr>
+
+      utop # user_id = item_id ;;
+      Error: This expression has type Item.Id.t
+             but an expression was expected of type User.Id.t
+      ```);%
+
+      % https://dev.realworldocaml.org/files-modules-and-programs.html - Nested Modules
+      このように内部的には同じ文字列で表現されるIDであっても、モジュールによって異なるIDと識別されるため、
+      異なる種類のIDを混同してしまうようなミスを事前に防げます。
+    }
+    +subsection?:(`Opening modules`){モジュールの展開}<
+      +p{
+        % プログラミングの基礎 第20章 20.6 Open文
+        % https://dev.realworldocaml.org/files-modules-and-programs.html = Opening Modules
+        モジュールがネストしている場合、毎回モジュール名を書くのは手間です。
+        その場合、\codem{open}キーワードを用いてモジュール名を省略できます\footnote{
+          % https://cs3110.github.io/textbook/chapters/modules/modules.html
+          具体的には、openキーワードによってモジュール内に定義されたものを現在のスコープに展開します。
+        }。
+        openを利用する構文は以下のとおりです。
+        % プログラミングの基礎 第20章 20.6 Open文
+        \d-code(```
+        open <module>
+        ```);%
+
+        \<module\>は展開したいモジュール名を表します。
+        これを用いた例を以下に示します。
+
+        \d-code(```
+        utop # module A = struct
+          module B = struct
+            let c = "c"
+          end
+        end ;;
+        module A : sig module B : sig val c : string end end
+
+        utop # A.B.c ;;
+        - : string = "c"
+
+        utop # open A.B ;;
+        utop # c ;;
+        - : string = "c"
+
+        utop # open A ;;
+        utop # B.c ;;
+        - : string = "c"
+
+        utop # open B ;;
+        utop # c ;;
+        - : string = "c"
+        ```);%
+
+        モジュールAはモジュールBを内包し、モジュールBにはcという変数が定義されていることを示しています。
+        モジュール名を省略しない場合、A.B.cのように呼び出す必要がありました。
+        \codem{open A.B}のように指定することでモジュール内に定義された変数（ここではc）等をそのまま記述できます。
+        また\codem{open A}、\codem{open B}のように、モジュール名を個別に指定することも可能です\footnote{
+          だだし、open Bはopen Aの後でしか呼び出せません。
+        }。        
+      }
+      +p{
+        % https://dev.realworldocaml.org/files-modules-and-programs.html - Open Modules Rarely
+        だだし、openするスコープは最小限に留めるのがベストプラクティスとされています。
+        % https://dev.realworldocaml.org/files-modules-and-programs.html - Prefer Local Opens
+        その方法として\dfn{ローカルオープン}があり、
+        これはオープンの範囲（モジュール名の省略できる範囲）を任意の式に制限するものです。
+        ローカルオープンはEBNFで以下のように表されます。
+        \d-code(```
+        <expr>        ::= ...
+                        | <local-open>
+
+        <local-open>  ::= let open <module-path> in <expr>
+
+        <module-path> ::= <module-name> { .<module-name> }
+        ```);%
+
+        上記の構文は次のルールを表しています。
+        \listing{
+          * ローカルオープンは式です
+          * ローカルオープンはletキーワードと併用します
+          * オープン対象のモジュールは、1つ以上のモジュール名（複数の場合はドット（.）でつなげる）を取ります
+        }%
+
+        % https://dev.realworldocaml.org/files-modules-and-programs.html - Prefer Local Opens
+        % https://v2.ocaml.org/manual/expr.html#sss:local-opens
+        % https://cs3110.github.io/textbook/chapters/modules/modules.html - Limiting the Scope of Open.
+        以下にローカルオープンを利用した例を示します。
+        \d-code(```
+        utop # module Mymath : sig
+          type t
+          val of_int : int -> t
+          val plus : t -> t -> t
+          val minus : t -> t -> t
+          val to_int : t -> int
+        end = struct
+          type t = int
+          let of_int x = x
+          let to_int x = x
+          let plus x y = x + y
+          let minus x y = x - y
+        end ;;
+        module Mymath :
+          sig
+            type t
+            val of_int : int -> t
+            val plus : t -> t -> t
+            val minus : t -> t -> t
+            val to_int : t -> int
+          end
+
+        utop # let x = 
+          let open Mymath in
+          plus (of_int 2) (of_int 3) ;;
+        val x : Mymath.t = <abstr>
+
+        utop # Mymath.to_int x ;;
+        - : int = 5
+        ```);%
+
+        上記は、変数xの式内のみにMymathモジュールを展開しています。
+        式内でのみMymathを省略して関数plusや関数of_intを呼び出していることが分かります。
+        そのため、以下のように変数xの外ではMymathを省略して呼び出せません。
+
+        \d-code(```
+        utop # to_int x ;;
+        Error: Unbound value to_int
+        ```);%
+      }
+    >
+    % https://dev.realworldocaml.org/files-modules-and-programs.html - Using Module Shortcuts Instead
+    % Using Module Shortcuts insteadは不要かな
+  >
+  +section?:(`Including modules`){モジュールの拡張}<
+    +p{
+      % https://dev.realworldocaml.org/files-modules-and-programs.html - Including Modules
+      既存のシグネチャ及びモジュールに変数や関数等を新たに追加することも可能です。
+      これは\codem{include}キーワードを用いて行います。
+      includeキーワードを用いてシグネチャを拡張する構文をEBNFで表すと以下のようになります\footnote{
+        includeキーワードの用途のみを示しています。
+        完全なEBNFではありません。
+      }。
+
+      % https://v2.ocaml.org/manual/modtypes.html#module-type
+      \d-code(```
+      <module-type>   ::= ...
+                        | sig { <specification> [;;] } end
+                        | ...
+
+      <specification> ::= ...       
+                        | include <module-type>
+                        | ...
+
+      <module-type>   ::= ...
+                        | (a..zA..Z) { a..zA..Z | 0..9 | _ | ' }
+                        | ...
+      ```);%
+
+      上記から分かるとおり、includeキーワードはsig〜end内に記述できます。
+      includeを用いてシグネチャを拡張する例を以下に示します。
+
+      \d-code(```
+      utop # module type ID_t = sig
+        type t
+        val of_string : string -> t
+        val to_string : t -> string
+      end ;;
+      module type ID_t =
+        sig type t val of_string : string -> t val to_string : t -> string end
+
+      utop # module type IDv2_t = sig
+        include ID_t
+        val extend_value : string
+      end ;;
+      module type IDv2_t =
+        sig
+          type t
+          val of_string : string -> t
+          val to_string : t -> string
+          val extend_value : string
+        end
+      ```);%
+
+      上記は、シグネチャID_tを拡張するシグネチャ\codem{IDv2_t}を定義しています。
+      ID_tに定義された関数がIDv2_tにも含まれていることが分かります。
+    }
+    +p{
+      また、includeキーワードを用いてモジュールを拡張する構文をEBNFで表すと以下のようになります\footnote{
+        シグネチャ同様にincludeキーワードの用途のみを示しています。
+      }。
+
+      % https://v2.ocaml.org/manual/modules.html#module-expr
+      \d-code(```
+      <module-expr>  ::= <module-path>
+                       | struct [ <module-items> ] end
+                       | <module-expr> ( <module-expr> )
+                       | ( <module-expr> : <module-type> )
+
+      <module-items> ::= { ;; }
+                         ( <definition> | <expr> ) { { ;; }
+                           ( <definition> | <expr> ) }
+                         { ;; }
+
+      <definition>   ::= ...
+                       | include <module-expr>
+                       | ...
+
+      <module-path> ::= <module-name> { .<module-name> } 
+
+      <module-name>  ::= (A..Z) { a..zA..Z | 0..9 | _ | ' }
+      ```);%
+
+      上記から分かるとおり、includeキーワードはstruct〜end内に記述できます。
+      includeを用いてモジュールを拡張する例を以下に示します。
+
+      \d-code(```
+      utop # module Id : ID_t = struct
+        type t = string
+        let of_string x = x
+        let to_string x = x
+      end ;;
+      module Id : ID_t
+
+      utop # module A = struct
+        include Id
+        let extend_value = "A"
+      end ;;
+      module A :
+        sig
+          type t = Id.t
+          val of_string : string -> t
+          val to_string : t -> string
+          val extend_value : string
+        end
+
+      utop # A.of_string ;;
+      - : string -> A.t = <fun>
+      utop # A.to_string ;;
+      - : A.t -> string = <fun>
+      utop # A.extend_value ;;
+      - : string = "A"
+      ```);%
+
+      上記は、includeによってIDモジュールの関数を持つAモジュールを作成しています。
+      また、Aモジュールでは新たにextend_valueという変数も持ちます。
+      このようにincludeを用いて既存のモジュールを拡張するモジュールを作成できます。
+    }
+  >
+  +section?:(`Functors`){ファンクタ}<
+    +p{
+      % https://dev.realworldocaml.org/functors.html - Functors
+    }
+  >
+  % +section?:(`First class modules`){第一級モジュール}<
+  %   +p{}
+  % >
+  % +section?:(){カプセル化と情報隠蔽}<
+  %   % https://cs3110.github.io/textbook/chapters/modules/encapsulation.html
+  % >
   +section?:(`Using dune`){Duneの利用}<
     +p{
       % http://ocamlverse.net/content/quickstart_ocaml_project_dune.html
