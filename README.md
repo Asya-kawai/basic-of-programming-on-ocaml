@@ -10,6 +10,12 @@ satysfi basic-of-programming-on-ocaml.saty -o basic-of-programming-on-ocaml.pdf
 
 You can open and read `basic-of-programming-on-ocaml.pdf`.
 
+## Cover
+
+* `./img/hyoshi.jpg`
+
+satysfiはpngもサポートするらしいが・・・まだ対応していないようだ。
+
 ## Table of contents
 
 * はじめに
@@ -96,6 +102,3 @@ You can open and read `basic-of-programming-on-ocaml.pdf`.
 ## その他
 
 * 章内にサブセクションを設け、モジュールを利用してより実践的な利用方法について解説する
-
-
-

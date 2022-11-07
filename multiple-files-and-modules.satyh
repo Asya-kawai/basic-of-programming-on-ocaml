@@ -21,6 +21,7 @@ let multiple-files-and-modules = '<
   +section?:(`Modules`){モジュール}<
     +p{
       % プログラミングの基礎 第19章 モジュール
+      % https://v2.ocaml.org/manual/moduleexamples.html
       モジュールとは、プログラムの関心や責務に応じてコードを分割またはまとめたものです。
       モジュールを定義するには以下の構文を利用します。
 
@@ -32,6 +33,13 @@ let multiple-files-and-modules = '<
 
       \codem{\<module\>}はモジュール名を表し、\codem{\<body\>}はモジュール本体を表します。
       モジュール本体にはモジュール固有の変数や関数を定義します。
+
+      % https://v2.ocaml.org/manual/moduleexamples.html
+      関連する変数や関数をまとめることを\dfn{パッケージング}と言い、
+      このようなまとまり（モジュール本体）をパッケージまたは\dfn{構造体}と言います。
+      構造体は\codem{sturct \<body\> end}で表されます。
+      このように構造体にモジュール名を付けることを\dfn{モジュールバインディング}と言います。
+
       モジュール定義をEBNFで表すと以下のようになります。
 
       % https://v2.ocaml.org/manual/modules.html#s%3Amodule-expr
@@ -590,14 +598,126 @@ let multiple-files-and-modules = '<
       - : string = "A"
       ```);%
 
-      上記は、includeによってIDモジュールの関数を持つAモジュールを作成しています。
+      上記は、includeによってIDモジュールの関数群を持つAモジュールを作成しています。
       また、Aモジュールでは新たにextend_valueという変数も持ちます。
       このようにincludeを用いて既存のモジュールを拡張するモジュールを作成できます。
     }
   >
   +section?:(`Functors`){ファンクタ}<
     +p{
+      % https://cs3110.github.io/textbook/chapters/modules/functors.html
+      % https://v2.ocaml.org/manual/moduleexamples.html#s:functors
+      \ref-section(`Including modules`);ではincludeキーワードによってモジュールの拡張を行いました。
+      しかしincludeの場合は、拡張先のモジュールで変数や関数を定義（パラメータ化）する必要があります。
+      \dfn{ファンクタ}はパラメータ化を行うための機能であり、よく「モジュールからモジュールへの"関数"」と表現されます。
+      なお、ここで"関数"と表現しているのは、概念としては関数ですが
+      \ref-section(`Function`);で説明した関数とは異なり、値から値への関数と同様の記述ができないためです。
+      % https://cs3110.github.io/textbook/chapters/modules/functors.html
       % https://dev.realworldocaml.org/functors.html - Functors
+      % ファンクタのメリットを最後に書く
+      ファンクタの例を以下に示します。
+      \d-code(```
+      utop # module type X = sig
+        val x : int
+      end ;;
+      module type X = sig val x : int end
+
+      utop # module IncreaseX (M : X) : X = struct
+        let x = M.x + 1
+      end ;;
+      module IncreaseX : functor (M : X) -> X
+
+      utop # module A = struct
+        let x = 0
+      end ;;
+      module A : sig val x : int end
+
+      utop # module B = IncreaseX (A) ;;
+      module B : sig val x : int end
+
+      utop # A.x ;;
+      - : int = 0
+
+      utop # B.x ;;
+      - : int = 1
+      ```);%
+
+      上記は、\codem{IncreaseX}というファンクタを定義しています。
+      IncreaseXはX型のモジュールMを受け取り、M.x + 1という変数xを持つX型のモジュールを返します。
+      % https://dev.realworldocaml.org/functors.html - A Trivial Example
+      通常の関数と異なり、ファンクタを定義する場合は必ず引数の型を明示する必要があります。
+      なお戻り値の型は必須ではありませんが、戻り値の型を省略した場合は戻り値がX型のモジュールではなく、
+      モジュール定義から推論されたシグネチャがそのまま出力されます。
+      戻り値を省略した場合の出力例を以下に示します。
+
+      \d-code(```
+      utop # module IncreaseX (M : X) = struct
+        let x = M.x + 1
+      end ;;
+      module IncreaseX : functor (M : X) -> sig val x : int end
+      ```);%
+
+      % https://cs3110.github.io/textbook/chapters/modules/functors.html
+      %また、IncreaseXはパラメータ化された構造体と考えるともでき、通常の関数と同じように引数によってモジュール内の変数や関数等の値を変えることができます。
+      また、上記の\codem{module B = IncreaseX (A)}のとおり、IncreaseXは通常の関数と同じように適用できます。
+      例から分かるとおりA.xが0であることから、B.xは\codem{let x = M.x + 1 = A.x + 1 = 0 + 1 = 1}となります。
+    }
+    +p{
+      % https://dev.realworldocaml.org/functors.html
+      IncreaseXファンクタは、IncreaseXが引数に取る型（ここではXシグネチャ）を満たす任意のモジュールに適用できます。
+      この時、IncreaseXが引数に取る型と一致しないものは無視されます。
+      その例を以下に示します。
+
+      \d-code(```
+      utop # module C = struct
+        let x = 2
+        let y = "two"
+      end ;;
+      module C : sig val x : int val y : string end
+
+      utop # module D = IncreaseX(C) ;;
+      module D : sig val x : int end
+
+      utop # D.x ;;
+      - : int = 3
+
+      utop # D.y ;;
+      Error: Unbound value D.y
+      ```);%
+
+      上記の例は、シグネチャXに含まれない変数yを持つCモジュールを定義しています。
+      これをIncreaseXに適用し、Dモジュールを定義します。
+      Dモジュールは変数xを持ち、この変数の値はC.xに+1した3です。
+      しかしファンクタが返すシグネチャXには変数yが含まれないため無視され、結果としてDモジュールに変数yは定義されません。
+    }
+    +p{
+      % https://cs3110.github.io/textbook/chapters/modules/functors.html
+      ファンクタは引数に取ったモジュールと異なるモジュールを返すことも可能です。
+      以下に引数に取るモジュールと返すモジュールが異なるファンクタの例を示します。
+      \d-code(```
+      utop # module AddX (M : X) = struct
+        let add y = M.x + y
+      end ;;
+      module AddX : functor (M : X) -> sig val add : int -> int end
+
+      utop # module E = AddX (struct let x = 10 end) ;;
+      module E : sig val add : int -> int end
+
+      utop # E.add 3 ;;
+      - : int = 13
+
+      utop # E.x ;;
+      Error: Unbound value E.x
+      ```);%
+
+      上記の例は、AddXというファンクタを定義しています。
+      AddXファンクタはX型のモジュールMを受け取り、int型の引数を1つ受け取ってM.x + yを返す関数addを持つシグネチャ（を満たすモジュール）を返します。
+      AddXに無名のモジュール\codem{struct let x = 10 end}を適用したものをEモジュールとして定義します。
+      上記の例から分かるとおり、Eモジュールはファンクタによって関数addを持ちます。
+      なお、ファンクタが返すシグネチャは変数xを持たないため、Eモジュールに変数xは定義されません。
+    }
+    +p{
+      % https://v2.ocaml.org/manual/moduleexamples.html#s%3Afunctors
     }
   >
   % +section?:(`First class modules`){第一級モジュール}<
