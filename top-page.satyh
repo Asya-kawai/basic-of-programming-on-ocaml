@@ -27,8 +27,8 @@ end = struct
     inline-frame-inner pads deco
       (embed-block-bottom ctx widAd (fun ctx -> (
           read-block ctx '<
-            +p{物理書籍が以下から入手できます：}
-            +centering{\url?:(`https://booth.pm/ja/items/1046747`){https://booth.pm/ja/items/1046747}}
+            +p{物理書籍は以下から入手できます：}
+            +centering{\url?:(`https://aintek.booth.pm/`){https://aintek.booth.pm/}}
           >
       )))
 

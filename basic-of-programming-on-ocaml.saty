@@ -17,13 +17,13 @@
 
 % Main.
 document (|
-  title = {OCamlで学ぶプログラミングの基礎};
-  author = {Toshiki KAWAI};
+  title = {関数型言語で学ぶプログラミングの基本};
+  author = {Asya-kawai(\@asya_aoi1049)};
   preface = preface;
   top-page = Some(top-page);
   copyright-page = (|
-    title = {OCamlで学ぶプログラミングの基礎（Web公開版 第1版）};
-    author = {Toshiki KAWAI\hskip(5cm);};
+    title = {関数型言語で学ぶプログラミングの基本};
+    author = {Asya-kawai(\@asya_aoi1049)\hskip(5cm);};
     date = {2022/11/09};
     contact = {\url{kawai-toshiki\@aintek.xyz}};
     printed-by = None;
