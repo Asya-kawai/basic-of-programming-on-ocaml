@@ -5,6 +5,7 @@
 @import: bib
 
 % Import chapter files.
+@import: installing-ocaml
 @import: basic-data-and-types
 @import: variables-and-functions
 @import: conditional-branch
@@ -12,8 +13,9 @@
 @import: recursive-functions
 @import: function-arguments
 @import: records-and-variants
+@import: tree-and-algorithms
 @import: error-handling
-@import: multiple-files-and-modules
+@import: modules
 
 % Main.
 document (|
@@ -31,6 +33,7 @@ document (|
   bibliography = bibliography;
 
 |) '<
+  +chapter?:(`Installing ocaml`){OCamlのインストール}<#installing-ocaml;>
   +chapter?:(`Basic data and types`){基本的なデータと型}<#basic-data-and-types;>
   +chapter?:(`Variables and functions`){変数と関数}<#variables-and-functions;>
   +chapter?:(`Conditional branch`){条件分岐}<#conditional-branch;>
@@ -38,6 +41,7 @@ document (|
   +chapter?:(`Recursive functions`){再帰}<#recursive-functions;>
   +chapter?:(`Function arguments`){関数の引数}<#function-arguments;>
   +chapter?:(`Records and variants`){その他のデータと型}<#records-and-variants;>
+  +chapter?:(`Tree and algorithms`){木構造とアルゴリズム}<#tree-and-algorithms;>
   +chapter?:(`Error handling`){エラーハンドリング}<#error-handling;>
-  +chapter?:(`Multiple files and modules`){ファイル分割とモジュール}<#multiple-files-and-modules;>
+  +chapter?:(`Modules`){モジュールとファイル分割}<#modules;>
 >

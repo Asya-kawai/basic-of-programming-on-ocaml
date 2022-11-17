@@ -30,7 +30,7 @@ let basic-data-and-types = '<
     本章では、プログラミングの基本となるデータとその型を説明します。
 
     本章を読み進めるにあたって、初学者の方は、
-    お手元のインタプリタ（例えば、\codem{utop}コマンドや\codem{ocaml}コマンド）
+    お手元のインタプリタ（例えば、utopコマンドやocamlコマンド等）
     を利用して、確かめながら読み進めてください。
   }
   +section{整数}<
@@ -384,6 +384,39 @@ let basic-data-and-types = '<
       ```);%
 
       しかしながら、これはプログラムの読み手にとって分かりづらいと考えられるため、避けたほうが無難でしょう。
+    }
+  >
+  +section?:(`Unit`){ユニット値}<
+    +p{
+      % https://en.wikipedia.org/wiki/Unit_type
+      % https://ocaml.jp/?OCaml%E5%85%A5%E9%96%80%281%29 - 基本データ型
+      % https://www.fos.kuis.kyoto-u.ac.jp/~igarashi/class/isle4-05w/mltext/ocaml003.html
+      % https://www2.lib.uchicago.edu/keith/ocaml-class/data.html#unit
+      \dfn{ユニット値}は\codem{()}という値です。ユニット値は\codem{unit}という型で表現されます。
+      つまりユニット型には()という値のみ存在します。
+      % https://ja.wikipedia.org/wiki/%E5%89%AF%E4%BD%9C%E7%94%A8_(%E3%83%97%E3%83%AD%E3%82%B0%E3%83%A9%E3%83%A0)
+      ユニット値()は戻り値を返す必要がない場合や、\dfn{副作用}と呼ばれる「主たる計算（作用）以外の、何らかの状態を変化させる作用」を含む場合に、
+      その計算全体の戻り値をユニット値()とします。
+
+      \d-code(```
+      utop # () ;;
+      - : unit = ()
+      ```);%
+
+      ユニット値()を利用する例として、\dfn{標準出力}への印字といった、いわゆるI/O実行があげられます。
+      OCamlには標準出力に表示するためのモジュール及び関数があり、その1つが\codem{Printf.printf}です\footnote{
+        モジュール及び関数については後述します。
+        Printf.printfの詳細については割愛し、unitの使用例を紹介するに留めます。
+      }。
+      Printf.printfを用いて標準出力に文字列を表示する例を以下に示します。
+      \d-code(```
+      utop # Printf.printf "%s" "abcdefg\n" ;;
+      abcdefg
+      - : unit = ()
+      ```);%
+
+      インタプリタの出力は「直前（-）に入力した結果の型がunit型で、その値が()である」ことを意味します。
+      このように副作用を含むケースではユニット型を返します。
     }
   >
   +section?:(`Other data`){その他のデータと型}<

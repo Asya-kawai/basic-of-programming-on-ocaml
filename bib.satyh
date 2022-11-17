@@ -57,6 +57,12 @@ let bibliography = [
     url = `http://www.nct9.ne.jp/m_hiroi/func/ocaml.html`;
     year = 2020;
   |));
+  (`Dream`, WebSite(|
+    author = {| \@antron |};
+    title = {Dream};
+    url = `https://github.com/aantron/dream`;
+    year = 2022;
+  |));
   % 参考程度に見た。本文中での参照はなし。
   (`TaPL-ja`, Book(|
     author = {| Benjamin C. Pierce

@@ -351,6 +351,13 @@ let function-arguments = '<
       % https://cs3110.github.io/textbook/chapters/data/lists.html も参考になるかも
       なお、optionのように型を指定すると新しい型を返すものを\dfn{型コンストラクタ}と言います。
 
+      % https://twitter.com/zehnpaard/status/1590038412048109569?s=20&t=0Ucp3-kiHWmC25j4BBKGDw
+      % 型コンストラクタは、kindとも呼ばれ「（データ）型の型」と言われる。
+      % そう考えると型コンストラクタは「型を指定すると型を返すものであり、自身も型でもある」と言える。
+      % https://okmij.org/ftp/ML/higher-kind-poly.html
+      % だだしOCamlではこのようなkind（higher-kind）をサポートしないため、OCamlにおいては型コンストラクタは型ではない。
+      % 参考： https://zehnpaard.hatenablog.com/entry/2022/02/28/034206
+
       optionが型を生成する例を以下に示します。
 
       \d-code(```

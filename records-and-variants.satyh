@@ -8,328 +8,410 @@
 % https://cs3110.github.io/textbook/chapters/data/variants.html
 
 let records-and-variants = '<   
+  +p{
+    タプルのように構造を持つデータ型は他にもあります。
+    それが\dfn{レコード}と\dfn{バリアント}です。
+    本章では、構造内のデータに名前を付け識別する方法や複数のデータを1つの型で表現する手法について説明します。
+  }
+  +section?:(`Records`){レコード}<
     +p{
-      タプルのように構造を持つデータ型は他にもあります。
-      それが\dfn{レコード}と\dfn{バリアント}です。
-      本章では、構造内のデータに名前を付け識別する方法や複数のデータを1つの型で表現する手法について説明します。
-    }
-    +section?:(`Records`){レコード}<
-      +p{
-        % プログラミングの基礎 第8章 レコード
-        タプルでは要素の順序を意識する必要がありました。
-        しかし、扱うデータによっては要素の順番を意識する必要がなかったり、
-        そもそも要素の順番が一定でないデータもあります。
-        またタプルには、各要素の値が何を表しているかを示すような、要素に対する名称をつけることができませんでした。
-        そのような場合は、\dfn{レコード}を利用することで、
-        要素の順番を気にせず且つ要素に対する名称を与えることができます。
+      % プログラミングの基礎 第8章 レコード
+      タプルでは要素の順序を意識する必要がありました。
+      しかし、扱うデータによっては要素の順番を意識する必要がなかったり、
+      そもそも要素の順番が一定でないデータもあります。
+      またタプルには、各要素の値が何を表しているかを示すような、要素に対する名称をつけることができませんでした。
+      \dfn{レコード}を利用することで、要素の順番を気にせず且つ要素に対する名称を与えることができます。
 
-        % https://dev.realworldocaml.org/records.html - Records
-        レコードを利用するには、まずレコードの型を定義する必要があります。
-        レコードの新しい型を定義するには、以下の構文を利用します。
+      % https://dev.realworldocaml.org/records.html - Records
+      レコードを利用するには、まずレコードの型を定義する必要があります。
+      レコードの新しい型を定義するには、以下の構文を利用します。
 
-        \d-code(```
-          type <record> = {
-            <field> : <type> ;
-            ...
-          }
-        ```);%
+      \d-code(```
+        type <record> = {
+          <field> : <type> ;
+          ...
+        }
+      ```);%
 
-        上記の構文において、\codem{\<record\>}は定義する型名を表しています。
-        \codem{\<field\>}がレコードの要素名を表し、\codem{\<value\>}がその要素の値を表します。
-        % プログラミングの基礎 第8章 8.2レコードの構文
-        なお、レコードではこの要素のことを\dfn{フィールド}といいます。
-        カッコ（\{...\}）中の3つのドット（\codem{...}）は「後ろに\<field\> : \<type\> \;の形式で0個以上の別名フィールドを書いて良い」ことを示します\footnote{
-          \<type\>はintやstringといった型名を取ります。
-        }。
+      上記の構文において、\codem{\<record\>}は定義する型名を表しています。
+      \codem{\<field\>}がレコードの要素名を表し、\codem{\<value\>}がその要素の値を表します。
+      % プログラミングの基礎 第8章 8.2レコードの構文
+      なお、レコードではこの要素のことを\dfn{フィールド}といいます。
+      カッコ（\{...\}）中の3つのドット（\codem{...}）は「後ろに\<field\> : \<type\> \;の形式で0個以上の別名フィールドを書いて良い」ことを示します\footnote{
+        \<type\>はintやstringといった型名を取ります。
+      }。
 
-        % https://v2.ocaml.org/manual/patterns.html#pattern
-        レコードの構造をEBNFで表すと以下のようになります。
-        \d-code(```
-        <pattern> ::= ...
-                    | { <field> [:<typexpr>] [= <pattern>]
-                        {; field [:<typexpr>] [= <pattern>]} [; _] [;] }
-                    | ...
+      % https://v2.ocaml.org/manual/patterns.html#pattern
+      レコードの構造をEBNFで表すと以下のようになります。
+      \d-code(```
+      <pattern> ::= ...
+                  | { <field> [:<typexpr>] [= <pattern>]
+                      {; field [:<typexpr>] [= <pattern>]} [; _] [;] }
+                  | ...
 
-        <field>   ::= (a..z | _) { a..zA..Z | 0..9 | _ | ' }
-        ```);%
+      <field>   ::= (a..z | _) { a..zA..Z | 0..9 | _ | ' }
+      ```);%
 
-        上記の構文は次のルールを示しています。
-        \listing{
-          * レコードはカッコ（\{...\}）内に\<field\>シンボルを取ります
-          * レコードは1つ以上のフィールドを持ちます
-          * レコードはセミコロン（\;）で区切ります
-          * レコードの末尾のセミコロン（\;）は省略可能です
-        }%
+      上記の構文は次のルールを示しています。
+      \listing{
+        * レコードはカッコ（\{...\}）内に\<field\>シンボルを取ります
+        * レコードは1つ以上のフィールドを持ちます
+        * レコードはセミコロン（\;）で区切ります
+        * レコードの末尾のセミコロン（\;）は省略可能です
+      }%
 
-        上記から、レコードは以下のような表現が可能であることが分かります。
+      上記から、レコードは以下のような表現が可能であることが分かります。
 
-        \d-code(```
+      \d-code(```
+      utop # type profile = {
+        last_name: string;
+        first_name: string;
+        age: int
+      } ;;
+      type profile = { last_name : string; first_name : string; age : int; }
+
+      utop # { last_name = "KAWAI"; first_name = "Toshiki"; age = 28 } ;;
+      - : profile = {last_name = "KAWAI"; first_name = "Toshiki"; age = 28}
+      ```);%
+    
+      上記の例では、\codem{profile}というレコード型を定義し、
+      これは string型で表現される\codem{last_name}及び\codem{first_name}フィールドと、
+      int型で表現される\codem{age}フィールドから構成されます。
+
+      なお、フィールド名はその型定義の中で一意でなければなりません。
+      つまり重複するようなフィールド名を持つことはできません。
+      以下に、重複したフィールド名を定義しようとした際の例を示します。
+
+      \d-code(```
         utop # type profile = {
-          last_name: string;
-          first_name: string;
-          age: int
+          name : string ;
+          name : string ;
         } ;;
-        type profile = { last_name : string; first_name : string; age : int; }
+        Line 3, characters 2-6:
+        Error: Two labels are named name
+      ```);%
 
-        utop # { last_name = "KAWAI"; first_name = "Toshiki"; age = 28 } ;;
-        - : profile = {last_name = "KAWAI"; first_name = "Toshiki"; age = 28}
-        ```);%
-      
-        上記の例では、\codem{profile}というレコード型を定義し、
-        これは string型で表現される\codem{last_name}及び\codem{first_name}フィールドと、
-        int型で表現される\codem{age}フィールドから構成されます。
+      上記の例では、インタプリタの出力は「\codem{name}という名称が2つ存在する」旨のエラーが示されています。
+    }
+    % ここにもっと書く
+    % https://dev.realworldocaml.org/records.html を参考に。
+  >
+  +section?:(`Original types`){独自の型定義}<
+    +p{
+      レコード型に限らず、独自の型を定義する場合には\codem{type}キーワードを利用します。
+      独自の型を定義するには以下の構文を用います。
 
-        なお、フィールド名はその型定義の中で一意でなければなりません。
-        つまり重複するようなフィールド名を持つことはできません。
-        以下に、重複したフィールド名を定義しようとした際の例を示します。
+      \d-code(```
+        type <type> = <def>
+      ```);%
 
-        \d-code(```
-          utop # type profile = {
-            name : string ;
-            name : string ;
-          } ;;
-          Line 3, characters 2-6:
-          Error: Two labels are named name
-        ```);%
+      % プログラミングの基礎 第8章 8.3 ユーザによる型定義
+      \codem{\<type\>}は型名を表し、型名に対する\codem{\<def\>}は型定義を表します。
 
-        上記の例では、インタプリタの出力は「\codem{name}という名称が2つ存在する」旨のエラーが示されています。
-      }
-      % ここにもっと書く
-      % https://dev.realworldocaml.org/records.html を参考に。
+      % https://v2.ocaml.org/manual/types.html#typexpr
+      % Type definitions bind type constructors to data types: 
+      % https://cs3110.github.io/textbook/chapters/data/options.html
+      % Like list, we call option a type constructor: given a type, it produces a new type; but, it is not itself a type.
+      別の言い方をすれば、
+      型定義とは型コンストラクタ（\<type\>）をデータ型（\<def\>）に束縛することを意味します\footnote{
+        型を指定すると新しい型を返すものを型コンストラクタと言います。
+      }。
+
+      EBNFで表すと以下のようになります\footnote{
+        分かりやすさのため、一部の記号列を省略しています。
+      }。
+
+      % https://v2.ocaml.org/manual/typedecl.html#ss:typedefs
+      \d-code(```
+      <type-definition>  ::= type <typedef> { and <typedef> }
+      <typedef>          ::= ... <typeconstr-name> <type-information>
+      <type-information> ::= [<type-equation>] ...
+      <type-equation>    ::= = <typexpr>
+
+      <typeconstr-name>  ::= (a..z | _) { a..zA..Z | 0..9 | _ | ' }
+      ```);%
+
+      上記の構文は次のルールを表しています。
+      \listing{
+        * 型定義（\<type-definition\>）はtype \<typedef\>という構文で表現されます\footnote{
+            \<type-definition\>は、独自の型定義の構文\codem{type \<type\> = \<def\>}に該当します。
+          }
+        * \<typedef\>は\codem{型コンストラクタ名（\<typeconstr-name\>） = 型式（\<typexpr\>）}で表現できます\footnote{
+            \<typedef\>から「\<typeconstr-name\> \<type-information\>」ですが、\<type-information\>は\<type-equation\>であり、これは「= \<typexpr\>」と解釈されるため、このように表現できます。
+            型定義はこれ以外の表現も可能です。分かりやすさのため、他の表現方法は省略しています。
+          }
+        * 型コンストラクタ名（\<typeconstr-name\>）は、先頭小文字またはアンダースコア（_）で始まり、以降は小文字、大文字、0〜9の数字、アンダースコア（_）またはシングルクォート（'）が利用できます
+      }%
+
+      上記の構文から、次のように独自の型を定義可能です。
+
+      \d-code(```
+      utop # type my_int = int ;;
+      type my_int = int
+
+      utop # type my_string = string ;;
+      type my_string = string
+
+      utop # (1 : my_int) ;;
+      - : my_int = 1
+
+      utop # ("one" : my_string) ;;
+      - : my_string = "one"
+      ```);%
+
+      % https://cs3110.github.io/textbook/chapters/data/type_synonym.html
+      上記以外にも、複数の型を組み合わせて独自の型を定義できます。
+
+      \d-code(```
+      utop # type point = float * float ;;
+      type point = float * float
+
+      utop # type vector = float list ;;
+      type vector = float list
+
+      utop # type matrix = float list list ;;
+      type matrix = float list list
+
+      utop # (10., 20. : point) ;;
+      - : point = (10., 20.)
+
+      utop # ([1. ; 2.] : vector) ;;
+      - : vector = [1.; 2.]
+
+      utop # ([[1. ; 2.]; [3. ; 4.]] : matrix) ;;
+      - : matrix = [[1.; 2.]; [3.; 4.]]
+      ```);%
+
+      このように、既存の型に対して新しい型名を付けることを\dfn{型シノニム}と言います。
+      複雑なデータ型に分かりやすい名前を付けることでコードの可読性が向上します。
+    }
+  >
+  +section?:(`Variants`){バリアント}<
+    +p{
+      レコードは全てのフィールドが揃っている必要がありました。
+      つまり、たった1つでもフィールドの記述が漏れているとエラーとなってしまうのでした。
+      現実のプログラミングでは、いつも全てのフィールドが揃っているとは限りません。
+      そこで、複数のデータを1つのデータとして扱えると便利です。
+
+      \dfn{バリアント}は複数のデータを1つの型として扱うためのデータです。
+      この時のデータの型を\dfn{バリアント型}といいます。
+
+      OCamlにおけるバリアントの型を定義するための構文は以下の通りです。
+
+      % https://dev.realworldocaml.org/variants.html
+      \d-code(```
+        type <variant> =
+          | <Tag> [ of <type> [* <type>]... ]
+          | ...
+      ```);%
+
+      上記の構文は、コンストラクタを表す\codem{\<Tag\>}が、「または」を表すパイプ（\codem{\|}）でつながっています\footnote{
+        % https://cs3110.github.io/textbook/chapters/data/algebraic_data_types.html#variants-that-carry-data
+        バリアント型において、コンストラクタは\dfn{タグ}とも呼ばれます。
+      }。
+      つまり\codem{\<variant\>}はパイプ（\|）でつながったコンストラクタのいずれかを値として取ります。
+      \<Tag\>の先頭が大文字から始まっているのは、コンストラクタの先頭が大文字から始まる必要があることを表しています。
+      \codem{[...]}は0回以上の出現を表しており、「\<Tag\> of \<type\>」や「\<Tag\> of \<type_1\> \* ... \* \<type_n\>」のように定義できます。
+      バリアント型の定義をEBNFで表すと以下のようになります\footnote{
+        分かりやすさのため、バリアント型の定義に関する表現のみ記載しています。
+      }。
+
+      % https://v2.ocaml.org/manual/typedecl.html#ss:typedefs
+      % https://v2.ocaml.org/manual/names.html#constr-name
+      % https://v2.ocaml.org/manual/lex.html#capitalized-ident
+      \d-code(```
+      <type-definition>     ::= type <typedef> { and <typedef> }
+      <typedef>             ::= ... <typeconstr-name> <type-information>
+      <type-information>    ::= ... [<type-representation>]
+      <type-representation> ::= = [|] <contr-decl> { | <constr-decl> }
+                              | ...
+
+      <typeconstr-name>     ::= (a..z | _) { a..zA..Z | 0..9 | _ | ' }
+      <constr-decl>         ::= ( <constr-name> | [] | (::) ) [of <constr-args>]
+      <constr-args>         ::= <typexpr> [ * <typexpr> ]
+      <constr-name>         ::= (A..Z) { a..zA..Z | 0..9 | _ | ' }
+      ```);%
+
+      上記の構文は次のルールを表しています。
+      \listing{
+        * バリアント型の定義は、type \<typedef\>という構文で表現されます\footnote{
+          これは\ref-section(`Original types`);の「独自の型定義」と同じです。
+        }
+        * バリアント型の定義は「型コンストラクタ名（\<typeconstr-name\>） = \| \<constr-decl_1\> ... \| \<constr-decl_n\>」のように複数のデータコンストラクタ宣言（\<constr-decl\>）を持つことができます
+        * 型コンストラクタ名（\<typeconstr-name\>）は、先頭小文字またはアンダースコア（_）で始まり、以降は小文字、大文字、0〜9の数字、アンダースコア（_）またはシングルクォート（'）が利用できます\footnote{
+          これも\ref-section(`Original types`);の「独自の型定義」と同じです。
+        }
+        * データコンストラクタ宣言（\<constr-decl\>）は、単一のコンストラクタ名（\<constr-name\>）を取ることができます
+        * また\codem{コンストラクタ名（\<constr-name\>） of \<typexpr\> [ \* \<typexpr\> ]}のように、\codem{of}キーワードを用いてコンストラクタ名に引数を与え型情報を付与できます
+        * コンストラクタ名（\<constr-name\>）は、先頭大文字で始まり、以降は小文字、大文字、0〜9の数字、アンダースコア（_）またはシングルクォート（'）が利用できます
+      }%
+
+      バリアント型の例を以下に示します。
+
+      % https://dev.realworldocaml.org/variants.html
+      \d-code(```
+        utop # type color =
+          | Black
+          | Blue
+          | Green
+          | Red
+          | White ;;
+        type color = Black | Blue | Green | Red | White
+      ```);%
+
+      上記は、バリアント型であるcolorを定義しています。
+      colorはデータコンストラクタとして、Black、Blue、Green、Red、Whiteを持ちます。
+      例えば、パターンマッチを用いてデータコンストラクタを整数や文字列に変換するといった処理が可能です。
+
+      \d-code(```
+      utop # let convert_to_int = function
+        | Black -> 0
+        | Blue -> 1
+        | Green -> 2
+        | Red -> 3
+        | White -> 4 ;;
+      val convert_to_int : color -> int = <fun>
+
+      utop # convert_to_int Black ;;
+      - : int = 0
+      utop # convert_to_int White ;;
+      - : int = 4
+      ```);%
+
+      また、\<Tag\> of \<type\> \| ...のように型情報を付与することも可能です。
+
+      \d-code(```
+      utop # type color =
+        | Black of int
+        | RGB of int * int * int
+        | White of int ;;
+      type color = Black of int | RGB of int * int * int | White of int
+
+      utop # Black 1 ;;
+      - : color = Black 
+      utop # RGB (1, 2, 3) ;;
+      - : color = RGB (1, 2, 3)
+      ```);%
+    }
+    +p{
+      % http://www.cs.tsukuba.ac.jp/~kam/lecture/fp2017/6.pdf 3 代数的データ型
+      % https://cs3110.github.io/textbook/chapters/data/algebraic_data_types.html#variants-that-carry-data
+      バリアント型は稀にいくつかの名称で呼ばれます。
+      例えば、バリアント型は\dfn{タグ付きユニオン（Tagged unions）}とも呼ばれます。
+      型が取りうるすべて全ての値が、コンストラクタが取る値の和集合であるためです。
+      例えば、color型が取りうる値をタグ付きユニオンの文脈で説明すると以下のようになります。
+      \listing{
+        * Blackでタグ付けされたint型の値または
+        * RGBでタグ付けされたint \* int \* intという値または
+        * Whiteでタグ付けされたint型の値
+      }%
+
+      また、バリアント型は\dfn{代数的データ型}とも呼ばれます。
+      つまりバリアント型は、または（\|）で区切られたコンストラクタのいずれか1つによって形成される\dfn{直和型}と、
+      コンストラクタが引数にタプルやレコード型を取れる\dfn{直積型}の両方を持つことを意味します。
+    }
+    +frame<
+      +subsection{コラム；複数の引数を持つ=タプルではない}<
+        +p{
+          % https://dev.realworldocaml.org/variants.html - VARIANTS, TUPLES AND PARENS
+          バリアントは複数の引数を持つコンストラクタを定義できますが、これはタプルではありません。
+          以下のように、複数の引数を取るコンストラクタ\codem{Untupled_RGB}を持つ型untupled_rgbと、
+          タプルを引数に取るコンストラクタ\codem{Tupled_RGB}を持つ型tupled_rgbを定義します。
+          2つの出力は非常に似ており、複数の引数を取るコンストラクタに対してタプルを与えることができるように見えます。
+          \d-code(```
+          utop # type untupled_rgb = Untupled_RGB of int * int * int ;;
+          type untupled_rgb = Untupled_RGB of int * int * int
+
+          utop # type tupled_rgb = Tupled_RGB of (int * int * int) ;;
+          type tupled_rgb = Tupled_RGB of (int * int * int)
+
+          utop # Tupled_RGB (1, 2, 3) ;;
+          - : tupled_rgb = Tupled_RGB (1, 2, 3)
+
+          utop # Untupled_RGB (1, 2, 3) ;;
+          - : untupled_rgb = Untupled_RGB (1, 2, 3)
+          ```);%
+
+          しかし、3つの引数を取るコンストラクタUntapled_RGBに対して、以下のようにタプル型の値を持つ変数を与えることはできません。
+          \d-code(```
+          utop # let tpl = (1, 2, 3) ;;
+          val tpl : int * int * int = (1, 2, 3)
+
+          utop # Untupled_RGB tpl ;;
+          Error: The constructor Untupled_RGB expects 3 argument(s),
+                 but is applied here to 1 argument(s)
+          ```);%
+
+          インタプリタの出力は「コンストラクタ\codem{Untupled_RGB}は3つの引数を期待したが、1つしか与えられなかった」ことを示しています。
+          一方、Tupled_RGBにはタプル型の値を持つ変数を与えることができます。
+
+          \d-code(```
+          utop # Tupled_RGB tpl ;;
+          - : tupled_rgb = Tupled_RGB (1, 2, 3)
+          ```);%
+
+          なお、タプル型の値を引数に取る関数を介することで、Untupled_RGBに与えることは可能です。
+          \d-code(```
+          utop # let of_tuple (x, y, z) = Untupled_RGB (x, y, z) ;;
+          val of_tuple : int * int * int -> untupled_rgb = <fun>
+
+          utop # of_tuple tpl ;;
+          - : untupled_rgb = Untupled_RGB (1, 2, 3)
+          ```);%
+        }
+      >
     >
-    +section?:(`Original types`){独自の型定義}<
+    +subsection?:(`Variants and pattern matching`){バリアントとパターンマッチ}<
       +p{
-        レコード型に限らず、独自の型を定義する場合には\codem{type}キーワードを利用します。
-        独自の型を定義するには以下の構文を用います。
+        レコードやリストではパターンマッチ（match...with...）を利用して、その要素を取り出しました。
+        バリアントでも同様にmatch式を利用して、その値にアクセスできます。
+
+        % https://www.fos.kuis.kyoto-u.ac.jp/~igarashi/class/isle4-07w/mltext/ocaml007.html 6.2 ヴァリアント型
+        以下ではパターンマッチを利用して、引数として与えられたバリアント型の変数figのコンストラクタに応じて、その面積を返す関数\codem{calc_area}を定義しています。
 
         \d-code(```
-          type <type> = <def>
-        ```);%
-
-        % https://v2.ocaml.org/manual/types.html#typexpr
-        \codem{\<type\>}は型名を表し、\codem{\<def\>}は型定義を表します。
-        EBNFで表すと以下のようになります\footnote{
-          分かりやすさのため、一部の記号列を省略しています。
-        }。
-
-        \d-code(```
-        <type-definition>  ::= type <typedef> { and typedef }
-        <typedef>          ::= ... <typeconstr-name> <type-information>
-        <type-information> ::= [type-equation] ...
-        <type-equation>    ::= = <typexpr>
-        ```);%
-
-        上記の構文は次のルールを表しています。
-        \listing{
-          * 型定義はtype \<typedef\>という構文で表現されます
-          * \<typedef\>は型名（\<typeconstr-name\>） = 型式（\<typexpr\>）で表現できます\footnote{
-              型定義はこれ以外の表現も可能です。分かりやすさのため、他の表現方法は省略しています。
-            }
-        }%
-
-        上記の構文から、次のように独自の型を定義可能です。
-
-        \d-code(```
-        utop # type my_int = int ;;
-        type my_int = int
-
-        utop # type my_string = string ;;
-        type my_string = string
-
-        utop # (1 : my_int) ;;
-        - : my_int = 1
-
-        utop # ("one" : my_string) ;;
-        - : my_string = "one"
-        ```);%
-
-        % https://cs3110.github.io/textbook/chapters/data/type_synonym.html
-        上記以外にも、複数の型を組み合わせて独自の型を定義できます。
-
-        \d-code(```
-        utop # type point = float * float ;;
-        type point = float * float
-
-        utop # type vector = float list ;;
-        type vector = float list
-
-        utop # type matrix = float list list ;;
-        type matrix = float list list
-
-        utop # (10., 20. : point) ;;
-        - : point = (10., 20.)
-
-        utop # ([1. ; 2.] : vector) ;;
-        - : vector = [1.; 2.]
-
-        utop # ([[1. ; 2.]; [3. ; 4.]] : matrix) ;;
-        - : matraix = [[1.; 2.]; [3.; 4.]]
-        ```);%
-
-        このように、既存の型に対して新しい型名を付けることを\dfn{型シノニム}と言います。
-        複雑なデータ型に分かりやすい名前を付けることでコードの可読性が向上します。
-      }
-    >
-    +section?:(`Variants`){バリアント}<
-      +p{
-        レコードは全てのフィールドが揃っている必要がありました。
-        つまり、たった1つでもフィールドの記述が漏れているとエラーとなってしまうのでした。
-        現実のプログラミングでは、いつも全てのフィールドが揃っているとは限りません。
-        そこで、複数のデータを1つのデータとして扱えると便利です。
-
-        \dfn{バリアント}は複数のデータを1つの型として扱うためのデータです。
-        この時のデータの型を\dfn{バリアント型}といいます。
-
-        OCamlにおけるバリアントの型を定義するための構文は以下の通りです。
-
-        % https://dev.realworldocaml.org/variants.html
-        \d-code(```
-          type <variant> =
-            | <Tag> [ of <type> [* <type>]... ]
-            ...
-        ```);%
-
-        上記の構文は、コンストラクタを表す\codem{\<Tag\>}が、「または」を表すパイプ（\codem{\|}）でつながっており、
-        \codem{\<variant\>}はコンストラクタのいずれかを値として取ります。
-        \<Tag\>の先頭が大文字から始まっているのは、コンストラクタの先頭が大文字から始まる必要があるためです。
-        \codem{[...]}は0回以上の出現を表しており、\<Tag\> \| ...のように定義できます。
-        それの例を以下に示します。
-
-        \d-code(```
-          utop # type color =
-            | Black
-            | Blue
-            | Green
-            | Red
-            | White ;;
-          type color = Black | Blue | Green | Red | White
-        ```);%
-
-        また、
-        \<Tag\> of \<type\> \| ...のように書くことができます。
-        以下にその例を示します。
-
-        \d-code(```
-          utop # type my_custom_type =
-            | Int of int
-            | Tuple of int * int
-            | Unknown ;;
-          type my_custom_type = Int of int | Tuple of int * int | Unknown
-        ```);%
-
-        これまでの説明だけではイメージしづらいため、ありきたりな例ですが、
-        複数の図形をまとめて1つのデータ型を定義したいとしましょう。
-
-        例えば、
-        \listing{
-          * 円： 半径の長さを取る          
-          * 長方形： 長辺と短辺の長さを取る
-          * 正方形： 1辺の長さを取る
-        }%
-        のように、異なるデータを1つの型として表現したいケースを考えてみます。
-
-        円と正方形は1つの長さを持てば良さそうですが、長方形は長辺と短辺の2つの長さを持つ必要があります。
-        このようなケースでは、以下のようなバリアント型を定義することができます。
-
-        \d-code(```
-          utop # type figure = 
+          utop # type figure =
             | Circle of int
             | Rectangle of int * int
-            | Square of int
-            | Unknown ;;
-          type figure = Circle of int | Rectangle of int * int | Square of int | Unknown
-        ```);%
+            | Square of int ;;
+          type figure = Circle of int | Rectangle of int * int | Square of int
 
-        上記で定義した\codem{figure}は、コンストラクタである\codem{Circle}、\codem{Rectangle}、\codem{Square}、\codem{Unknown}のいずれを取ります。つまり、これらは\codem{figure}の値です。
-
-        上記を定義した後で、以下のようにインタプリタ上で\codem{Circle}、\codem{Rectangle}、\codem{Square}、\codem{Unknown}を入力すると、それが\codem{figure}型の値であることが分かります。
-
-        \d-code(```
-          utop # Circle 3 ;;
-          - : figure = Circle 3
-          utop # Rectangle (3, 4) ;;
-          - : figure = Rectangle (3, 4)
-          utop # Square 5 ;;
-          - : figure = Square 5
-          nutop # Unknown ;;
-          - : figure = Unknown
-        ```);%
-      }
-      +p{
-        なお、コンストラクタは先頭が大文字で始まる必要があると説明しました。
-        一方で、変数及び関数は大文字で始めることができない点に注意して下さい。
-
-        \d-code(```
-          utop # let SomthingValue = "something" ;;
-          Line 1, characters 4-17:
-          Error: Unbound constructor SomthingValue
-
-          utop # let SomethingFunction = (fun x -> x);;
-          Line 1, characters 4-21:
-          Error: Unbound constructor SomethingFunction
-        ```);%
-      }
-      +subsection?:(`Variants and pattern matching`){バリアントとパターンマッチ}<+p{
-        レコード及びリストではパターンマッチ\codem{match...with...}を利用して、その要素を取り出しました。
-        バリアントでも同様にmatch式を利用して、その値にアクセスすることができます。
-        バリアント型は複数のコンストラクタの値を持つため、match式ではそのコンストラクタによるパターンマッチを行います。
-        以下では、パターンマッチを利用して、引数として与えられたバリアント型の変数figureのコンストラクタに応じて、その面積を返す関数\codem{calc_area}を定義しています。
-
-        \d-code(```
           utop # let calc_area fig = match fig with
             | Circle x -> x * x * 3
             | Rectangle (x, y) -> x * y
             | Square x -> x * x
-            | Unknown -> 0 ;;
-            val calc_area : figure -> int = <fun>
-
-            utop # let circle = Circle 3 ;;
-            val circle : figure = Circle 3
-            utop # calc_area circle ;;
-            - : int = 27
-
-            utop # let rect = Rectangle (3, 4) ;;
-            val rect : figure = Rectangle (3, 4)
-            utop # calc_area rect ;;
-            - : int = 12
-
-            utop # let square = Square 5 ;;
-            val square : figure = Square 5
-            utop # calc_area square ;;
-            - : int = 25
-
-            utop # calc_area Unknown ;;
-            - : int = 0
-        ```);%
-
-        バリアントにおけるパターンマッチにおいても、これまで見てきたレコードやリストのパターンマッチと同様に、
-        バリアント型が取りうる全てのパターンを書く必要があります。
-        上記の関数calc_areaにおいて、\codem{Unknown}を取り除いた例を以下に示します。
-
-        \d-code(```
-          utop # let calc_area fig = match fig with
-            | Circle x -> x * x * 3
-            | Rectangle (x, y) -> x * y
-            | Square x -> x * x ;;
-
-          Lines 1-4, characters 20-21:
-          Warning 8 [partial-match]: this pattern-matching is not exhaustive.
-          Here is an example of a case that is not matched:
-          Unknown
           val calc_area : figure -> int = <fun>
+
+          utop # let circle = Circle 3 ;;
+          val circle : figure = Circle 3
+          utop # calc_area circle ;;
+          - : int = 27
+
+          utop # let rect = Rectangle (3, 4) ;;
+          val rect : figure = Rectangle (3, 4)
+          utop # calc_area rect ;;
+          - : int = 12
+
+          utop # let square = Square 5 ;;
+          val square : figure = Square 5
+          utop # calc_area square ;;
+          - : int = 25 
         ```);%
 
-        上記の場合は警告が発生し、
-        この警告は「パターンマッチにおいて全てのパターンが網羅されておらず、\codem{Unknown}のパターンにマッチしない」ことを示しています。
-      }>
-    >
-    +section?:(`Practice of variants`){実践}<
-      +p{
-        バリアントを利用して実践的なプログラムを書いてみましょう。
+        上記の例のfigure型はバリアント型であり、Circle、Rectangle、Squareの3つのコンストラクタを持ちます。
+        calc_areaはfigure型の値を引数に取り、パターンマッチによってコンストラクタCircle、Rectangle、Squareを判別し、
+        コンストラクタの引数に対応するパターン変数を用いて面積を計算します\footnote{
+          円の面積を求める計算が\codem{x \* x \* 3}となっていますが、整数値の計算のため3を採用しています。
+          Circleがfloat型を引数に取る場合、3.14を用いることができます。
+        }。
       }
-      +subsection{列挙型との類似性}<+p{
-        他のいくつかの言語では、定数または識別子（\dfn{列挙子}）を持つ集合からなるデータ型を\dfn{列挙型}といいます。
-        以下はプログラミング言語Goの例ですが、以下のような書き方になります。
+    >
+    +subsection{列挙型との類似性}<
+      +p{
+        % https://cs3110.github.io/textbook/chapters/data/variants.html
+        % https://www.fos.kuis.kyoto-u.ac.jp/~igarashi/class/isle4-07w/mltext/ocaml007.html 6.3 ヴァリアント型の応用
+        いくつかのプログラミング言語では、定数または識別子（\dfn{列挙子}）を持つ集合からなるデータ型を\dfn{列挙型}といいます。
+        例えばプログラミング言語Goの場合、以下のように定数を並べて列挙型のような振る舞いを表現します。
 
         \d-code(```
           type Color int
@@ -354,17 +436,23 @@ let records-and-variants = '<
           type color = Black | Blue | Green | Red | White
         ```);%
 
-        しかし、他の言語（ここではGoで話を進めます）では各コンストラクタの実体は整数であるため、コンストラクタ同士の演算が可能ですが、
-        OCamlではコンストラクタ同士の演算は定義されていません。
-        もしコンストラクタ同士の演算を行いたい場合は、それ用の演算子（関数）を定義する必要があります。
+        しかし、上記のようにプログラミング言語Goでは定数の実体は整数であるため、定数の演算が可能です。
+        つまり、Goでは\codem{Blue + Green + Red}のような演算が可能です。
+
+        しかし、OCamlではコンストラクタ同士の演算は定義されていません。
+        コンストラクタ同士の演算を行いたい場合、独自の演算子（関数）を定義する必要があります。
+        以下にコンストラクタ同士を足し合わせる演算子を定義する例を示します。
 
         \d-code(```
           utop # type color =
             | Black
+            | LightBlue
             | Blue
             | DarkBlue
+            | LightGreen
             | Green
             | DarkGreen
+            | LightRed
             | Red
             | DarkRed
             | Gray
@@ -372,10 +460,13 @@ let records-and-variants = '<
             | Unknown ;;
           type color =
               Black
+            | LightBlue
             | Blue
             | DarkBlue
+            | LightGreen
             | Green
             | DarkGreen
+            | LightRed
             | Red
             | DarkRed
             | Gray
@@ -388,6 +479,9 @@ let records-and-variants = '<
             | (Black, Red) -> DarkRed
             | (Black, White) -> Gray
             | (Black, _) | (_, Black) -> Black
+            | (White, Blue) -> LightBlue
+            | (White, Green) -> LightGreen
+            | (White, Red) -> LightRed
             | (White, _) | (_, White) -> White
             | (_, _) -> Unknown ;;
           val ( ++ ) : color -> color -> color = <fun>
@@ -396,24 +490,41 @@ let records-and-variants = '<
           - : color = DarkGreen
         ```);%
 
-        上記の例は、バリアント型であるcolorを拡張し、\codem{DarkBlue}、\codem{DarkGreen}、\codem{DarkRed}を追加で定義し、
-        色を混ぜ合わせた結果を返す演算子\codem{++}\footnote{
-          他の色の組み合わせも考えられますが、行数が長くなりすぎるため、ここではBlackとの組み合わせにフォーカスしています。
-        }を定義しています。
-        このような演算子を定義することで、コンストラクタ同士の演算が可能になります。
+        上記の例は、バリアント型であるcolor型を拡張し、黒または白を混ぜた時の色を追加しました。
+        パターンマッチを用いて、色を混ぜ合わせた結果を返す演算子\codem{++}を定義しています。
+        混ぜ合わせた結果が黒や白になる組み合わせは、
+        \codem{(Black, _) \| (_, Black) -\> ...}、\codem{(White, _) \| (_, White) -\> ...}のように、Orパターンを用いて表現しています。
+        このようにバリアント型を用いてコンストラクタ用の演算子を定義することで、
+        他のプログラミング言語における列挙型と似たような振る舞いを実現できます。
+      }
+    >
+    +subsection?:(`Recursive variant types`){再帰バリアント型と木構造}<
+      +p{
+        % https://www.fos.kuis.kyoto-u.ac.jp/~igarashi/class/isle4-07w/mltext/ocaml007.html 再帰ヴァリアント型
+        バリアント型において、ofの後ろにバリアント型自身を書くことで再帰的にバリアント型を定義できます。
+        これを\dfn{再帰バリアント型}と言います。
 
-        また、\codem{(Black, _) \| (_, Black) -\> ...}、\codem{(White, _) \| (_, White) -\> ...}のように、
-        複数のパターンにおける処理をまとめることができ、これを\dfn{orパターン}といいます。
-      }>
-      +subsection?:(`Recursive variant type`){再帰バリアント型と木構造}<+p{
-        バリアントの型定義において、ofの後ろにバリアント型自身を書くことで\dfn{再帰バリアント型}を定義できます。
-        ここでは例として「木」を考えてみます。
-        木は、
+        % プログラミングの基礎 第17章 17.2 木
+        例として「木」の構造（木構造）を考えてみます。
+        木は以下の要素から構成されるものとします。
+
         \listing{
-          * 葉
-          * 節（ノード）
-        }
-        から構成されることとします。
+          * 空の木： Empty
+          * 葉： Leaf
+          * 節（ノード）： Node
+        }%
+
+        空の木\codem{Empty}とはその名のとおり葉や節を持たない木を表します。
+        葉\codem{Leaf}は木の先端を表し、何か1つのデータを持ちます。
+        本節では、葉は整数値を持つことにします。
+        一方で節\codem{Node}は木の幹が分かれている部分を表します。
+        節自身も何か1つのデータを持ち、さらにその先に2つの木（空の木、葉、または節のいずれか）を持つことができます。
+        % https://www.fos.kuis.kyoto-u.ac.jp/~igarashi/class/isle4-07w/mltext/ocaml007.html Case Study: 二分木
+        節の先を子と言い、子の数が必ず2つ以下となるような木構造を\dfn{2分木}と言います\footnote{
+          木構造のうち、子の数が3つ以下のものを3分木、4つ以下のものを4分木と言い、n個以下のものを\dfn{n分木}と言います。
+        }。
+
+        以下に2分木を例を図示します。
 
         \d-code(```
           +-----------+
@@ -437,12 +548,7 @@ let records-and-variants = '<
                 +----------+
         ```);%
 
-        葉\codem{Leaf}は木の一番先を表し、何か1つのデータを持つコンストラクタを示します。
-        一方で節\codem{Node}は木の幹が分かれている部分を表し、節自身も何か1つのデータを持つ且つ
-        さらにその先に2つの節を持つことができるコンストラクタです。
-        このように必ず2つの葉を持つような木構造を\dfn{2分木}と呼びます。
-        
-        これをヴァリアント型で定義すると以下のように定義することができます。
+        これをバリアント型で定義すると以下のように記述できます。
         \d-code(```
           utop # type tree =
             | Empty
@@ -451,32 +557,16 @@ let records-and-variants = '<
           type tree = Empty | Leaf of int | Node of tree * int * tree
         ```);%
 
-        上記の例から分かるとおり、バリアント型である\codem{tree}は\codem{Empty}\footnote{
-          Emptyは一見不要なように思えますが、木構造自体が空であること及び木構造に値を追加する関数を実装する際に必要となるため、予め定義しています。
-        }、\codem{Leaf}、\codem{Node}の3つのコンストラクタから構成されます。
-        Emptyは空であることを表します。Leafはint型を持ち、Nodeは\codem{(tree, int, tree)}という組み合わせを持つことを表します。
-        Nodeコンストラクタのof以降に自分自身である\codem{tree}を持っているため、これは再帰バリアント型となります。
-        また、自分自身を含むコンストラクタを持つバリアント型は\dfn{自己参照している}といいます。
-        自己参照するような（再帰的な）ケースでは、無限ループとならないように必ず自己参照しないケースを含めるようにして下さい。
-        上記の例ではLeafが存在するため大丈夫そうです。
-      }
-      +p{
-        なお、上記のtreeはint型しか持つことができない定義になってしまっていますが、
-        これを任意の型を持てるようにするには、以下のように木及び各コンストラクタが多相型な値を持てるよう定義します。
+        上記の例は、バリアント型である\codem{tree}を定義しています。
+        前述したとおり、木構造はEmpty、Leaf、Nodeの3つのコンストラクタから構成されます。
+        Nodeコンストラクタのof以降に自分自身であるtreeを持っているため、これは再帰バリアント型となります。
 
-        \d-code(```
-          utop # type 'a tree = 
-            | Empty
-            | Leaf of 'a
-            | Node of 'a tree * 'a * 'a tree ;;
-          type 'a tree = Empty | Leaf of 'a | Node of 'a tree * 'a * 'a tree
-        ```);%
-      }
-      +p{
-        木構造は、Unixファイルシステムにも採用されていたり、様々な場面で利用されています。
-        そのため木構造を自身で実装し利用できることは有用です。
-        int型だけを持つtreeでも多相型のtreeでも良いですが、ここでは単純化のためint型だけを持つtreeを用いて、
-        具体的な利用例を見ていきます。
+        % プログラミングの基礎 第17章 17.2 木
+        また、自分自身を含むコンストラクタを持つバリアント型は\dfn{自己参照している}といいます。
+        自己参照するようなケースでは、無限ループとならないように必ず自己参照しないケースを含める必要があります。
+        バリアント型であるtreeでは、EmtpyとLeafが自己参照しないケースに当たります。
+
+        以下にtree型を用いた木構造の例を示します。
 
         \d-code(```
           utop # type tree =
@@ -490,6 +580,7 @@ let records-and-variants = '<
 
           utop # Leaf 3 ;;
           - : tree = Leaf 3
+
           utop # Leaf 4 ;;
           - : tree = Leaf 4
 
@@ -497,298 +588,195 @@ let records-and-variants = '<
           - : tree = Node (Leaf 3, 5, Leaf 4)
         ```);%
 
-        Leafは、これまで見てきたバリアント型と同じように利用でき、
-        \codem{\<constructor\> \<value\>}のように書くことでtreeのLeafコンストラクタの値を生成できます。
-        上記では、3の値を持つLeafと4の値を持つLeafをインタプリタに入力しています。
+        Emptyは空の木を表します。
+        Leaf 3は前述のLeaf(3)に当たり、3という整数値を持つ葉を表しています。
+        同様にLeaf 4はLeaf(4)を表します。
 
-        一方、Nodeは\codem{(tree \* int \* tree)}であり、
-        上記では\codem{Leaf 3}、\codem{Leaf 4}、そして5の値を持つNodeを作成しています。
-        なお、Nodeはtree型であれば何でも持つことができるため、以下のようにNodeが別のNodeを持つことも可能です。
+        また、Nodeは\codem{tree \* int \* tree}の引数を取るため、\codem{Node (Leaf 3, 5, Leaf 4)}は次のことを示します。
+        \listing{
+          * 左の子にLeaf 3（整数値3を持つ葉）を持ちます
+          * 自身は整数値5を持ちます
+          * 右の子にはLeaf 4（整数値4を持つ葉）を持ちます
+        }%
+
+        なお、Nodeはtree型の引数であれば何でも取ることができるため、以下のようにNodeが別のNodeを持つことも可能です。
 
         \d-code(```
           utop # Node (Node (Leaf 3, 5, Leaf 4), 10, Leaf 7) ;;
           - : tree = Node (Node (Leaf 3, 5, Leaf 4), 10, Leaf 7)
         ```);%
 
-        これは図示した木構造をプログラムで表現したものであり、頂点\footnote{
-          この頂点を特に根（ルート）と呼びます。
-        }に10を持ち、
-        そこから7の値を持つ葉と5の値を持つ節が伸びている形を表現しています。
-        加えて、5の値を持つ節は、3と4の葉を持つことが示されています。
-
-        \d-code(```
-          Node ( +---+, 10, +---+ )
-                   |          |
-             Leaf ( 7 )    Node ( +---+, 5, +---+ )
-                                    |         |
-                              Leaf ( 3 )   Leaf ( 4 )
-        ```);%
-
-        ここで、節が左または右に別の木構造（具体的には節、葉、空（Empty））を持つ場合、この別の木構造を\dfn{部分木}といいます。
-      }>
-      +subsection{木構造とその関数}<+p{
-        \ref-subsection(`Recursive variant type`);で説明した木構造に対して、いくつかの関数（ここではその深さと節の数を数える関数）を考えてみます。
-        木構造の深さを計算する関数は、以下のように定義できます。
-
-        \d-code(```
-          utop # let rec tree_depth = function
-            | Empty -> 0
-            | Leaf _ -> 0
-            | Node (left, _, right) -> 1 + (max (tree_depth left) (tree_depth right)) ;;
-          val tree_depth : tree -> int = <fun>
-
-          utop # let my_tree = Node (Node (Leaf 3, 5, Leaf 4), 10, Leaf 7) ;;
-          val my_tree : tree = Node (Node (Leaf 3, 5, Leaf 4), 10, Leaf 7)
-
-          utop # tree_depth my_tree ;;
-          - : int = 2
-        ```);%
-
-        深さとは、頂点を1としてそれに続く節を数え上げていき、頂点から最も遠い節までの節の合計のことを指します。
-        ここで最も遠い節と言っているのは、節は複数に枝分かれし、節によっては深さがバラバラな場合があり、
-        頂点から最も遠くまで伸びている節を木の深さとして採用する必要があるためです。
-        上記の関数は、Leafの場合は\codem{0}を返し、Nodeの場合は現在の節\codem{1}と「左と右に伸びる節の内、大きい方の値」を可算します。
-        特に\codem{tree_depth left}及び\codem{tree_depth right}は自分自身を呼び出しているため再帰になっています。
-        また、\codem{tree_depath}内で利用している関数\codem{max}は、与えられた2つの引数の内大きい方を返す関数で、
-        maxを用いることで左と右でより深い方の値を返すように実装しています。
-        
-        次に、節（ノード）の数を数え上げる関数を考えてみます。
-        木構造の節の数を数える関数は、以下のように定義できます。
-
-        \d-code(```
-          utop # let rec tree_size = function
-            | Empty -> 0
-            | Leaf _ -> 0
-            | Node (left, _, right) -> 1 + (tree_size left) + (tree_size right) ;;
-          val tree_size : tree -> int = <fun>
-
-          utop # let my_tree = Node (Node (Leaf 3, 5, Leaf 4), 10, Leaf 7) ;;
-          val my_tree : tree = Node (Node (Leaf 3, 5, Leaf 4), 10, Leaf 7)
-
-          utop # tree_size my_tree ;;
-          - : int = 2
-        ```);%
-
-        前述の深さを出力する関数\codem{tree_depth}と同様に再帰関数であり、Nodeの場合に「現在の節\codem{1} + 左のノード数 + 右のノード数」を返します。
+        これは前述の図示した木構造を表現したものです。
+        頂点に10を持ち、そこから7の値を持つ葉と5の値を持つ節が伸びていることを表現しています\footnote{
+          % https://www.fos.kuis.kyoto-u.ac.jp/~igarashi/class/isle4-07w/mltext/ocaml007.html Case Study: 二分木
+          この頂点を\dfn{根（ルート）}と言います。
+        }。
+        5の値を持つ節は、3と4の葉を持つことが分かります。
+        このように節が左または右に別の木構造（具体的には節、葉、空（Empty））を持つ場合、この別の木構造を\dfn{部分木}といいます。
       }
-      +p{
-        なお、上記では節が2つしかない木構造を扱いました。節が2つのものを\dfn{2分木}といいます。
-        それ以外の、例えば節が3つのものを3分木、4つのものを4分木、...n個の節を持つ木を\dfn{n分木}といいます。
-        特に、2分木\codem{${t}}に対して
-
-        \d-codem{
-          ${tree\_size(t) \leqq 2^{tree\_depth(t)} - 1}
-        }
-        が成り立ちます。
-        また、2分木\codem{${t}}に対して
-
-        \d-codem{
-          ${tree\_size(t) = 2^{tree\_depth(t)} - 1}
-        }
-        となるような2分木を\dfn{完全2分木}といいます。
-
-        以下に完全2分木の例を示します。
-
-        \d-code(```
-          utop # let comp_tree = Node(
-            Node(Node(Leaf 2, 4, Leaf 3), 8, Node(Leaf 5, 7, Leaf 6)),
-            16,
-            Node(Node(Leaf 9, 11, Leaf 10), 15, Node(Leaf 12, 14, Leaf 13))) ;;
-          val comp_tree : tree =
-            Node (Node (Node (Leaf 2, 4, Leaf 3), 8, Node (Leaf 5, 7, Leaf 6)), 16,
-             Node (Node (Leaf 9, 11, Leaf 10), 15, Node (Leaf 12, 14, Leaf 13)))
-
-          utop # tree_depth comp_tree ;;
-          - : int = 3
-
-          utop # tree_size comp_tree ;;
-          - : int = 7
-        ```);%
-
-        上記の例から\codem{${tree\_size(t) = 7}}且つ\codem{${tree\_depth(t) = 3}}であることが分かります。
-        これらを\codem{${tree\_size(t) = 2^{tree\_depth(t)} - 1}}に代入すると
-        \codem{${7 = 2^3 - 1}}となるため、等式を満たしていることが分かりますね。
-      }
-      +p{
-        次に、木構造から値を列挙する関数を定義してみます。
-        木構造から値を取り出すには次の方法があります。
-
-        \listing{
-          * \dfn{行きがけ順（preorder）}： 訪れた節の値にラベルを付け、左の部分木、右の部分木の順で探索（走査）及び値を見つけ次第ラベルを付ける方法
-          * \dfn{通りがけ順（inorder）}： 左の部分木を辿れなくなるまで探索（走査）及び値にラベルを付け、1つ上の節、右の部分木の順で探索（走査）及び値を見つけ次第ラベルを付ける方法
-          * \dfn{帰りがけ順（postorder）}： 左の部分木を辿れなくなるまで探索（走査）及び値にラベルを付け、1つ上の節の右の部分木を探索（走査）及び値を見つけ次第ラベル付けし、左右両方の走査が完了次第1つ上の節の値をラベル付けする。これを頂点まで繰り返す方法
-        }
-
-        行きがけ順の関数は以下のように定義できます。
-
-        \d-code(```
-          utop # let rec preorder = function
-            | Leaf x -> [x]
-            | Node (left, x, right) -> x :: (preorder left) @ (preorder right) ;;
-          val preorder : tree -> int list = <fun>
-
-          utop # preorder comp_tree ;;
-          - : int list = [15; 8; 4; 2; 3; 7; 5; 6; 14; 10; 8; 9; 13; 11; 12]
-        ```);%
-
-        通りがけ順は以下のように定義できます。
-
-        \d-code(```
-          utop # let rec inorder = function
-            | Leaf x -> [x]
-            | Node (left, x, right) -> (inorder left) @ (x :: inorder right) ;;
-          val inorder : tree -> int list = <fun>
-
-          utop # inorder comp_tree ;;
-          - : int list = [2; 4; 3; 8; 5; 7; 6; 15; 8; 10; 9; 14; 11; 13; 12]
-        ```);%
-
-        帰りがけ順は以下のように定義できます。
-
-        \d-code(```
-          utop # let rec postorder = function
-            | Leaf x -> [x]
-            | Node (left, x, right) -> (postorder left) @ (postorder right) @ [x];;
-          val postorder : tree -> int list = <fun>
-
-          utop # postorder comp_tree ;;
-          - : int list = [2; 3; 4; 5; 6; 7; 8; 8; 9; 10; 11; 12; 13; 14; 15]
-        ```);%
-
-        各探索方法に図を入れてもっと書く。
-        comptreeの定義も変えたので結果を更新しておく。
-      }>
-      +subsection{2分探索木}<+p{
-        \dfn{2分探索木}は、検索を高速に行えるように、一定の規則に従ってデータを格納したデータ構造（木構造）です。
-        2分探索木は
-
-        \listing{
-          * 左の部分木には、その節のデータよりも小さいデータのみ格納される
-          * 右の部分木には、その節のデータよりも大きいデータのみ格納される
-        }
-
-        というルールがあります。
-        このような木構造を探索することを\dfn{2分探索}といいます。
-
-        2分探索木の例を以下に示します。
-
-        \d-code(```
-               Node ( +---+,              10,              +---+ )
-                        |                                    |
-          Node ( +---+, 5, +---+ )            Node ( +---+,   15,   +---+ )
-                   |         |                         |              |
-               Leaf ( 3 )   Leaf ( 4 )  Node ( +---+, 14, +---+ )   Leaf ( 16 )
-                                                 |          |
-                                             Leaf ( 12 )   Leaf ( 13 )
-        ```);%
-
-        蛇足ですが、2分探索木であり且つ完全2分木である木構造も存在します。
-
-        \d-code(```
-               Node ( +---+,          10,          +---+ )
-                        |                            |
-          Node ( +---+, 5, +---+ )    Node ( +---+, 15, +---+ )
-                   |         |                 |          |
-               Leaf ( 3 )   Leaf ( 4 )   Leaf ( 14 )  Leaf ( 16 )
-        ```);%
-
-        上記のような2分探索木を探索（走査）するための関数は、以下のように定義できます。
-
-        \d-code(```
-          utop # let rec search tree data = match tree with
-            | Empty -> false
-            | Leaf x -> data = x
-            | Node (left, x, right) ->
-              if x = data then true
-              else
-                if data < x then search left data
-                else search right data ;;
-           val search : tree -> int -> bool = <fun>
-        ```);%
-
-        上記の関数は、検索対象となる木構造\codem{tree}と検索したい値\codem{data}を引数にとります。
-        treeが空\codem{Empty}である場合は、検索したい値が見つからなかったと判断し\codem{false}を返します。
-        葉\codem{Leaf}である場合は、葉の値とdataを比較し、その結果を返します。
-        節（Node）である場合は、節が持つ値とdataを比較し一致していれば\codem{true}を返します。
-        節が持つ値と一致しなければ、節が持つ値とdataの大小を比較し、
-        \codem{data \< x}であれば左の部分木\codem{left}をsearch関数の第一引数として与え、再帰的に検索を行います。
-        そうでなければ（つまり\codem{data \> x}）、右の部分木\codem{right}をsearch関数の第一引数として与え、再帰的に検索を行います。
-
-        \d-code(```
-          utop # let comp_binary_search_tree = Node(
-            Node(Node(Empty, 3, Leaf 4), 5, Node(Leaf 6, 7, Leaf 8)),
-            9,
-            Node(Node(Leaf 10, 11, Leaf 12), 13, Node(Leaf 14, 15, Empty))) ;;
-          val comp_binary_search_tree : tree =
-            Node (Node (Node (Empty, 3, Leaf 4), 5, Node (Leaf 6, 7, Leaf 8)), 9,
-             Node (Node (Leaf 10, 11, Leaf 12), 13, Node (Leaf 14, 15, Empty)))
-
-          utop # search comp_binary_search_tree 1 ;;
-          - : bool = false
-
-          utop # search comp_binary_search_tree 4 ;;
-          - : bool = true
-
-          utop # search comp_binary_search_tree 6 ;;
-          - : bool = true
-
-          utop # search comp_binary_search_tree 9 ;;
-          - : bool = true
-
-          utop # search comp_binary_search_tree 13 ;;
-          - : bool = true
-
-          utop # search comp_binary_search_tree 20 ;;
-          - : bool = false
-        ```);%
-
-        上記の例では、完全2分木に対して探索（走査）を行っていますが、2分探索木であれば上記のsearch関数を用いて値の有無を確認できます。
-        また、2分探索木において探索と同じくらい重要な操作として「追加」があります。
-        追加関数を考える場合、2分探索木のルールに則った実装が必要です。
-        つまり、これから追加したい値に対して、節が持つ値よりも小さい場合は左の部分木に値を挿入し、大きい場合は右の部分木に値を挿入します。
-
-        \d-code(```
-          utop # let rec add tree data = match tree with
-            | Empty -> Leaf data
-            | Leaf x ->
-              if data = x then Leaf x
-              else      
-                if data < x then Node ((Leaf data), x, Empty)
-                else Node (Empty, x, (Leaf data)) 
-            | Node (left, x, right) ->
-              if data = x then Node (left, x, right)
-              else
-                if data < x then Node ((add left data), x, right)
-                else Node (left, x, (add right data)) ;;
-          val add : tree -> int -> tree = <fun>
-
-          utop # add Empty 1 ;;
-          - : tree = Leaf 1
-
-          utop # add (Leaf 3) 4 ;;
-          - : tree = Node (Empty, 3, Leaf 4)
-
-          utop # let binary_search_tree = Node(
-            Node(Node(Leaf 2, 3, Leaf 4), 5, Empty),
-            9,
-            Node(Node(Leaf 10, 11, Leaf 12), 13, Node(Leaf 14, 15, Leaf 16))) ;;
-          val binary_search_tree : tree =
-            Node (Node (Node (Leaf 2, 3, Leaf 4), 5, Empty), 9,
-             Node (Node (Leaf 10, 11, Leaf 12), 13, Node (Leaf 14, 15, Leaf 16)))
-
-          utop # add binary_search_tree 6 ;;
-          - : tree =
-          Node (Node (Node (Leaf 2, 3, Leaf 4), 5, Leaf 6), 9,
-           Node (Node (Leaf 10, 11, Leaf 12), 13, Node (Leaf 14, 15, Leaf 16)))
-
-          utop # add binary_search_tree 20 ;;
-          - : tree =
-          Node (Node (Node (Leaf 2, 3, Leaf 4), 5, Empty), 9,
-           Node (Node (Leaf 10, 11, Leaf 12), 13,
-            Node (Leaf 14, 15, Node (Empty, 16, Leaf 20))))
-        ```);%
-
-        他にも特定の値を削除する関数などが考えられますが、エラーハンドリングの知識が必要になりますので、ここでは割愛します。
-      }>
     >
+    +subsection?:(`Parameterized variants`){パラメータ化されたバリアント}<
+      +p{
+        % プログラミングの基礎 第17章 17.5 多相型の宣言
+        % https://www.fos.kuis.kyoto-u.ac.jp/~igarashi/class/isle4-07w/mltext/ocaml007.html - 多相的ヴァリアント型
+        前述のtreeはint型しか持つことができせんが、
+        以下のように木及び各コンストラクタが多相型な値を持てるよう定義することも可能です。
+
+        \d-code(```
+          utop # type 'a tree = 
+            | Empty
+            | Leaf of 'a
+            | Node of 'a tree * 'a * 'a tree ;;
+          type 'a tree = Empty | Leaf of 'a | Node of 'a tree * 'a * 'a tree
+        ```);%
+
+        % https://cs3110.github.io/textbook/chapters/data/algebraic_data_types.html#parameterized-variants
+        上記は、'aが型変数を表しており、'a treeという多相型を定義しています。
+
+        %         % https://www.fos.kuis.kyoto-u.ac.jp/~igarashi/class/isle4-07w/mltext/ocaml007.html Case Study: 二分木
+        % https://cs3110.github.io/textbook/chapters/data/trees.html#representation-with-tuples
+        ここで、木の大きさ（ノード数）を数える関数を考えます。
+        \d-code(```
+        utop # let rec size = function
+          | Empty | Leaf _ -> 0
+          | Node (left, _, right) -> 1 + (size left) + (size right) ;;
+        val size : 'a tree -> int = <fun>
+        ```);%
+
+        上記の関数\codem{size}は、'aがどのような型であっても動作します。
+
+        \d-code(```
+        utop # size Empty ;;
+        - : int = 0
+
+        utop # size (Leaf 1) ;;
+        - : int = 0
+        utop # size (Node (Node (Leaf 3, 5, Leaf 4), 10, Leaf 7)) ;;
+        - : int = 2
+
+        utop # size (Leaf "a") ;;
+        - : int = 0
+        utop # size (Node (Node (Leaf "a", "c", Leaf "b"), "e", Leaf "d")) ;;
+        - : int = 2
+        ```);%
+
+        % https://cs3110.github.io/textbook/chapters/data/algebraic_data_types.html#parameterized-variants
+        % https://www.fos.kuis.kyoto-u.ac.jp/~igarashi/class/isle4-02w/mltext/ocaml005.html 4.2多相性
+        これはOCamlが、パラメトリック多相という「関数等を定義する際に特定のデータ型に依存せず、どのような型であっても関数等の振る舞いが同じ」である性質をサポートするからです。
+      }
+      +p{
+        % https://cs3110.github.io/textbook/chapters/data/algebraic_data_types.html#built-in-variants
+        また、OCamlのリストやオプションもパラメータ化されたバリアントで表現されています。
+        OCamlで予め定義されているリストやオプションの型を確認するにはutopで\codem{\#typeof}を利用します。
+        \d-code(```
+        utop # #typeof "list" ;;
+        type nonrec 'a list = [] | (::) of 'a * 'a list
+
+        utop # #typeof "option" ;;
+        type nonrec 'a option = None | Some of 'a
+        ```);%
+
+        また、これらは自身で以下のように定義できます。
+
+        \d-code(```
+        utop # type 'a my_list =
+          | []
+          | ( :: ) of 'a * 'a my_list ;;
+        type 'a my_list = [] | (::) of 'a * 'a my_list
+
+        utop # [] ;;
+        - : 'a my_list = []
+        utop # 1 :: [] ;;
+        - : int my_list = (::) (1, [])
+
+        utop # type 'a my_option =
+          | None
+          | Some of 'a ;;
+        type 'a my_option = None | Some of 'a
+
+        utop # None ;;
+        - : 'a my_option = None
+        utop # Some "abc" ;;
+        - : string my_option = Some "abc"
+        ```);%
+      }
+    >
+    +subsection?:(`Polymorphic variants`){多相バリアント}<
+      +p{
+        % https://dev.realworldocaml.org/variants.html Polymorphic Variants
+        % https://v2.ocaml.org/manual/polyvariant.html
+        % https://ocaml.jp/refman/ch04s02.html
+        % https://cs3110.github.io/textbook/chapters/data/algebraic_data_types.html#polymorphic-variants
+        これまで紹介したバリアントは、予めバリアント型を定義する必要がありました。
+        これはコンストラクタ（タグ）を定義及び利用する際に、一意の型を割り当てるためです。
+        % ref-subsection(`Variants and pattern matching`);を再掲？しない。
+        しかし、一部の関数等からのみ利用されるバリアント型のために型定義を書くことは手間です。
+
+        % https://v2.ocaml.org/manual/polyvariant.html
+        OCamlは\dfn{多相バリアント}という、事前に型またはコンストラクタの定義が不要で且つ
+        コンストラクタ（タグ）が特定の型に属さない（多相バリアントを利用する際に型システムが推論する）データをサポートします。
+        % https://cs3110.github.io/textbook/chapters/data/algebraic_data_types.html#polymorphic-variants
+        なお、多相バリアントのコンストラクタはバッククオート（\codem{\`}） で始まる必要があります。
+
+        % https://v2.ocaml.org/manual/polyvariant.html
+        以下に多相バリアントの例を示します。
+        \d-code(```
+        utop # [`Yes; `No] ;;
+        - : [> `No | `Yes ] list = [`Yes; `No]
+        ```);%
+        上記の例において、
+        インタプリタの出力は「直前（-）に入力した結果の型は\codem{``[> `No | `Yes ] list``}という多相バリアント型で、その値は\codem{``[`Yes; `No]``}である」ことを示しています。
+        ``[> `No | `Yes ] list``は、引数なしで`` `No``または`` `Yes``のどちらにマッチするリストであることを表します。
+        % https://cs3110.github.io/textbook/chapters/data/algebraic_data_types.html#polymorphic-variants
+        なお、上記の例から分かるとおり、多相バリアントは特定の名前と対応しないため、\dfn{匿名バリアント（無名バリアント）}と言われる場合もあります。
+
+        また、引数を取るコンストラクタを持つ多相バリアントを定義することもできます。
+        \d-code(```
+        utop # `No 1 ;;
+        - : [> `No of int ] = `No 1
+        ```);%
+
+        ここで、多相バリアントを処理する関数の例を以下に示します。
+        \d-code(```
+        utop # let is_zero_or_ten = function
+          | 0 | 10 -> `Yes
+          | n -> `No n ;;
+        val is_zero_or_ten : int -> [> `No of int | `Yes ] = <fun>
+
+        utop # is_zero_or_ten 0 ;;
+        - : [> `No of int | `Yes ] = `Yes
+        utop # is_zero_or_ten 10 ;;
+        - : [> `No of int | `Yes ] = `Yes
+        utop # is_zero_or_ten 100 ;;
+        - : [> `No of int | `Yes ] = `No 100
+        ```);%
+
+        % https://dev.realworldocaml.org/variants.html Polymorphic Variants
+        多相バリアント型の先頭にある大なり（\codem{\>}）記号は、`` `Yes``、`` `No``以外のコンストラクタ（タグ）を含む可能性があることを示しています。
+        % https://dev.realworldocaml.org/variants.html Polymorphic Variants
+        % https://cs3110.github.io/textbook/chapters/data/algebraic_data_types.html#polymorphic-variants
+        つまり、上記の関数is_zero_or_tenは「少なくとも`` `Yes``、`` `No``またはそれ以上のコンストラクタを返す（可能性がある）」ことを表しています。
+        そのため、次のような処理を書くことが可能です。
+        \d-code(```
+        utop # match is_zero_or_ten 100 with
+          | `Yes -> "Yes"
+          | `No n -> "No"
+          | `Unknown -> "Unknown" ;;
+        - : string = "No"
+        ```);%
+        上記のように、関数is_zero_or_tenが「少なくとも`` `Yes``、`` `No``またはそれ以上のコンストラクタを返す（可能性がある）」ため、任意のコンストラクタUnknownを含めても問題ありません。
+
+        % https://dev.realworldocaml.org/variants.html Polymorphic Variants
+        なお、以下のような関数を定義すると、大なり（\>）記号とは逆の意味を持つ小なり（\<）記号を含む多相バリアント型を推論します。
+        \d-code(```
+        utop # let is_yes = function
+          | `Yes -> true
+          | `No -> false ;;
+        val is_yes : [< `No | `Yes ] -> bool = <fun>
+        ```);%
+        先頭の小なり（\codem{\<}）記号は、`` `Yes`、`` `No`またはその両方を持つ型のみ引数として受け取れることを示します。
+        つまり、上記の関数is_yesは「`` `Yes``、`` `No``またはその両方以下のコンストラクタを受け取り、bool型の値を返す」関数であることが分かります。
+      }
+    >
+  >
 >

@@ -58,6 +58,50 @@ let tuples-and-lists-and-pattern-matching = '<
         * 2つ目の要素：int型である2
       }%
     }
+    +subsection?:(`Uncarried functions`){非カリー化関数}<
+      +p{
+        \ref-subsection(`Curryed functions`);ではカリー化関数を説明しました。
+        % https://cs3110.github.io/textbook/chapters/hop/currying.html
+        (fun x y z ... -\> ...)は複数の引数を取る関数でありカリー化された関数ですが、\dfn{非カリー化関数（カリー化されない関数）}も存在します。
+        カリー化されない関数とは、引数の一部を省略できない関数です。
+
+        例えば、2つの要素を持つタプル値を引数に取る関数はカリー化されない関数です\footnote{
+          タプルを引数に取ることで、複数の引数を取る関数を表現しています。
+        }。
+
+        \d-code(```
+        utop # let uncarried_diff (x, y) = x - y ;;
+        val uncarried_diff : int * int -> int = <fun>
+        ```);%
+
+        \codem{uncarried_diff}はxとyの2つの引数を取りますが、xまたはyの1つだけをuncarried_diffに与えることはできません。
+        % https://cs3110.github.io/textbook/chapters/hop/currying.html
+        ここで任意の型をtとすると、上記の関数の型は「t1 \* t2 -\> t3」となり、このようなスタイルの型を持つ関数を非カリー化関数（カリー化されない関数）と言います。
+        なお、非カリー化関数をカリー化関数に変換することができます\footnote{
+          このような変換をカリー化と言います。
+        }。
+
+        \d-code(```
+        utop # let curry f x y = f (x, y) ;;
+        val curry : ('a * 'b -> 'c) -> 'a -> 'b -> 'c = <fun>
+        ```);%
+
+        上記の関数\codem{curry}は第一引数に関数fを取り、第二、第三引数を要素に持つタプル値としてfに適用する関数です。
+        これをuncarried_diffに適用すると、\ref-subsection(`Curryed functions`);で例示した関数diffと同等な関数になることが分かります。
+
+        \d-code(```
+        utop # let diff x y = x - y ;;
+        val diff : int -> int -> int = <fun>
+        utop # diff 3 1 ;;
+        - : int = 2
+
+        utop # let curried_diff = curry uncarried_diff ;;
+        val curried_diff : int -> int -> int = <fun>
+        utop # curried_diff 3 1 ;;
+        - : int = 2
+        ```);%
+      }
+    >
   >
   +section?:(`Pattern matching`){パターンマッチ}<
     +p{
@@ -89,15 +133,15 @@ let tuples-and-lists-and-pattern-matching = '<
 
       上記の構文は次のルールを示しています。
       \listing{
-        * \<pattern\>は\<value-name\>の命名規則に従う記号列を取ります
-        * または、アンダースコア（_）を取ります\footnote{
+        * パターン（\<pattern\>）は値（\<value-name\>）の命名規則に従う記号列を取ることができます
+        * パターンは、アンダースコア（_）を取ることもできます\footnote{
             % https://v2.ocaml.org/manual/patterns.html#sss:pat-variable
             アンダースコア（_）は任意の値に一致しますが、アンダースコア（_）を指定して値を参照できません。
           }
-        * または、\<pattern\>をカッコで囲んだ形式（\codem{( \<pattern\> )}）を取ります
-        * または、型を指定した形（\codem{( \<pattern\> : \<typexpr\> )}）を取ります\footnote{\<typexpr\> はintやstringといった型名を取ります。}
-        * または、\codem{\<pattern\> \| \<pattern\>}のように複数のパターンをパイプ（\|）でつないで並べます
-        * または、\codem{\<pattern\> \{, \<pattern\>\}+}のように複数のパターンをカンマ（,）でつないで並べます
+        * パターンは、\<pattern\>をカッコで囲んだ形式（\codem{( \<pattern\> )}）を取ることもできます
+        * パターンは、型を指定した形（\codem{( \<pattern\> : \<typexpr\> )}）を取ります\footnote{\<typexpr\> はintやstringといった型名を取ります。}
+        * パターンは、\codem{\<pattern\> \| \<pattern\>}のように複数のパターンをパイプ（\|）でつないで並べることも可能です
+        * パターンは、\codem{\<pattern\> \{, \<pattern\>\}+}のように複数のパターンをカンマ（,）でつないで並べることも可能です
       }%
 
       パターン及びパターンマッチでは上記の構文を用いて様々な処理を行います。
@@ -350,7 +394,7 @@ let tuples-and-lists-and-pattern-matching = '<
       ```);%
 
       上記の関数\codem{is_alphabet}は、char型の値を引数に取り'a'〜'z'または'A'〜'Z'であればtrueを返し、それ以外であればfalseを返します。
-      なお、orパターンは読みやすさのため、横に並べて書くこともできます。
+      なお、Orパターンは読みやすさのため、横に並べて書くこともできます。
       \d-code(```
       utop # let is_alphabet x = match x with
         | 'a'..'z' | 'A'..'Z' -> true
@@ -456,7 +500,6 @@ let tuples-and-lists-and-pattern-matching = '<
         \d-code(```
         utop # let are_over_ten x = match x with
           | (a, b) -> if a >= 10 && b >= 10 then true else false ;;
-          | _ -> false ;;
         val are_over_ten : int * int -> bool = <fun>
         ```);%
       }

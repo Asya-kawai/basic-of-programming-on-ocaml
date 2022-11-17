@@ -1,0 +1,56 @@
+@import: settings
+
+% https://cs3110.github.io/textbook/chapters/preface/install.html
+
+let installing-ocaml = '<
+  +p{
+    本書ではOCamlのコード例を用いて説明します。
+    OCamlのコードを手元で確かめるには\codem{ocaml}コマンドまたは\codem{utop}コマンドが必要です。
+    本章ではUbuntu OSにおけるインストール方法を紹介します。
+  }
+  +section{インストール方法}<
+    +p{
+      Ubuntuにログインしターミナル（端末）を起動します。
+      始めに、下記コマンドを実行しパッケージをアップデートします。
+      \d-code(```
+      % sudo apt update
+      ```);%
+
+      必要に応じてパッケージのアップグレードも行います。
+      \d-code(```
+      % sudo apt upgrade -y
+      ```);%
+
+      次に\codem{opam}というOCamlのパッケージマネージャをインストールします。
+      これをインストールするとocamlコマンドもインストールされます。
+      % https://opam.ocaml.org/doc/Install.html
+      \d-code(```
+      % sudo apt install opam -y
+      ```);%
+
+      opamをインストール後、下記コマンドを実行しopamの初期化を行います。
+      % https://cs3110.github.io/textbook/chapters/preface/install.html#initialize-opam
+      \d-code(```
+      % opam init --bare -a -y
+      ```);%
+
+      OCamlにはutopという、\dfn{REPL(Read-Eval-Print Loop)}というツールが存在します。
+      % https://e-words.jp/w/REPL.html
+      REPLとは実行環境の1つで、プログラマが入力した文字列を受け取って、それを解釈・実行し結果を返すプログラムです。
+      このようなプログラムは\dfn{インタプリタ}とも呼ばれます。
+      utopは結果を返した後は再び入力を待ち受けます。
+      utopは補完機能等を備えているため、本書ではutopの利用を推奨します。
+      utopをインストールするには、以下のコマンドを実行します。
+      \d-code(```
+      % opam install utop
+      ```);%
+
+      コンソールにutopと入力し、utopを起動します。
+      \d-code(```
+      % utop
+      ```);%
+
+      終了するには\codem{Ctrl + d}を入力します。
+    }
+  >
+>

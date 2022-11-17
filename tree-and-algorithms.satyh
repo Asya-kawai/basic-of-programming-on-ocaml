@@ -1,0 +1,354 @@
+@import: settings
+
+let tree-and-algorithms = '<
+  +p{
+    \ref-subsection(`Recursive variant types`);では再帰バリアント型を用いて木構造を表現しました。
+    % https://www.fos.kuis.kyoto-u.ac.jp/~igarashi/class/isle4-07w/mltext/ocaml007.html Case Study: 二分木
+    木構造はUnixファイルシステム等の様々な場面で応用されています。
+    そのため木構造の理解や木構造に対する操作を学ぶことは有用です。
+    % https://ja.wikipedia.org/wiki/%E3%82%A2%E3%83%AB%E3%82%B4%E3%83%AA%E3%82%BA%E3%83%A0
+    木構造に対する操作のような、何らかの結果を得るための明確な手続き（手順）を\dfn{アルゴリズム}と言います。
+    本章では、木構造を操作するための関数とそのアルゴリズムについて説明します。
+  }
+  +section{木構造と操作関数}<
+    +p{
+      % https://www.fos.kuis.kyoto-u.ac.jp/~igarashi/class/isle4-07w/mltext/ocaml007.html Case Study: 二分木
+      \ref-subsection(`Recursive variant types`);で説明したような木構造に対して、その深さ測る関数を考えます。
+      % \ref-subsection(`Parameterized variants`);で説明したパラメータ化されたバリアントを用います。
+      なお、本節では以下の木構造定義を用いることにします。
+      \d-code(```
+      utop # type 'a tree = 
+        | Empty
+        | Leaf of 'a
+        | Node of 'a tree * 'a * 'a tree ;;
+      type 'a tree = Empty | Leaf of 'a | Node of 'a tree * 'a * 'a tree
+      ```);%
+
+      木構造の深さを計算する関数は、以下のように定義できます。
+
+      \d-code(```
+      utop # let rec tree_depth = function
+        | Empty -> 0
+        | Leaf _ -> 0
+        | Node (left, _, right) -> 1 + (max (tree_depth left) (tree_depth right)) ;;
+      val tree_depth : 'a tree -> int = <fun>
+
+      utop # let my_tree = Node (Node (Leaf 3, 5, Leaf 4), 10, Leaf 7) ;;
+      val my_tree : int tree = Node (Node (Leaf 3, 5, Leaf 4), 10, Leaf 7)
+
+      utop # tree_depth my_tree ;;
+      - : int = 2
+      ```);%
+
+      木の深さとは「頂点を1としてそれに続く節を数え上げていき、頂点から最も遠い節までの節の合計」のことを指します。
+      ここで最も遠い節と表現しているのは、節は複数に枝分かれし、節によっては深さがバラバラな場合があり、
+      頂点から最も遠くまで伸びている節を木の深さとして採用する必要があるためです。
+      上記の関数\codem{tree_depth}は、Leafの場合は0を返し、Nodeの場合は現在の節と「左と右に伸びる節の内、大きい方の値」を可算します。
+      特に\codem{(tree_depth left)}及び\codem{(tree_depth right)}は自分自身を呼び出しているため再帰になっています。
+      また、tree_depath内で利用している関数\codem{max}は「与えられた2つの引数の内大きい方を返す関数」で、
+      maxを用いて左と右でより深い方の値を返すように実装しています。
+    }
+    +p{
+      % http://www.cs.tsukuba.ac.jp/~kam/lecture/fp2017/8.pdf
+      前述の関数tree_depthは再帰関数であるため、メモリの\dfn{スタック領域}を消費します。
+      % https://atmarkit.itmedia.co.jp/icd/root/31/61024131.html
+      再帰関数は木構造の深さが深くなるほどスタック領域を使用してしまい、\dfn{スタックオーバーフロー}が発生する可能性があります。
+      % https://ja.wikipedia.org/wiki/%E6%9C%AB%E5%B0%BE%E5%86%8D%E5%B8%B0
+      その対策として「自身の呼び出しが、関数内の処理において一番最後になる」ような再帰定義を行います。
+      これを\dfn{末尾再帰（Tail recursion）}と言います。
+      関数tree_depthを末尾再帰で定義し直すと以下のように定義できます。
+      % https://stackoverflow.com/questions/21183770/ocaml-binary-tree-depth-with-no-stack-overflow
+      % https://stackoverflow.com/questions/9323036/tail-recursive-function-to-find-depth-of-a-tree-in-ocaml
+      \d-code(```
+utop # let tree_depth_tailrec tree =
+  let rec tree_depth_tailrec tree k = match tree with
+    | Empty | Leaf _ -> k 0
+    | Node(left,_,right) ->
+      tree_depth_tailrec left (fun dleft ->
+        tree_depth_tailrec right (fun dright ->
+          k (1 + (max dleft dright))))
+  in tree_depth_tailrec tree (fun d -> d) ;;
+val tree_depth_tailrec : 'a tree -> int = <fun>
+      ```);%
+
+      % http://www.nct9.ne.jp/m_hiroi/func/ocaml02.html
+      % どこかで参考になるかな？
+    }
+    +p{
+      % https://www.fos.kuis.kyoto-u.ac.jp/~igarashi/class/isle4-07w/mltext/ocaml007.html Case Study: 二分木
+      ここまで節の子が2つ以下の木構造を扱ってきました。このように節が2つ以下のものを\dfn{2分木}と言いました\footnote{
+        2分木については\ref-subsection(`Recursive variant types`);でも解説しました。
+      }。
+      % 2分木\codem{${t}}に対して以下の等式が常に成り立ちます。
+      % \d-codem{
+      %   ${tree\_size(t) \leqq 2^{tree\_depth(t)} - 1}
+      % }
+      % また、2分木\codem{${t}}に対して
+      % \d-codem{
+      %   ${tree\_size(t) = 2^{tree\_depth(t)} - 1}
+      % }
+      % となるような2分木を\dfn{完全2分木}といいます。
+
+      % https://www.sophia-it.com/content/complete+binary+tree
+      2分木の木構造のうち、頂点から全ての葉までの深さが等しく、全てのノードが2つの子を持つものを\dfn{完全2分木}と言います。
+      以下に完全2分木の例を図示します。
+      \d-code(```
+      +-----------+
+      | Node (16) |
+      +-----------+                       
+           |
+           +-------------------------------------+
+           |  +-----------+                      |  +-----------+
+           +--| Node (8)  |                      +--| Leaf (15) |
+              +-----------+                         +-----------+
+                |                                     |
+                |     +-----------+                   |     +-----------+
+                +-----| Leaf (4)  |                   +-----| Leaf (11) |
+                |     +-----------+                   |     +-----------+
+                |       |                             |       |
+                |       |  +-----------+              |       |  +-----------+
+                |       +--| Leaf (2)  |              |       +--| Leaf (9)  |
+                |       |  +-----------+              |       |  +-----------+
+                |       |                             |       |
+                |       |  +-----------+              |       |  +-----------+
+                |       +--| Leaf (3)  |              |       +--| Leaf (10) |
+                |          +-----------+              |          +-----------+
+                |                                     |
+                |     +-----------+                   |     +-----------+
+                +-----| Leaf (7)  |                   +-----| Leaf (14) |
+                      +-----------+                         +-----------+
+                        |                                     |
+                        |  +-----------+                      |  +-----------+
+                        +--| Leaf (5)  |                      +--| Leaf (12) |
+                        |  +-----------+                      |  +-----------+
+                        |                                     |
+                        |  +-----------+                      |  +-----------+
+                        +--| Leaf (6)  |                      +--| Leaf (13) |
+                           +-----------+                         +-----------+
+      ```);%
+
+      上図をtree型で表現すると以下のようになります。
+      \d-code(```
+      utop # let comp_tree = Node(
+        Node(Node(Leaf 2, 4, Leaf 3), 8, Node(Leaf 5, 7, Leaf 6)),
+        16,
+        Node(Node(Leaf 9, 11, Leaf 10), 15, Node(Leaf 12, 14, Leaf 13))) ;;
+      val comp_tree : int tree =
+        Node (Node (Node (Leaf 2, 4, Leaf 3), 8, Node (Leaf 5, 7, Leaf 6)), 16,
+         Node (Node (Leaf 9, 11, Leaf 10), 15, Node (Leaf 12, 14, Leaf 13)))
+      ```);%
+      % 上記の例から\codem{${tree\_size(t) = 7}}且つ\codem{${tree\_depth(t) = 3}}であることが分かります。
+      % これらを\codem{${tree\_size(t) = 2^{tree\_depth(t)} - 1}}に代入すると
+      % \codem{${7 = 2^3 - 1}}となるため、等式を満たしていることが分かります。
+    }
+    +p{
+      % https://www.fos.kuis.kyoto-u.ac.jp/~igarashi/class/isle4-07w/mltext/ocaml007.html
+      ここで、木構造から値を列挙する関数を考えます。
+      木構造から値を取り出すには次のアルゴリズムがあります。
+
+      \listing{
+        * \dfn{行きがけ順（preorder）}： 訪れた節の値にラベルを付け、左の部分木、右の部分木の順で探索（走査）及び値を見つけ次第ラベルを付ける方法
+        * \dfn{通りがけ順（inorder）}： 左の部分木を辿れなくなるまで探索（走査）及び値にラベルを付け、1つ上の節、右の部分木の順で探索（走査）及び値を見つけ次第ラベルを付ける方法
+        * \dfn{帰りがけ順（postorder）}： 左の部分木を辿れなくなるまで探索（走査）及び値にラベルを付け、1つ上の節の右の部分木を探索（走査）及び値を見つけ次第ラベル付けし、左右両方の走査が完了次第1つ上の節の値をラベル付けする。これを頂点まで繰り返す方法
+      }
+
+      行きがけ順の関数は以下のように定義できます。
+
+      \d-code(```
+      utop # let rec preorder = function
+        | Empty -> []
+        | Leaf x -> [x]
+        | Node (left, x, right) -> x :: (preorder left) @ (preorder right) ;;
+      val preorder : 'a tree -> 'a list = <fun>
+
+      utop # preorder comp_tree ;;
+      - : int list = [16; 8; 4; 2; 3; 7; 5; 6; 15; 11; 9; 10; 14; 12; 13]
+      ```);%
+
+      通りがけ順は以下のように定義できます。
+
+      \d-code(```
+      utop # let rec inorder = function
+        | Empty -> []
+        | Leaf x -> [x]
+        | Node (left, x, right) -> (inorder left) @ (x :: inorder right) ;;
+      val inorder : 'a tree -> 'a list = <fun>
+
+      utop # inorder comp_tree ;;
+      - : int list = [2; 4; 3; 8; 5; 7; 6; 16; 9; 11; 10; 15; 12; 14; 13]
+      ```);%
+
+      帰りがけ順は以下のように定義できます。
+
+      \d-code(```
+      utop # let rec postorder = function
+        | Empty -> []
+        | Leaf x -> [x]
+        | Node (left, x, right) -> (postorder left) @ (postorder right) @ [x];;
+      val postorder : 'a tree -> 'a list = <fun>
+
+      utop # postorder comp_tree ;;
+      - : int list = [2; 3; 4; 5; 6; 7; 8; 9; 10; 11; 12; 13; 14; 15; 16]
+      ```);%
+    }
+  >
+  +section{2分探索木}<
+    +p{
+      % https://www.fos.kuis.kyoto-u.ac.jp/~igarashi/class/isle4-07w/mltext/ocaml007.html
+      \dfn{2分探索木}は、検索を高速に行えるように一定の規則に従ってデータを格納したデータ構造（木構造）です。
+      2分探索木は次のルールがあります。
+
+      \listing{
+        * 左の部分木には、その節のデータよりも小さいデータのみ格納される
+        * 右の部分木には、その節のデータよりも大きいデータのみ格納される
+      }
+
+      このような木構造を探索することを\dfn{2分探索}といいます。
+      2分探索木の例を以下に示します。
+
+      \d-code(```
+      +-----------+
+      | Node (10) |
+      +-----------+                       
+           |
+           +-------------------------------------+
+           |  +-----------+                      |  +-----------+
+           +--| Node (5)  |                      +--| Leaf (15) |
+              +-----------+                         +-----------+
+                |                                     |
+                |     +-----------+                   |     +-----------+
+                +-----| Leaf (3)  |                   +-----| Leaf (14) |
+                |     +-----------+                   |     +-----------+
+                |                                     |       |
+                |                                     |       |  +-----------+
+                |                                     |       +--| Leaf (12) |
+                |                                     |       |  +-----------+
+                |                                     |       |
+                |                                     |       |  +-----------+
+                |                                     |       +--| Leaf (13) |
+                |                                     |          +-----------+
+                |                                     |
+                |     +-----------+                   |     +-----------+
+                +-----| Leaf (4)  |                   +-----| Leaf (16) |
+                      +-----------+                         +-----------+
+      ```);%
+
+      また、2分探索木であり且つ完全2分木である木構造も存在します。
+      2分探索木であり且つ完全2分木である木構造の例を以下に示します。
+
+      \d-code(```
+      +-----------+
+      | Node (10) |
+      +-----------+                       
+           |
+           +-------------------------------------+
+           |  +-----------+                      |  +-----------+
+           +--| Node (5)  |                      +--| Leaf (15) |
+              +-----------+                         +-----------+
+                |                                     |
+                |     +-----------+                   |     +-----------+
+                +-----| Leaf (3)  |                   +-----| Leaf (14) |
+                |     +-----------+                   |     +-----------+
+                |                                     |
+                |     +-----------+                   |     +-----------+
+                +-----| Leaf (4)  |                   +-----| Leaf (16) |
+                      +-----------+                         +-----------+
+      ```);%
+
+      上記のような2分探索木を探索（走査）するための関数は、以下のように定義できます。
+
+      \d-code(```
+      utop # let rec search tree data = match tree with
+        | Empty -> false
+        | Leaf x -> data = x
+        | Node (left, x, right) ->
+            if x = data then true
+            else
+              if data < x then search left data
+              else search right data ;;
+      val search : 'a tree -> 'a -> bool = <fun>
+      ```);%
+
+      上記の関数\codem{search}は、検索対象となる木構造treeと検索したい値dataを引数にとります。
+      treeが空（Empty）である場合は、検索したい値が見つからなかったと判断しfalseを返します。
+      葉（Leaf）である場合は、葉の値とdataを比較し、その結果を返します。
+      節（Node）である場合は、節が持つ値とdataを比較し一致していればtrueを返します。
+      節が持つ値と一致しなければ、節が持つ値とdataの大小を比較し、
+      \codem{data \< x}であれば左の部分木（left）をsearch関数の第一引数として与え、再帰的に検索を行います。
+      そうでなければ（つまり\codem{data \>= x}であれば）、右の部分木（right）をsearch関数の第一引数として与え、再帰的に検索を行います。
+      関数searchを実行した際の結果を以下に示します。
+
+      \d-code(```
+        utop # let comp_binary_search_tree = Node(
+          Node(Node(Empty, 3, Leaf 4), 5, Node(Leaf 6, 7, Leaf 8)),
+          9,
+          Node(Node(Leaf 10, 11, Leaf 12), 13, Node(Leaf 14, 15, Empty))) ;;
+        val comp_binary_search_tree : tree =
+          Node (Node (Node (Empty, 3, Leaf 4), 5, Node (Leaf 6, 7, Leaf 8)), 9,
+           Node (Node (Leaf 10, 11, Leaf 12), 13, Node (Leaf 14, 15, Empty)))
+
+        utop # search comp_binary_search_tree 1 ;;
+        - : bool = false
+        utop # search comp_binary_search_tree 4 ;;
+        - : bool = true
+        utop # search comp_binary_search_tree 6 ;;
+        - : bool = true
+        utop # search comp_binary_search_tree 9 ;;
+        - : bool = true
+        utop # search comp_binary_search_tree 13 ;;
+        - : bool = true
+        utop # search comp_binary_search_tree 20 ;;
+        - : bool = false
+      ```);%
+
+      上記の例では、完全2分木に対して探索（走査）を行っていますが、2分探索木であれば上記の関数searchを用いて値の有無を確認できます。
+      また、2分探索木において探索と同じくらい重要な操作として「追加」があります。
+      追加関数を考える場合、2分探索木のルールに則った実装が必要です。
+      つまり、追加したい値が節の持つ値よりも小さい場合は左の部分木に値を挿入し、大きい場合は右の部分木に値を挿入するように実装します。
+      以下に追加関数addの実装例を示します。
+
+      \d-code(```
+        utop # let rec add tree data = match tree with
+          | Empty -> Leaf data
+          | Leaf x ->
+            if data = x then Leaf x
+            else      
+              if data < x then Node ((Leaf data), x, Empty)
+              else Node (Empty, x, (Leaf data)) 
+          | Node (left, x, right) ->
+            if data = x then Node (left, x, right)
+            else
+              if data < x then Node ((add left data), x, right)
+              else Node (left, x, (add right data)) ;;
+        val add : 'a tree -> 'a -> 'a tree = <fun>
+
+        utop # add Empty 1 ;;
+        - : int tree = Leaf 1
+
+        utop # add (Leaf 3) 4 ;;
+        - : int tree = Node (Empty, 3, Leaf 4)
+
+        utop # let binary_search_tree = Node(
+          Node(Node(Leaf 2, 3, Leaf 4), 5, Empty),
+          9,
+          Node(Node(Leaf 10, 11, Leaf 12), 13, Node(Leaf 14, 15, Leaf 16))) ;;
+        val binary_search_tree : tree =
+          Node (Node (Node (Leaf 2, 3, Leaf 4), 5, Empty), 9,
+           Node (Node (Leaf 10, 11, Leaf 12), 13, Node (Leaf 14, 15, Leaf 16)))
+
+        utop # add binary_search_tree 6 ;;
+        - : int tree =
+        Node (Node (Node (Leaf 2, 3, Leaf 4), 5, Leaf 6), 9,
+         Node (Node (Leaf 10, 11, Leaf 12), 13, Node (Leaf 14, 15, Leaf 16)))
+
+       utop # add binary_search_tree 20 ;;
+       - : int tree =
+       Node (Node (Node (Leaf 2, 3, Leaf 4), 5, Empty), 9,
+        Node (Node (Leaf 10, 11, Leaf 12), 13,
+          Node (Leaf 14, 15, Node (Empty, 16, Leaf 20))))
+      ```);%
+
+      他にも特定の値を削除する関数などが考えられますが、エラーハンドリングの知識が必要になるため割愛します。
+    }
+  >
+>

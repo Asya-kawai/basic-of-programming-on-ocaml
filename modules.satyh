@@ -1,9 +1,11 @@
 @import: settings
 
+% https://dev.realworldocaml.org/first-class-modules.html
 % https://v2.ocaml.org/manual/firstclassmodules.html
 % 第一級モジュールの説明をどこかに入れる。
+% と思ったが、なかなか説明が膨大になるのでやめる。
 
-let multiple-files-and-modules = '<
+let modules = '<
   +p{
     % https://cs3110.github.io/textbook/chapters/modules/intro.html
     % https://dev.realworldocaml.org/files-modules-and-programs.html - Files, Modules, and Programs
@@ -11,7 +13,10 @@ let multiple-files-and-modules = '<
     これはプログラムを単一ファイルに書くようなものです。
     小さなプログラムを書くだけであれば、1つのファイルに全てを詰め込んで良いかも知れません。
     しかし、大きく複雑なプログラムを書く場合、単一ファイルに全てを記述しそれを把握することが困難な場合があります。
-    そのようなケースでは、プログラムの関心や責務に応じてコードを分割しますが、この分割した単位を\dfn{モジュール}といいます。
+    そのようなケースでは、プログラムの関心や責務に応じてコードを分割しますが、この分割した単位を\dfn{モジュール}といいます\footnote{
+      % https://dev.realworldocaml.org/first-class-modules.html
+      OCamlのモジュールは、変数や関数と同じように値として扱うことができ、これを\dfn{第一級モジュール}と言います。
+    }。
     % https://dev.realworldocaml.org/files-modules-and-programs.html - Multifile Programs and Modules
     OCamlでは、1つのファイルは1つのモジュールに対応します。
     つまり、プログラムの関心や責務といった概念単位でファイル分割を行うと、自動的にモジュールに分割したことになります。
@@ -35,7 +40,8 @@ let multiple-files-and-modules = '<
       モジュール本体にはモジュール固有の変数や関数を定義します。
 
       % https://v2.ocaml.org/manual/moduleexamples.html
-      関連する変数や関数をまとめることを\dfn{パッケージング}と言い、
+      % https://cs3110.github.io/textbook/chapters/modules/encapsulation.html
+      関連する変数や関数をまとめることを\dfn{パッケージング}または\dfn{カプセル化}と言い、
       このようなまとまり（モジュール本体）をパッケージまたは\dfn{構造体}と言います。
       構造体は\codem{sturct \<body\> end}で表されます。
       このように構造体にモジュール名を付けることを\dfn{モジュールバインディング}と言います。
@@ -65,9 +71,9 @@ let multiple-files-and-modules = '<
 
       上記の構文は次のルールを表しています。
       \listing{
-        * モジュール式（\<module-expr\>）はstruct〜endで表現されます
+        * モジュール式（\<module-expr\>）はstruct〜endで表現できます
         * モジュール内には、モジュール定義やletバインディングを記述できます
-        * モジュール式（\<module-expr\>）は、module \<module-name\> = \<module-expr\>で表現されます
+        * モジュール定義（\<definition\>）は、\codem{module \<module-name\> = \<module-expr\>}で表現できます
         * モジュール名（\<module-name\>）は先頭大文字で始める必要があります
       }%
 
@@ -112,6 +118,13 @@ let multiple-files-and-modules = '<
       モジュールを定義するとシグネチャも自動で生成されます。
       しかし、モジュール内でしか利用しない変数や関数といった、モジュールの利用者に公開しなくても良い情報を含む場合があります。
       このようにモジュールが提供するべき変数や関数等だけを公開し、それ以外を隠蔽するのがシグネチャです。
+      % https://cs3110.github.io/textbook/chapters/modules/encapsulation.html
+      このように外部に公開する必要のない情報を隠すこと及び
+      公開しない情報へアクセスさせないことを\dfn{情報隠蔽}と言います\footnote{
+        % https://ja.wikipedia.org/wiki/%E3%82%AB%E3%83%97%E3%82%BB%E3%83%AB%E5%8C%96
+        特定のデータや操作をまとめ詳細を隠蔽することをカプセル化と定義する場合もあるため、
+        カプセル化と情報隠蔽は同義と見なされることもあります。
+      }。
 
       シグネチャを定義するには以下の構文を利用します。
 
@@ -146,7 +159,7 @@ let multiple-files-and-modules = '<
 
       上記の構文は次のルールを表しています。
       \listing{
-        * モジュールの型（\<module-type\>）はsig〜endで表されます
+        * モジュールの型（\<module-type\>）はsig〜endで表現できます
         * sig〜end内には、0個以上の定義（\<specification\>）を定義できます
         * 定義は、変数、関数、例外等を含みます
         * シグネチャ名は、先頭が大文字または小文字で始める必要があります
@@ -309,6 +322,29 @@ let multiple-files-and-modules = '<
 
       上記の例は、モジュールA内にモジュールBを定義しています。
       モジュールB内の変数oneを利用するには、A.B.oneのようにドット（.）でつなぎます。
+
+      % https://v2.ocaml.org/manual/moduleexamples.html#s:module:structures
+      これを\dfn{ドット表記}と言います。
+      モジュールのドット表記をEBNFで表すと以下のようになります。
+
+      % https://v2.ocaml.org/manual/modules.html#module-expr
+      % https://v2.ocaml.org/manual/names.html#module-path
+      \d-code(```
+      <module-expr>  ::= <module-path>
+                       | struct [ <module-items> ] end
+                       | ..
+
+      <module-path>  ::= <module-name> { .<module-name> }
+
+      <module-name>  ::= (A..Z) { a..zA..Z | 0..9 | _ | ' }
+      ```);%
+
+      上記の構文は次のルールを表しています。
+      \listing{
+        * モジュール式（\<module-expr\>）は\<module-path\>またはstruct〜endで表現できます
+        * モジュールパス（\<module-path\>）は、モジュール名（\<module-name\>）をドット（.）でつないで表現できます
+        * モジュール名（\<module-name\>）は先頭大文字で始める必要があります
+      }%
     }
     +p{
       % https://dev.realworldocaml.org/files-modules-and-programs.html - Nested Modules
@@ -612,9 +648,24 @@ let multiple-files-and-modules = '<
       \dfn{ファンクタ}はパラメータ化を行うための機能であり、よく「モジュールからモジュールへの"関数"」と表現されます。
       なお、ここで"関数"と表現しているのは、概念としては関数ですが
       \ref-section(`Function`);で説明した関数とは異なり、値から値への関数と同様の記述ができないためです。
+
+      ファンクタを定義する構文は以下のとおりです。
+      % https://cs3110.github.io/textbook/chapters/modules/functors.html#functor-syntax-and-semantics
+      \d-code(```
+      module <functor> (<module> : <signature>) ... = ...
+      ```);%
+
+      \codem{\<functor\>}はファンクタ名を表し、
+      \codem{\<module\> : \<signature\>}はファンクタが受け取るモジュールとその型を表します。
+      ファンクタが受け取るモジュールはシグネチャと合わせて、必ずカッコで囲む必要があります\footnote{
+        引数にとるモジュールのシグネチャを省略できない点が\ref-section(`Function`);で説明した関数と異なる点です。
+      }。
+      (\<module\> : \<sigunature\>)の後ろにある3つのドット（...）は「0個以上の引数を取って良い」ことを表します。
+
       % https://cs3110.github.io/textbook/chapters/modules/functors.html
       % https://dev.realworldocaml.org/functors.html - Functors
       % ファンクタのメリットを最後に書く
+      % 結局、書かないかも
       ファンクタの例を以下に示します。
       \d-code(```
       utop # module type X = sig
@@ -643,7 +694,7 @@ let multiple-files-and-modules = '<
       ```);%
 
       上記は、\codem{IncreaseX}というファンクタを定義しています。
-      IncreaseXはX型のモジュールMを受け取り、M.x + 1という変数xを持つX型のモジュールを返します。
+      IncreaseXはX型のモジュールMを受け取り、M.x + 1という値に束縛された変数xを持つX型のモジュールを返します。
       % https://dev.realworldocaml.org/functors.html - A Trivial Example
       通常の関数と異なり、ファンクタを定義する場合は必ず引数の型を明示する必要があります。
       なお戻り値の型は必須ではありませんが、戻り値の型を省略した場合は戻り値がX型のモジュールではなく、
@@ -685,10 +736,10 @@ let multiple-files-and-modules = '<
       Error: Unbound value D.y
       ```);%
 
-      上記の例は、シグネチャXに含まれない変数yを持つCモジュールを定義しています。
+      上記の例は、Xシグネチャに含まれない変数yを持つCモジュールを定義しています。
       これをIncreaseXに適用し、Dモジュールを定義します。
-      Dモジュールは変数xを持ち、この変数の値はC.xに+1した3です。
-      しかしファンクタが返すシグネチャXには変数yが含まれないため無視され、結果としてDモジュールに変数yは定義されません。
+      Dモジュールは変数xを持ち、この変数の値は3（C.x + 1 = 2 + 1）です。
+      しかしファンクタが返すXシグネチャには変数yが含まれないため無視され、結果としてDモジュールに変数yは定義されません。
     }
     +p{
       % https://cs3110.github.io/textbook/chapters/modules/functors.html
@@ -712,19 +763,68 @@ let multiple-files-and-modules = '<
 
       上記の例は、AddXというファンクタを定義しています。
       AddXファンクタはX型のモジュールMを受け取り、int型の引数を1つ受け取ってM.x + yを返す関数addを持つシグネチャ（を満たすモジュール）を返します。
-      AddXに無名のモジュール\codem{struct let x = 10 end}を適用したものをEモジュールとして定義します。
+      AddXに匿名モジュール\codem{struct let x = 10 end}を適用したものをEモジュールとして定義します。
       上記の例から分かるとおり、Eモジュールはファンクタによって関数addを持ちます。
       なお、ファンクタが返すシグネチャは変数xを持たないため、Eモジュールに変数xは定義されません。
     }
     +p{
-      % https://v2.ocaml.org/manual/moduleexamples.html#s%3Afunctors
+      % https://cs3110.github.io/textbook/chapters/modules/functors.html#functor-syntax-and-semantics
+      ファンクタを定義する構文から分かるとおり、ファンクタは複数の引数を取ることができます。
+      複数の引数を取るファンクタの例を以下に示します。
+
+      \d-code(```
+      utop # module type Y = sig
+        val y : int
+      end ;;
+      module type Y = sig val y : a end
+
+      utop # module AddY (M1 : X) (M2 : Y) = struct
+        let x = M1.x + M2.y
+      end ;;
+      module AddY : functor (M1 : X) (M2 : Y) -> sig val x : a end
+
+      utop # module F = AddY (struct let x = 2 end) (struct let y = 3 end) ;;
+      module F : sig val x : a end
+
+      utop # F.x ;;
+      - : a = 5
+      ```);%
+
+      上記は、\codem{AddY}というファンクタを定義しています。
+      AddYは、2つの引数（Xシグネチャを持つM1モジュールとYシグネチャを持つM2モジュール）を受け取り、
+      M1.x + M2.y という値に束縛された変数xを持つモジュールを返します。
+    }
+    +p{
+      % https://cs3110.github.io/textbook/chapters/modules/functors.html#functor-syntax-and-semantics
+      % 匿名ファンクタを説明する
+      また、ファンクタは高階関数と同じように、
+      1つのファンクタを引数に取り\dfn{匿名ファンクタ}を返す\dfn{高階ファンクタ}で記述できます。
+      匿名ファンクタを作るには、\codem{functor}キーワードを利用します。
+      つまり以下の2つの構文は同等です。
+
+      % https://cs3110.github.io/textbook/chapters/modules/functors.html#functor-syntax-and-semantics
+      % https://v2.ocaml.org/manual/modules.html#sss:mexpr-module-defs
+      \d-code(```
+      module <functor> (<module_1> : <signature_1>)
+                       ...
+                       (<module_n> : <signature_n>) = ...
+
+      module <functor> = functor (<module_1> : <signature_1>) ->
+                         functor (<module_n> : <signature_n>) -> ...
+      ```);%
+
+      AddYファンクタをfunctorキーワードで定義し直すと以下のように書くことができます。
+      \d-code(```
+      utop # module AddY = functor (M1 : X) -> functor (M2 : Y) -> struct
+        let x = M1.x + M2.y
+      end ;;
+      module AddY : functor (M1 : X) (M2 : Y) -> sig val x : int end
+      ```);%
     }
   >
+  % 今は脚注で入れるようにする。後から章立てする。
   % +section?:(`First class modules`){第一級モジュール}<
   %   +p{}
-  % >
-  % +section?:(){カプセル化と情報隠蔽}<
-  %   % https://cs3110.github.io/textbook/chapters/modules/encapsulation.html
   % >
   +section?:(`Using dune`){Duneの利用}<
     +p{
@@ -799,6 +899,7 @@ let multiple-files-and-modules = '<
         +p{
           いくつかのプログラミング言語であれば、プログラムのスタート地点である関数等が存在します\footnote{
             これをエントリーポイントとも言います。
+            いくつかのプログラミング言語では、main関数がその役割を担います。
           }。
           しかしOCamlでは他の言語と異なり、固有のmain関数が存在しません。
           OCamlはソースコード内の変数、関数、式を定義された順（上から下）で評価します。
@@ -808,12 +909,18 @@ let multiple-files-and-modules = '<
         }
       >
     >
-    +subsection{ライブラリの利用}<
+    +subsection?:(`Using libraries`){ライブラリの利用}<
       +p{
         % http://ocamlverse.net/content/quickstart_ocaml_project_dune.html Libraries
         duneを利用して作成したプロジェクトでは、libディレクトリで様々なモジュールを管理できます。
-        ここでは試験的な利用を目的としたMathモジュールを作成する例を示します。
-        エディタ等で\codem{lib/math.ml}というファイルを新規作成し、以下の内容を入力し保存してください。
+        % www2.ocaml.org
+        % Libraries, starting with the standard library, provide collections of modules        
+        このように1つ以上のモジュールをまとまたものを\dfn{ライブラリ}と言います。
+
+        ここでは四則演算を目的としたMathモジュールを作成する例を示します。
+        エディタ等で\codem{lib/math.ml}というファイルを新規作成し、以下の内容を入力し保存してください\footnote{
+          分かりやすさのため関数を定義していますが、中置演算子として定義しても良いです。
+        }。
   
         \d-code(```
         let plus x y = x + y
@@ -852,7 +959,10 @@ let multiple-files-and-modules = '<
         bin/以下のファイル群から利用できることが分かります。
       }
       +p{
-        bin/main.mlを以下の内容に書き換え、lib/math.mlの関数を利用してみます。
+        bin/main.mlを以下の内容に書き換え、lib/math.mlの関数を利用してみます\footnote{
+          % https://ocaml.jp/refman/libref/Printf.html
+          \codem{Printf.printf}は受け取った引数に従って文字列を整形し、それを標準出力に出すための関数です。
+        }。
 
         \d-code(```
         let () =
@@ -868,7 +978,7 @@ let multiple-files-and-modules = '<
         当該スコープでMy_web_appを省略できます。
         つまり、本来はMy_web_app.Mathと書く必要があったところをMath.plusやMath.minusで呼び出せるようになります。
 
-        下記コマンドを実行し、main.mlを実行します。
+        下記コマンドを実行しmain.mlの結果を出力します。
         \d-code(```
         % dune exec ./bin/main.exe
         Result: 5, 5
@@ -878,11 +988,169 @@ let multiple-files-and-modules = '<
   >
   +section?:(`Multiple files and Modules`){ファイル分割とモジュール}<
     +p{
+      大規模なプログラムを書く場合、複数のモジュールを利用することがあります。
+      複数のモジュール定義を1つのファイルにまとめることもできますが、1つのファイルのサイズが大きくなってしまい、
+      全体の見通しが悪くなる場合があります。
+      その場合、ファイルを分割することで見通しが良くなり、プログラムの可読性が向上し余計なミスを防ぐことができます。
+    }
+    +p{
       % https://dev.realworldocaml.org/files-modules-and-programs.html - Multifile Programs and Modules
-      % これは改めて説明不要かな
-
       % https://dev.realworldocaml.org/files-modules-and-programs.html - Signatures and Abstract Types
-      
+      % こっちは参照しなかった
+      例として\ref-subsection(`Using libraries`);で作成したMathモジュールを拡張することを考えます。
+
+      まずは単一のMathモジュールに機能を追加することを考えます。
+      そこで、実数も扱えるようlib/math.mlに以下の定義を追加します\footnote{
+        分かりやすさのため関数を定義していますが、中置演算子を定義しても良いです。
+      }。
+      \d-code(```
+      let plus x y = x + y
+      let minus x y = x - y
+      let plus_f x y = x +. y
+      let minus_f x y = x -. y
+      ```);%
+
+      bin/main.mlを以下のように書き換え、追加した関数を呼び出します。
+
+      \d-code(```
+      let () =
+        let open My_web_app in
+        let result1 = Math.plus 2 3 in
+        let result2 = Math.minus 10 5 in
+        let result3 = Math.plus_f 10. 20. in
+        let result4 = Math.minus_f 30. 10. in
+        Printf.printf "Result: %d, %d, %f, %f\n" result1 result2 result3 result4
+      ```);%
+
+      下記コマンドを実行しmain.mlの結果を出力します。
+
+      \d-code(```
+      % dune exec ./bin/main.exe
+      Result: 5, 5, 30.000000, 20.000000
+      ```);%
+
+      次に、Mathモジュールが、
+      int型を扱う\codem{Myint}モジュールとfloat型を扱う\codem{Myfloat}モジュールから構成されるように変更します。
+      まず、int型を扱うモジュール名をMyintとするため、lib/myint.mlというファイルを新規作成し、
+      以下の内容を書き込みます。
+      \d-code(```
+      let plus x y = x + y
+      let minus x y = x - y
+      ```);%
+
+      同様にfloat型を扱うモジュール名をMyfloatとするためlib/myfloat.mlというファイルを新規作成し、
+      以下の内容を書き込みます。
+      \d-code(```
+      let plus_f x y = x +. y
+      let minus_f x y = x -. y
+      ```);%
+
+      最後に、Mathモジュール（lib/math.ml）内でMyintモジュールとMyfloatモジュールをincludeします。
+      \d-code(```
+      include Myint
+      include Myfloat
+      ```);%
+
+      myint.ml、myflaot.ml、math.mlは以下のように配置されます。
+
+      \d-code(```
+      % ls ./lib/
+      dune  math.ml  myfloat.ml  myint.ml
+      ```);%
+
+      main.mlを再度実行し、モジュールが呼び出せること及び結果が変わらないことを確認します。
+      \d-code(```
+      % ls ./bin/main.ml
+      ./bin/main.ml
+
+      % cat ./bin/main.ml
+      let () =
+        let open My_web_app in
+        let result1 = Math.plus 2 3 in
+        let result2 = Math.minus 10 5 in
+        let result3 = Math.plus_f 10. 20. in
+        let result4 = Math.minus_f 30. 10. in
+        Printf.printf "Result: %d, %d, %f, %f\n" result1 result2 result3 result4
+
+      % dune exec ./bin/main.exe
+      Result: 5, 5, 30.000000, 20.000000
+      ```);%
+
+      上記の記述によって、bin/main.mlを書き換えることなく、Mathモジュールの見通しを改善できました。
+    }
+  >
+  +section?:(`Using external modules`){外部モジュールの利用}<
+    +p{
+      Webアプリケーションとして動作させるためには、TCP/IPや適切なセキュリティ等の知識が必要です。
+      しかし、プログラマが全てを理解し一からWebアプリケーションを作成することは手間です。
+      このように膨大な前提知識を必要とするアプリケーションを作成する場合、
+      信頼された第三者が作成した外部ライブラリを利用すると便利です。
+      % https://en.wikipedia.org/wiki/Software_framework
+      なお、このようにソフトウェアの実装に必要な一般的な機能を持つものを\dfn{フレームワーク}と言います\footnote{
+        このフレームワークの定義は諸説あります。
+        本書の定義では、ライブラリと同義として扱っても構いません。
+      }。
+      特にWebアプリケーションに特化したフレームワークをWebアプリケーションフレームワークと言います。
+    }
+    +p{
+      OCamlにはいくつかのWebアプリケーションフレームワークが存在しますが、本書では\dfn{Dream}というフレームワークを利用します。
+      opamを用いて以下のようにDreamをインストールできます。
+      \d-code(```
+      % opam install dream
+      ```);%
+
+      次にdreamを利用するため、以下のようにbin/duneの(libraries ...)にdreamを追加します。
+
+      \d-code(```
+      (executable
+       (public_name my_web_app)
+       (name main)
+       (libraries dream my_web_app))
+      ```);%
+
+      これでbin/以下のファイルからDreamライブラリが利用可能になりました。
+      例としてDreamを用いて文字列を返すだけの簡易的なWebサーバを作成します。
+      bin/main.mlを以下の内容に書き換え保存してください\footnote{
+        外部ライブラリも同様に呼び出せることを示すだけに留めるため、
+        Dreamの記述に関する詳細な説明は割愛します。
+      }。
+
+      \d-code(```
+      let () =
+        Dream.run
+        @@ Dream.logger
+        @@ Dream.router [
+        Dream.get "/" (fun _ -> Dream.html ("Good morning, world"))
+      ]
+      ```);%
+
+      Dreamは\codem{Dream.run}を利用してサーバを起動します。
+      サーバはデフォルトで\codem{http://localhost:8080}というURLで起動します。
+
+      これを実行にするため、コマンドラインで以下のように入力して下さい。
+      \d-code(```
+      % dune exec ./bin/main.exe
+
+      12.11.22 11:05:51.586                       Running at http://localhost:8080
+      12.11.22 11:05:51.586                       Type Ctrl+C to stop
+      ```);%
+
+      実行するとコマンドは終了せず、\codem{Dream.logger}によってサーバのログが表示されます。
+      ログには、サーバがhttp://localhost:8080で起動したこと、サーバを止めるには\codem{Ctrl + C}を入力すれば良いことが示されています。
+      試しにブラウザで上記URLにアクセスするとbin/main.ml内の"Good morning, world"が表示されます。
+
+      また、bin/main.mlを以下のように書き換え、自身で作成したlib/math.mlも同様に呼び出すことが可能です。
+      \d-code(```
+      let () =
+        let open My_web_app in
+        Dream.run
+        @@ Dream.logger
+        @@ Dream.router [
+        Dream.get "/" (fun _ -> Dream.html (Printf.sprintf "%d" (Math.plus 2 3)))
+      ]
+      ```);%
+
+      このように外部ライブラリも自身で作成したライブラリと同様に\*/duneの(libraries ...)に記述することで利用できます。
     }
   >
 >

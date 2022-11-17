@@ -15,15 +15,15 @@ let variables-and-functions = '<
     これらを実現してくれるのが変数と関数です。
 
     % https://dev.realworldocaml.org/variables-and-functions.html
-    変数と関数はプログラミングを行う上で基本的な考え方です。      
+    変数と関数はプログラミングを行う上で基本的な考え方です。
     本章では、プログラミングの基本的な考え方である変数と関数を説明します。      
   }
   +section?:(`Variables`){変数}<
     +p{
       % https://dev.realworldocaml.org/variables-and-functions.html - Variables
       OCamlにておいて\dfn{変数}とは、ある値にバインド（束縛）された識別子です。
-      値を変数にバインドするには\codem{let}キーワードを使用します。
-      変数にバインドする構文は以下のとおりです\footnote{
+      値に変数をバインドするには\codem{let}キーワードを使用します。
+      変数をバインドする構文は以下のとおりです\footnote{
         ここに示したletによる変数の定義は正確なものではありません。
         分かりやすさのため簡略化した表記としています。
       }。
@@ -70,7 +70,7 @@ let variables-and-functions = '<
         * \codem{a..zA..Z \| 0..9 \| _ \| '}：a〜z、A〜Z、0〜9、アンダースコア（_）またはシングルクォート（'）を利用できます
       }%
 
-      この表記は、\dfn{BNF}（バッカス・ナウア記法）という「文法を定義するために用いられるメタ言語」を拡張したのです。
+      この表記は、\dfn{BNF}（バッカス・ナウア記法）という「文法を定義するために用いられるメタ言語」を拡張したものです。
       拡張されたBNFを\dfn{EBNF}と言います。
     }
     +p{
@@ -192,12 +192,19 @@ let variables-and-functions = '<
       上記のエラーは「\codem{x}という値はバインドされていない」ことを示しています。
       よってトップレベルのスコープにはなく、x + xのスコープでのみ変数名xが参照可能であることが確認できました。
     }>
-    +subsection{不変}<
+    +subsection{不変と参照等価性}<
       +p{
         % プログラミングの基礎 - 第3章 ほかの言語の変数との違い
         % https://dev.realworldocaml.org/variables-and-functions.html
         OCamlの変数は他のプログラミング言語と異なり\dfn{不変}です。
-        つまり、変数を定義した後に別の値で上書きできないのです。
+        つまり、変数を定義した後に別の値で上書きできないのです\footnote{
+          % https://cs3110.github.io/textbook/chapters/mut/refs.html
+          だだし\dfn{ref}キーワードを用いて上書き可能にすることはできます。
+        }。
+        % プログラミングの基礎 - 第22章 22.1 参照等価性
+        このようにいつも同じ値を持ち続ける性質を\dfn{参照等価性}と言います\footnote{
+          なお、以降で説明する関数においても、いつも同じ値を返す場合は参照等価性を持つと言えます。
+        }。
 
         これを確かめるために、局所変数で利用した構文を応用してみます。
         例えば、OCamlでは以下のような式を書くこともできます\footnote{
@@ -249,14 +256,14 @@ let variables-and-functions = '<
         これは以下のことを示しています。
 
         \listing{
-          * 変数0（\<variable_0\>）は、局所変数1（\<variable_1\>）及び局所変数2（\<variable_2\>）を持ちます
+          * 変数0（\<variable_0\>）は、その式中に局所変数1（\<variable_1\>）及び局所変数2（\<variable_2\>）を定義します
           * 局所変数1（\<variable_1\>）は、in以降の（局所変数1にとっての）\<expr\>である\codem{let \<variable_2\> = \<expr_2\> in \<expr_3\>}までのスコープで有効です
           * 局所変数2（\<variable_2\>）は、in以降の（局所変数2にとっての）\<expr\>である\codem{\<expr_3\>}のスコープで有効です
           * 変数0（\<variable_0\>）は、\<expr_3\>を評価した結果得られる値を返します
         }%
 
         このことを利用すると、
-        \codem{\<variable_0\>}の内部で任意の局所変数を持つことが可能であることを分かります。
+        \codem{\<variable_0\>}の内部で任意の局所変数を持つことが可能であることが分かります。
 
         \d-code(```
           let <variable_0> =
@@ -272,12 +279,12 @@ let variables-and-functions = '<
         ここまで準備できたところで、局所変数の上書きを試みます。
 
         \d-code(```
-          utop # let a = 
+          utop # let a =
             let pi = 3.14 in
             let b = pi *. 2. in
             let pi = 0. in
             b ;;
-          Line 4, characters 5-7:
+          Line 4, characters 16-18:
           Warning 26 [unused-var]: unused variable pi.
           val a : float = 6.28
         ```);%
@@ -294,7 +301,8 @@ let variables-and-functions = '<
         しかし結果は\codem{6.28}となっており、その計算過程は3.14 \*. 2.0であることが分かります。
         つまり、最初に定義した変数piをlet pi = 0.で上書きしているわけではなく、
         （変数名は同じであっても）piという新しい変数を定義しているのです。
-        また、let pi = 0.で変数piを新しく定義する前の変数bでは、以前の定義である3.14を参照します。
+        このように、同名の新しい変数で古い変数を隠すことを\dfn{シャドーイング}と言います。
+        結果から分かるとおり、let pi = 0.で変数piを新しく定義する前の変数bでは、以前の定義である3.14を参照します。
       }
       +p{
         なお、出力結果に警告\codem{Warning 26 [unused-var]: unused variable pi.}が表示されていますが、
@@ -322,7 +330,7 @@ let variables-and-functions = '<
 
       上記の構文を見てお気付きかと思いますが、OCamlでは関数も変数と同じようにキーワード\codem{let}で定義できます。
       \codem{\<function\>}は関数名を表し、\codem{\<arguments...\>}は引数を表します。
-      \<arguments...\>にある3つのドット（\codem{...}）は、「後ろに2番目の引数、3番目の引数...のように0個以上の引数を取って良い」ことを示します。
+      \<arguments...\>は、「1番目の引数、2番目の引数、3番目の引数...のように1個以上の引数を取る」ことを示します。
       \codem{\<expr\>}は、（変数定義で利用した構文と同じく）式を表します。
     }
     +p{
@@ -390,10 +398,12 @@ let variables-and-functions = '<
         -\>のように型から型を構成する記号を、\dfn{型構成子}と言います。
       }。
       関数の型は\codem{A -\> B}のように表現し、「型Aの引数を受け取り型Bの値を返す、という関数の型」を表します。
+      そして、インタプリタの出力の\codem{\<fun\>}は、定義されたものが関数であることを表します。
+      整数や実数等の何らかの値に束縛された変数を定義した際は、その具体的な値が示されましたが、関数の場合はその内部まで示されることはありません。
 
-      試しに\codem{add_one 10}を入力すると、その結果は\codem{11}となり、与えた引数に+1されていることが分かります。
+      また、上記の例では関数add_oneに引数10を与えるとその結果は11となり、与えた引数に+1されていることが分かります。
       % https://str.i.kyushu-u.ac.jp/~bannai/ocaml-intro/basics.html
-      なお、add_one 10のように関数名の後に引数を並べることを\dfn{関数適用}と言います。
+      add_one 10のように関数名の後に引数を並べることを\dfn{関数適用}と言います。
     }
     +p{
       % プログラミングの基礎 - 第4章 関数の定義
@@ -409,8 +419,8 @@ let variables-and-functions = '<
           % プログラミングの基礎 - 第4章 関数の定義 - 型推論と型チェック
           % https://www.fos.kuis.kyoto-u.ac.jp/~igarashi/class/isle4-07w/mltext/ocaml003.html - 関数宣言
           先程の関数add_oneを定義した際に、引数xの型を指定しませんでした。
-          にも関わらず、xの型はintであるという結果が得られました。
-          これは、関数の式にてx + 1とあるとおり、整数の演算に用いられる+が存在するため、xの型はint型でなければいけません。
+          それにも関わらず、xの型はintであるという結果が得られました。
+          これは、関数の式にてx + 1とあるとおり、整数の演算に用いられる+が存在するため、xの型はint型でなければいけないからです。
 
           試しにxに整数以外（例えば実装）を渡すとエラーになります。
 
@@ -508,10 +518,6 @@ let variables-and-functions = '<
         この意味は「第一引数としてint型を受け取り、第二引数としてint型を受け取り、結果としてint型を返す関数の型」となります。
 
         これを、もう少し自然に解釈しようとすると「2つのint型な引数をとり、int型の結果を返す関数」になります。
-
-        インタプリタの出力の\codem{\<fun\>}は、定義されたものが関数であることを表します。
-        整数や実数等の何らかの値に束縛された変数を定義した際は、その具体的な値が示されましたが、関数の場合はその内部まで示されることはありません。
-
         % 部分適用については、カリー化で合わせて説明する。
       }
     >
@@ -522,7 +528,7 @@ let variables-and-functions = '<
         % プログラミングの基礎 - 第14章 14.4名前のない関数
         つまり、変数や前述の関数と違って、後から変数名や関数名を指定して再利用することができないということです。
         しかしながら、関数名をつけるまでもない関数が定義できると便利な場合があります。
-        例えば、1度しか実行されない処理に対して関数名を付ける必要はないため、このようなケースで無名関数は有用です。
+        例えば、1度しか実行されない処理に対して関数名を付ける必要はないため、このようなケースで匿名関数は有用です。
         匿名関数を作るには、\codem{fun}キーワードを用いて、以下の構文を利用します。
 
         \d-code(```
@@ -564,12 +570,12 @@ let variables-and-functions = '<
         上記の例では、まず\codem{add_note_header}という関数を定義しています。
         この関数は引数に文字列を取り、その文字列の先頭に\codem{`Note: `#}という文字列を結合して返します。
 
-        次に無名関数\codem{(fun g -\> g "Hello world.")}にadd_note_headerを適用しています。
-        無名関数(fun g -\> g "Hello world.")は以下のように動作します。
+        次に匿名関数\codem{(fun g -\> g "Hello world.")}にadd_note_headerを適用しています。
+        匿名関数(fun g -\> g "Hello world.")は以下のように動作します。
         \listing{
           * (fun g -\> g "Hello world.")は関数\codem{g}を引数として取ります
           * 関数\codem{g}に実引数として"Hello world."を適用した結果を得ます
-          * 上記の結果を無名関数の値として返します
+          * 上記の結果を匿名関数の値として返します
         }%
 
         関数適用の結果、\codem{Note: Hello world.}という文字列が返されました。
@@ -613,7 +619,7 @@ let variables-and-functions = '<
           let <function> <arguments...> = <expr>
         ```);%
 
-        無名関数を用いて変数（関数）を定義する以下の構文は、
+        匿名関数を用いて変数（関数）を定義する以下の構文は、
 
         \d-code(```
           let <variable> = fun <arguments...> -> <expr>
@@ -641,7 +647,7 @@ let variables-and-functions = '<
         % https://dev.realworldocaml.org/variables-and-functions.html - Multiargument Functions
         上記の定義は、\ref-subsection(`Multiargument functions`);で定義した関数diffと同じであることが分かります。
 
-        面白いことに、上記の無名関数を次のように書いても同じです。
+        面白いことに、上記の匿名関数を次のように書いても同じです。
 
         \d-code(```
         utop # fun x -> (fun y -> x - y) ;;
@@ -658,7 +664,7 @@ let variables-and-functions = '<
         そのため、\ref-subsection(`Multiargument functions`);で定義した関数diffと上記の2つは同等であると言えます。
       }
     >
-    +subsection?:(`Currying`){カリー化}<
+    +subsection?:(`Curryed functions`){カリー化関数}<
       +p{
         ここで、\ref-subsection(`Multiargument functions`);で紹介した関数\codem{diff}を思い出しましょう。
         関数diffは以下のように定義していました。
@@ -689,21 +695,27 @@ let variables-and-functions = '<
         なお、(fun x -\> (fun y -\> x - y))に内包された（fun y -\> x - y）のxは、
         外部の関数fun x -\> (...)によってバインドされたのものです。
 
-        このように、あるものの中にそれと同じ形や種類のものが入っている構造や状態を\dfn{ネスト}またはネストしていると言い、
+        このように、あるものの中にそれと同じ形や種類のものが入っている構造や状態をネストしていると言い、
         ネストされた関数の式であるx - yは「外側の関数でバインドされた値x」と「同関数内でバインドされたy」を参照し評価されます。
 
-        % カリー化の説明例
+        % カリー化関数の説明例
         % http://www.nct9.ne.jp/m_hiroi/func/ocaml03.html
-        % https://ocaml.jp/?OCaml%E5%85%A5%E9%96%80%282%29
         % https://www.fos.kuis.kyoto-u.ac.jp/~igarashi/class/isle4-02w/mltext/ocaml005.html
         % https://en.wikipedia.org/wiki/Currying
-        複数の引数を取る関数(fun x y z ... -\> ...)を、たった1つの引数を取る連続した関数(fun x -\> (fun y -\> (fun z -\> ...)))への変換を\dfn{カリー化}と言います。
+        上記の例において、両者の関数の型が「int -\> int -\> int」であることから
+        複数の引数を取る関数(fun x y z ... -\> ...)は、たった1つの引数を取る連続した関数(fun x -\> (fun y -\> (fun z -\> ...)))と同等であることが分かります。
+        % https://cs3110.github.io/textbook/chapters/hop/currying.html
+        ここで任意の型をtとすると、両者の型は「t1 -\> t2 -\> t3」となり、このようなスタイルの型を持つ関数を\dfn{カリー化関数（カリー化された関数）}と言います。
+        % https://ocaml.jp/?OCaml%E5%85%A5%E9%96%80%282%29
         つまり複数の引数を取る関数は、引数を1つ取る関数によって表現できます\footnote{
           この表現を\dfn{カリー化表現}と言います。
         }。
       }
+    >
+    +subsection?:(`Partial application`){部分適用}<
       +p{
-        カリー化は「関数を返す関数」によって、複数の引数を取る関数を表現したものです。
+        % https://ja.wikipedia.org/wiki/%E3%82%AB%E3%83%AA%E3%83%BC%E5%8C%96
+        \dfn{カリー化}は「関数を返す関数」によって、複数の引数を取る関数を表現したもの（あるいは表現すること）です。
         複数の引数を取る関数に対して、引数を1つずつ与えることでこれを観察できます。
 
         \d-code(```
@@ -717,7 +729,7 @@ let variables-and-functions = '<
         - : int = 2
         ```);%
 
-        関数diffに第一引数だけを与えた場合（\codem{diff 3}）、\codem{int -\> int}という関数の型を得ました。
+        関数diffに第一引数だけを与えた場合（diff 3）、「int -\> int」という関数の型を得ました。
         このように、複数の引数を取る関数に対して第一引数だけを与えると、「残りの引数を取り結果を返す関数」が得られます。
         (diff 3)によって返された関数に引数を1つ与えることで、関数diffに引数を2つ渡した時と同じ結果を得ることができます。
       }
@@ -725,17 +737,19 @@ let variables-and-functions = '<
         % 部分適用の説明
 
         % https://dev.realworldocaml.org/variables-and-functions.html - Multiargument Functions
-        前述の応用として、カリー化を利用すると関数diffから次のような関数を生成できます。
+        前述の例の応用としてカリー化を利用すると、関数diffから次のような関数を生成できます。
 
         \d-code(```
-          utop # let diff_from_ten y = diff 10 y ;;
+          utop # let diff_from_ten = diff 10 ;;
           val diff_from_ten : int -> int = <fun>
 
           utop # diff_from_ten 5 ;;
           - : int = 5
         ```);%
 
-        上記の例では、関数\codem{diff_from_ten}を定義し、この関数は10と与えられた引数\codem{y}との差を返します。
+        上記の例では、関数\codem{diff_from_ten}を定義しており、この関数は関数diffの第一引数に10を与えたものと同等です。
+        つまり関数diff_from_tenは「残りの引数を受け取ると\codem{10 - （残りの引数）}の結果を返す」関数です。
+        実際に\codem{diff_from_ten 5}は10 - 5 = 5の結果を返しています。
         % https://ocaml.org/docs/functional-programming 
         このように、カリー化された関数に引数の一部を適用して新しい関数を取得することを\dfn{部分適用}と言います。
 
@@ -895,7 +909,10 @@ let variables-and-functions = '<
         ```);%
 
         上記の中置演算子\codem{\|\>}は、
-        多相型の引数xと関数fを受け取って、\codem{f x}（つまり関数fに引数xを適用した結果）を返すことを示しています。
+        多相型の引数xと関数fを受け取って、\codem{f x}（つまり関数fに引数xを適用した結果）を返すことを示しています\footnote{
+          多相型については後述します。
+          ここでは「どのような型に属しても良いという性質を持つ型」と捉えて下さい。
+        }。
 
         これは、
 

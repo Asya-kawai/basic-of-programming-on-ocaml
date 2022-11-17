@@ -35,8 +35,17 @@ let conditional-branch = '<
       }%
 
       条件式（\<boolean-condition-expr\>）は、必ずbool型の値を返す式である必要があります。
-      また、上記の構文からも分かるとおり、if式はelse節を省略することができ、これは前者（if \<boolean-condition\> then \<expr\>）の構文に当たります。
-      なお、then節及びelse節が存在する場合、then節の式（\<expr\>または\<expr_1\>）及びelse節の式（\<expr_2\>）は同じ型を返す必要があります。  
+
+      上記の構文からも分かるとおり、if式はelse節を省略することができ、これは前者（if \<boolean-condition\> then \<expr\>）の構文に当たります。
+      % https://ocaml.jp/?OCaml%E5%85%A5%E9%96%80%281%29 if文
+      ただし、else節を省略する場合、\<expr\>はunit型を返す必要があります。
+      \d-code(```
+      utop # if true then Printf.printf "%s\n" "ok" ;;
+      ok
+      - : unit = ()
+      ```);%
+
+      また、then節及びelse節が存在する場合、then節の式（\<expr\>または\<expr_1\>）及びelse節の式（\<expr_2\>）は同じ型を返す必要があります。  
 
       以下にif式を利用した例を示します。
 
@@ -143,7 +152,8 @@ let conditional-branch = '<
         % https://www.fos.kuis.kyoto-u.ac.jp/~igarashi/class/isle4-05w/mltext/ocaml003.html - 関数宣言
         関数minの型は\codem{'a -\> 'a -\> 'a}と表現されています。
         引数に異なる値（int型であれば1,2,3,...等、多相型であれば任意の値）を利用できるようにパラメータ（ここでは'a）で置き換えることを\dfn{パラメータ化}と言い、
-        パラメータ化による多相性を\dfn{パラメトリック多相}と言います。
+        パラメータ化による多相性を\dfn{パラメトリック多相（Parametric polymorphism）}と言います。
+        これによって、型変数がどのような型に属していても関数は同じように振る舞います。
       }。
 
       % https://www.fos.kuis.kyoto-u.ac.jp/~igarashi/class/isle4-02w/mltext/ocaml005.html#toc12
@@ -152,7 +162,7 @@ let conditional-branch = '<
       なぜなら、値の大小比較は同一の型同士でのみ可能だからです。
       % OCamlではアドホック多相をサポートしないので説明しない
       % 部分型多相（サブタイピング多相）はオブジェクト指向を扱う部分でのみ利用するため説明しない
-      % let多相、値多相はどこかで説明しても良いかも知れない         
+      % let多相、値多相はどこかで説明しても良いかも知れない
     }
     +p{
       % プログラミングの基礎 第5章 条件分岐
