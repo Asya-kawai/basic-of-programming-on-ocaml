@@ -58,7 +58,7 @@ let tuples-and-lists-and-pattern-matching = '<
         * 2つ目の要素：int型である2
       }%
     }
-    +subsection?:(`Uncarried functions`){非カリー化関数}<
+    +subsection?:(`Uncurried functions`){非カリー化関数}<
       +p{
         \ref-subsection(`Curryed functions`);ではカリー化関数を説明しました。
         % https://cs3110.github.io/textbook/chapters/hop/currying.html
@@ -70,14 +70,14 @@ let tuples-and-lists-and-pattern-matching = '<
         }。
 
         \d-code(```
-        utop # let uncarried_diff (x, y) = x - y ;;
-        val uncarried_diff : int * int -> int = <fun>
+        utop # let uncurried_diff (x, y) = x - y ;;
+        val uncurried_diff : int * int -> int = <fun>
         ```);%
 
-        \codem{uncarried_diff}はxとyの2つの引数を取りますが、xまたはyの1つだけをuncarried_diffに与えることはできません。
+        \codem{uncurried_diff}はxとyの2つの引数を取りますが、xまたはyの1つだけをuncurried_diffに与えることはできません。
         % https://cs3110.github.io/textbook/chapters/hop/currying.html
         ここで任意の型をtとすると、上記の関数の型は「t1 \* t2 -\> t3」となり、このようなスタイルの型を持つ関数を非カリー化関数（カリー化されない関数）と言います。
-        なお、非カリー化関数をカリー化関数に変換することができます\footnote{
+        なお、非カリー化関数は以下のようにカリー化関数に変換することができます\footnote{
           このような変換をカリー化と言います。
         }。
 
@@ -87,7 +87,7 @@ let tuples-and-lists-and-pattern-matching = '<
         ```);%
 
         上記の関数\codem{curry}は第一引数に関数fを取り、第二、第三引数を要素に持つタプル値としてfに適用する関数です。
-        これをuncarried_diffに適用すると、\ref-subsection(`Curryed functions`);で例示した関数diffと同等な関数になることが分かります。
+        これをuncurried_diffに適用すると、\ref-subsection(`Curryed functions`);で例示した関数diffと同等な関数になることが分かります。
 
         \d-code(```
         utop # let diff x y = x - y ;;
@@ -95,7 +95,7 @@ let tuples-and-lists-and-pattern-matching = '<
         utop # diff 3 1 ;;
         - : int = 2
 
-        utop # let curried_diff = curry uncarried_diff ;;
+        utop # let curried_diff = curry uncurried_diff ;;
         val curried_diff : int -> int -> int = <fun>
         utop # curried_diff 3 1 ;;
         - : int = 2

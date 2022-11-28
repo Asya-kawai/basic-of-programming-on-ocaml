@@ -192,12 +192,13 @@ let modules = '<
       別の文脈で定義または利用したint型の値を、意図せずMymathモジュールの関数に適用することを防げるというメリットがあります\footnote{
         % プログラミングの基礎 第19章 19.4 抽象データ型
         % https://ja.wikipedia.org/wiki/%E6%8A%BD%E8%B1%A1%E3%83%87%E3%83%BC%E3%82%BF%E5%9E%8B
-        このようにモジュールで利用可能な型が具体的に何であるか（ここではint型）を隠蔽し、それを利用する関数によってのみ規定されるデータ型を\dfn{抽象データ型}と言います。ここではMymath.tが抽象データ型になります。
+        このようにモジュールで利用可能な型tが具体的に何であるか（ここではint型）を隠蔽し、それを利用する関数によってのみ規定されるデータ型を\dfn{抽象データ型}と言います。
+        ここではMymath.t（Mymathモジュール内の型t）が抽象データ型になります。
 
         % https://dev.realworldocaml.org/files-modules-and-programs.html - Signatures and Abstract Types
         % https://dev.realworldocaml.org/files-modules-and-programs.html - Concrete Types in Signatures
         % 上記は初学者には難しいと感じたので割愛。
-        % 読んだ感じ、注腸データ型の具体例を述べているだけ？
+        % 読んだ感じ、抽象データ型の具体例を述べているだけ？
       }。
 
       Mymath_tシグネチャは型tを利用するいくつかの関数も提供します。
@@ -855,7 +856,7 @@ let modules = '<
       \codem{my_web_server}というプロジェクト名を作成したい場合、以下のように入力します。
 
       \d-code(```
-      % my-http-serverdune init proj my_web_app
+      % dune init proj my_web_app
       Success: initialized project component named my_web_app
 
       % cd my_web_app/
